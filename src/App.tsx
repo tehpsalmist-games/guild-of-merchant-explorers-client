@@ -2,6 +2,7 @@ import React, { ComponentProps, useEffect, useState } from 'react'
 import { ExplorerMap } from './ExplorerMap'
 import { Button } from '@8thday/react'
 import { useGameState } from './hooks/useGameState'
+import clsx from 'clsx'
 
 const bgImage = new URL('/src/images/Aghon.jpeg', import.meta.url)
 
@@ -19,7 +20,7 @@ export const App = ({ className = '', ...props }: AppProps) => {
   return (
     <main className={`${className} flex-center h-screen max-h-screen`} {...props}>
       <div
-        className="aghon relative m-auto aspect-[1416/990] w-full bg-cover"
+        className="aghon relative m-auto aspect-[1416/990] w-full max-w-full bg-cover"
         style={{ backgroundImage: `url(${bgImage})` }}
       >
         <ExplorerMap

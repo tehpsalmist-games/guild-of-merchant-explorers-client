@@ -21,7 +21,7 @@ export const ExplorerMap = ({ className = '', board, ...props }: ExplorerMapProp
   return (
     <svg
       viewBox={`0 0 ${dimX * HEX_WIDTH + MAGIC_OFFSET_VALUE_X} ${dimY * HEX_HEIGHT + MAGIC_OFFSET_VALUE_Y}`}
-      className={`${className} max-h-full w-full max-w-full`}
+      className={`${className}`}
       {...props}
     >
       <defs>
