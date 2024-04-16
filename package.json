@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "main": "index.html",
   "scripts": {
-    "start": "MODE=development parcel serve src/index.html",
+    "start": "parcel serve src/index.html",
     "build": "MODE=production parcel build src/index.html --no-scope-hoist"
   },
   "repository": {
