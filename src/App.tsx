@@ -1,34 +1,39 @@
 import React, { ComponentProps, useEffect, useState } from 'react'
 import { ExplorerMap } from './ExplorerMap'
-import { aghonData } from './data/boards/aghon'
-import { Board } from './game-logic/Board'
+import { Button } from '@8thday/react'
+import { useGameState } from './hooks/useGameState'
 
 const bgImage = new URL('/src/images/Aghon.jpeg', import.meta.url)
-
-const aghonBoard = new Board(aghonData)
-
-console.log(aghonBoard)
 
 export interface AppProps extends ComponentProps<'main'> {}
 
 export const App = ({ className = '', ...props }: AppProps) => {
   const updateState = useState(false)[1]
 
+  const gameState = useGameState()
+
   useEffect(() => {
-    aghonBoard.addEventListener('statechange', () => updateState((s) => !s))
+    gameState.moveHistory.addEventListener('statechange', () => updateState((s) => !s))
   }, [])
 
   return (
-    <main className={`${className} flex-center h-screen`} {...props}>
+    <main className={`${className} flex-center h-screen max-h-screen`} {...props}>
       <div
-        className="aghon relative aspect-[1416/990] w-full max-w-full bg-cover"
+        className="aghon relative m-auto aspect-[1416/990] w-full bg-cover"
         style={{ backgroundImage: `url(${bgImage})` }}
       >
         <ExplorerMap
-          board={aghonBoard}
+          board={gameState.board}
           className="absolute"
           style={{ top: `${(105 / 990) * 100}%`, left: `${(101 / 1416) * 100}%`, width: `${(1229 / 1416) * 100}%` }}
         />
+        <Button
+          variant="destructive"
+          className="absolute right-2 top-2"
+          onClick={() => gameState.moveHistory.undoMove()}
+        >
+          Undo Move
+        </Button>
       </div>
     </main>
   )

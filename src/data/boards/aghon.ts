@@ -31,7 +31,7 @@ export const aghonData: (HexData | null)[][] = [
     { terrain: 'wild', isTower: true },
     { terrain: 'sand' },
     { terrain: 'mountain', coins: 3 },
-    { terrain: 'mountain' },
+    { terrain: 'mountain', coins: 2 },
     { terrain: 'water' },
     { terrain: 'water' },
     { terrain: 'water' },

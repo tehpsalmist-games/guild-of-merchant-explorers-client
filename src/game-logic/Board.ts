@@ -1,18 +1,29 @@
+import { GameState } from './GameState'
+
 export type Terrain = 'mountain' | 'sand' | 'grass' | 'water' | 'wild'
 
-export class Board extends EventTarget {
+export class Board {
   hexes: (Hex | null)[][]
   regions: Region[] = []
   lands: Land[] = []
   villages: Hex[] = []
   towers: Hex[] = []
+  gameState: GameState
 
   constructor(hexes: (HexData | null)[][]) {
-    super()
+    this.hexes = hexes.map((columns, columnIndex) => {
+      return columns.map((hexData, rowIndex) => {
+        // if null, just return the null
+        if (!hexData) return null
 
-    this.hexes = hexes.map((c, column) =>
-      c.map((hexData, row) => hexData && new Hex({ ...hexData, row, column, board: this })),
-    )
+        return new Hex({
+          ...hexData,
+          row: rowIndex,
+          column: columnIndex,
+          board: this,
+        })
+      })
+    })
 
     for (const hex of this.getFlatHexes()) {
       // make Lands
@@ -50,9 +61,12 @@ export class Board extends EventTarget {
     return [this.hexes.length, this.hexes[0].length]
   }
 
-  // kind of a hacky UI updater for now... :/
-  recordState() {
-    this.dispatchEvent(new CustomEvent('statechange', { detail: { board: this } }))
+  wipe() {
+    this.getFlatHexes().forEach((hex) => {
+      if (!hex.isVillage && !hex.isCity) {
+        hex.isExplored = false
+      }
+    })
   }
 }
 
@@ -69,27 +83,22 @@ export interface HexData {
   ruinSymbol?: string
 }
 
-interface TradingPost {
-  value: number
-  isCovered: boolean // or isLive?
-}
-
 export class Hex {
   row: number
   column: number
   terrain: Terrain
   coins: number
-  tradingPost?: TradingPost
+  tradingPostValue: number
   isCity = false
   isRuin = false
   isTower = false
   isIce = false
   isExplored = false
-  isOccupied = false
   isVillage = false
   isVillageCandidate = false
   isInLand = false
   isInRegion = false
+  isCovered = false
   region: Region | null = null
   land: Land | null = null
   board: Board
@@ -111,18 +120,15 @@ export class Hex {
     this.column = column
     this.terrain = terrain
     this.coins = coins ?? 0
-    this.isOccupied = this.isExplored = this.isCity = isCity ?? false
+    this.isExplored = this.isCity = isCity ?? false
     this.isRuin = isRuin ?? false
     this.isTower = isTower ?? false
     this.isIce = isIce ?? false
-
-    if (tradingPostQuantity) {
-      this.tradingPost = { value: tradingPostQuantity, isCovered: false }
-    }
+    this.tradingPostValue = tradingPostQuantity ?? 0
 
     const isLandTerrain = ['mountain', 'sand', 'grass'].includes(terrain)
 
-    if (!this.coins && !this.isRuin && !this.tradingPost && isLandTerrain) {
+    if (!this.coins && !this.isRuin && !this.tradingPostValue && isLandTerrain) {
       this.isVillageCandidate = true
     }
 
@@ -149,9 +155,6 @@ export class Hex {
     if (this.land) {
       this.land.explore()
     }
-
-    // hacky!
-    this.board.recordState()
   }
 
   isExplorable() {
@@ -196,6 +199,14 @@ export class Region {
   explore() {
     if (this.hexes.every((h) => h.isExplored)) {
       this.hasVillage = true
+
+      const villageCandidates = this.hexes.filter((h) => h.isVillageCandidate)
+      if (villageCandidates.length > 1) {
+        this.board.gameState.villageMode(this)
+      } else if (villageCandidates.length === 1) {
+        // auto place the only option
+        villageCandidates[0].isVillage = true
+      }
     }
   }
 }
