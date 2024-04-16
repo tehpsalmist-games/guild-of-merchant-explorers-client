@@ -153,6 +153,10 @@ export class Hex {
     // hacky!
     this.board.recordState()
   }
+
+  isExplorable() {
+    return !this.isExplored && this.board.hexContactIterator(this).some((h) => h.isExplored)
+  }
 }
 
 export class Region {

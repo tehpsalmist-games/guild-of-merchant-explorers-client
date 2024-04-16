@@ -39,10 +39,6 @@ export const ExplorerMap = ({ className = '', board, ...props }: ExplorerMapProp
                 id={`${rowId}-${colId}`}
                 y={HEX_HEIGHT * rowId + (colId % 2 === 0 ? MAGIC_OFFSET_VALUE_Y : 0)}
                 x={HEX_WIDTH * colId + MAGIC_OFFSET_VALUE_X}
-                onClick={() => {
-                  hex.explore()
-                  console.log(hex)
-                }}
               />
             ),
         ),
