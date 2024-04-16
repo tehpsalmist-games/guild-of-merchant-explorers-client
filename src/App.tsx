@@ -17,13 +17,16 @@ export const App = ({ className = '', ...props }: AppProps) => {
   return (
     <main className={`${className} flex-center relative h-screen max-h-screen`} {...props}>
       <ExplorerMap />
-      <Button
-        variant="destructive"
-        className="!absolute right-2 top-2"
-        onClick={() => gameState.moveHistory.undoMove()}
-      >
-        Undo Move
-      </Button>
+      <div className="absolute right-2 top-2 flex gap-2">
+        {gameState.moveHistory.moveHistory.length > 1 && (
+          <Button variant="destructive" onClick={() => gameState.moveHistory.clearHistory()}>
+            Reset Moves
+          </Button>
+        )}
+        {gameState.moveHistory.moveHistory.length > 0 && (
+          <Button onClick={() => gameState.moveHistory.undoMove()}>Undo Move</Button>
+        )}
+      </div>
     </main>
   )
 }

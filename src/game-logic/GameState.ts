@@ -1,7 +1,8 @@
 import { aghonData } from '../data/boards/aghon'
 import { Board, Hex, Region } from './Board'
+import { sleep } from '../utils'
 
-export type GameMode = 'exploring' | 'treasure-exploring' | 'village' | 'power-card' | 'trading'
+export type GameMode = 'exploring' | 'treasure-exploring' | 'village' | 'power-card' | 'trading' | 'clear-history'
 
 export class GameState {
   mode: GameMode = 'exploring'
@@ -83,8 +84,19 @@ export class MoveHistory extends EventTarget {
     this.recordState()
   }
 
-  clearHistory() {
-    this.moveHistory = []
+  async clearHistory() {
+    while (this.moveHistory.length) {
+      this.undoMove()
+
+      // cool UI effect of undoing all the action visually in half-second increments
+      // this mode blocks the user from doing anything while it happens
+      this.gameState.mode = 'clear-history'
+      await sleep(500)
+    }
+
+    // this will always be the mode we return to, I'm 99% sure of it.
+    this.gameState.mode = 'exploring'
+    this.recordState()
   }
 
   recordState() {
