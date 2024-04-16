@@ -1,19 +1,46 @@
+import { CSSProperties } from 'react'
 import { GameState } from './GameState'
 
 export type Terrain = 'mountain' | 'sand' | 'grass' | 'water' | 'wild'
 
+export interface BoardData {
+  imageURL: URL
+  dimensions: {
+    height: number
+    width: number
+    innerWidth: number
+    innerHeight: number
+    paddingLeft: number
+    paddingTop: number
+  }
+  hexData: (HexData | null)[][]
+}
+
 export class Board {
+  // display properties
+  imageURL: URL
+  svgStyle: CSSProperties
+  height: number
+  width: number
+
+  // game data
   hexes: (Hex | null)[][]
   regions: Region[] = []
   lands: Land[] = []
-  villages: Hex[] = []
-  towers: Hex[] = []
   gameState: GameState
 
-  constructor(hexes: (HexData | null)[][]) {
-    this.hexes = hexes.map((columns, columnIndex) => {
+  constructor(boardData: BoardData) {
+    this.imageURL = boardData.imageURL
+    this.height = boardData.dimensions.height
+    this.width = boardData.dimensions.width
+    this.svgStyle = {
+      top: `${(boardData.dimensions.paddingTop / this.height) * 100}%`,
+      left: `${(boardData.dimensions.paddingLeft / this.width) * 100}%`,
+      width: `${(boardData.dimensions.innerWidth / this.width) * 100}%`,
+    }
+
+    this.hexes = boardData.hexData.map((columns, columnIndex) => {
       return columns.map((hexData, rowIndex) => {
-        // if null, just return the null
         if (!hexData) return null
 
         return new Hex({
