@@ -27,7 +27,7 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
         'fill-[url(#block-pattern)]': showBlock,
         'fill-transparent': visuallyBlank,
         'cursor-pointer fill-blue-500/15 hover:fill-blue-500/25': isVillageCandidate,
-        'fill-blue-500/50': hex.isVillage,
+        'fill-[url(#village-pattern)]': hex.isVillage,
       })}
       onClick={() => {
         console.log(hex)

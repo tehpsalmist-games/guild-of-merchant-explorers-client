@@ -4,6 +4,7 @@ import { useGameState } from './hooks/useGameState'
 import { useResizeObserver } from '@8thday/react'
 
 const blockImage = new URL('/src/images/block.png', import.meta.url)
+const villageImage = new URL('/src/images/village.png', import.meta.url)
 
 const MAGIC_OFFSET_VALUE_X = 25
 const MAGIC_OFFSET_VALUE_Y = 43.3
@@ -54,6 +55,11 @@ export const ExplorerMap = ({ className = '', ...props }: ExplorerMapProps) => {
           <defs>
             <pattern id="block-pattern" patternUnits="objectBoundingBox" width="50" height="50">
               <image href={blockImage.href} x="23" y="21" width="50" height="50" />
+            </pattern>
+          </defs>
+          <defs>
+            <pattern id="village-pattern" patternUnits="objectBoundingBox" width="50" height="50">
+              <image href={villageImage.href} x="13" y="9" width="70" height="70" />
             </pattern>
           </defs>
           {gameState.board.hexes.map((cols, colId) =>
