@@ -3,8 +3,9 @@ import { HexPath } from './HexPath'
 import { useGameState } from './hooks/useGameState'
 import { useResizeObserver } from '@8thday/react'
 
-const blockImage = new URL('/src/images/block.png', import.meta.url)
-const villageImage = new URL('/src/images/village.png', import.meta.url)
+const blockImage = new URL('/src/images/block-blank.png', import.meta.url)
+const villageImage = new URL('/src/images/village-blank.png', import.meta.url)
+const towerImage = new URL('/src/images/tower.png', import.meta.url)
 
 const MAGIC_OFFSET_VALUE_X = 25
 const MAGIC_OFFSET_VALUE_Y = 43.3
@@ -40,6 +41,7 @@ export const ExplorerMap = ({ className = '', ...props }: ExplorerMapProps) => {
   return (
     <div ref={containerRef} className={`${className} h-full max-h-full w-full max-w-full overflow-hidden`} {...props}>
       <div
+        id="explorer-map"
         ref={boardRef}
         className="aghon relative mx-auto bg-cover"
         style={{
@@ -52,16 +54,6 @@ export const ExplorerMap = ({ className = '', ...props }: ExplorerMapProps) => {
           className={`absolute`}
           style={gameState.board.svgStyle}
         >
-          <defs>
-            <pattern id="block-pattern" patternUnits="objectBoundingBox" width="50" height="50">
-              <image href={blockImage.href} x="23" y="21" width="50" height="50" />
-            </pattern>
-          </defs>
-          <defs>
-            <pattern id="village-pattern" patternUnits="objectBoundingBox" width="50" height="50">
-              <image href={villageImage.href} x="13" y="9" width="70" height="70" />
-            </pattern>
-          </defs>
           {gameState.board.hexes.map((cols, colId) =>
             cols.map(
               (hex, rowId) =>

@@ -175,6 +175,10 @@ export class Hex {
   explore() {
     this.isExplored = true
 
+    if (this.isTower) {
+      this.isCovered = true
+    }
+
     if (this.region) {
       this.region.explore()
     }
