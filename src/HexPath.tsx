@@ -36,11 +36,11 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
           case 'exploring':
             if (!hex.isExplorable()) return
 
-            return gameState.moveHistory.addMove({ hex, action: 'explored' })
+            return gameState.moveHistory.doMove({ hex, action: 'explored' })
           case 'village':
             if (!isVillageCandidate) return
 
-            return gameState.moveHistory.addMove({ hex, action: 'village' })
+            return gameState.moveHistory.doMove({ hex, action: 'village' })
         }
       }}
       {...props}
