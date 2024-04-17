@@ -34,11 +34,5 @@ export const App = ({ className = '', ...props }: AppProps) => {
         {gameState.message}
       </div>
     </main>
-    // @dylanraleyisme, this is done, feel free to delete if you're satisfied.
-    //TODO we need some sort of tooltip in the corner that prompts the player to do various things.
-    //ex: you just got a block from a treasure card. please place it on the board.
-    //ex: you just made a trading route. please pick a trading post to cover so that it can't be used again.
-    //ex for weird situations: you just created multiple trading routes at once. please pick two trading posts to score.
-    //most of the time, it would probably not be needed because everything is pretty self-explanatory.
   )
 }

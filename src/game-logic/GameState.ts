@@ -1,5 +1,5 @@
 import { aghonData } from '../data/boards/aghon'
-import { Board, Hex, Region } from './Board'
+import { Board, Hex, Region, TradeRoute } from './Board'
 import { sleep } from '../utils'
 
 export type GameMode =
@@ -18,6 +18,7 @@ export class GameState {
   moveHistory: MoveHistory
   board: Board
   regionForVillage?: Region
+  tradeRoute?: TradeRoute
 
   constructor() {
     this.moveHistory = new MoveHistory()
@@ -49,9 +50,11 @@ export class GameState {
     this.message = "You've explored the region! Choose where to build a village."
   }
 
-  tradingMode() {
+  tradingMode(tradingRoute: TradeRoute) {
     this.mode = 'trading'
-    //TODO how are we going to determine what trading posts are connected?
+    this.tradeRoute = tradingRoute
+    this.message = 'Trade!'
+    //TODO add trading logic for multiple trading candatates
   }
 
   //TODO this will probably need to take a card as an argument at some point

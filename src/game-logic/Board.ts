@@ -175,7 +175,17 @@ export class Hex {
   explore() {
     this.isExplored = true
 
-    if (this.isTower) {
+    //For hexes that do actions that require it to be uncovered
+    //TODO how are we going to undo this? maybe we should move it?
+    if (!this.isCovered){
+      if (this.isTower) {
+        //TODO add tower logic
+      }
+
+      if (this.isRuin) {
+        //TODO add ruin logic
+      }
+
       this.isCovered = true
     }
 
@@ -275,5 +285,47 @@ export class Land {
 
   explore() {
     this.hasBeenReached = true
+  }
+}
+
+//We can use this to find trading routes and score them.
+//TODO I can't test this cuz I got an error lol
+export class TradeRoute{
+  tradingPosts: Hex[] = []
+  board: Board
+  isTradable = this.tradingPosts?.length > 1
+
+  constructor(startingHex: Hex) {
+    this.board = startingHex.board
+    if (startingHex.isExplored) this.buildTradeRouteFromHex(startingHex)
+  }
+
+  buildTradeRouteFromHex(hex: Hex) {
+    if (hex.tradingPostValue) {
+      this.tradingPosts.push(hex)
+    }
+
+    for (const nextHex of this.board.hexContactIterator(hex)) {
+      if (nextHex.isExplored) {
+        this.buildTradeRouteFromHex(nextHex)
+      }
+    }
+  }
+  
+  coverTradingPost(hex: Hex) {
+    if (this.tradingPosts.includes(hex)) {
+      hex.isCovered = true;
+      this.tradingPosts = this.tradingPosts.filter((h) => h !== hex);
+    }
+  }
+
+  get log() {
+    return this.tradingPosts.map((h) => h.element)
+  }
+
+  explore() {
+    if (this.isTradable) {
+      this.board.gameState.tradingMode(this)
+    }
   }
 }

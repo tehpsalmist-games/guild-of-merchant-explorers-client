@@ -72,6 +72,9 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
               if (!isVillageCandidate) return
 
               return gameState.moveHistory.doMove({ hex, action: 'village' })
+            case 'trading':
+              //Still figuring this out lol
+              return gameState.moveHistory.doMove({ hex, action: 'traded' })
           }
         }}
         {...props}
