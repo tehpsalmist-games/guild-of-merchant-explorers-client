@@ -228,7 +228,7 @@ export class Region {
   }
 
   explore() {
-    if (this.hexes.every((h) => h.isExplored)) {
+    if (!this.hasVillage && this.hexes.every((h) => h.isExplored)) {
       this.hasVillage = true
 
       const villageCandidates = this.hexes.filter((h) => h.isVillageCandidate)

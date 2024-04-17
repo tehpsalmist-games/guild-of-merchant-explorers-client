@@ -2,11 +2,19 @@ import { aghonData } from '../data/boards/aghon'
 import { Board, Hex, Region } from './Board'
 import { sleep } from '../utils'
 
-export type GameMode = 'exploring' | 'treasure-exploring' | 'village' | 'power-card' | 'trading' | 'clear-history' | 'wait-for-new-card'
+export type GameMode =
+  | 'exploring'
+  | 'treasure-exploring'
+  | 'village'
+  | 'power-card'
+  | 'trading'
+  | 'clear-history'
+  | 'wait-for-new-card'
 
 export class GameState {
   mode: GameMode = 'exploring'
   currentExplorerCard: 0
+  message = 'Explore!'
   moveHistory: MoveHistory
   board: Board
   regionForVillage?: Region
@@ -38,6 +46,7 @@ export class GameState {
   villageMode(region: Region) {
     this.mode = 'village'
     this.regionForVillage = region
+    this.message = "You've explored the region! Choose where to build a village."
   }
 
   tradingMode() {
@@ -48,6 +57,7 @@ export class GameState {
   //TODO this will probably need to take a card as an argument at some point
   exploringMode() {
     this.mode = 'exploring'
+    this.message = 'Explore!'
   }
 }
 

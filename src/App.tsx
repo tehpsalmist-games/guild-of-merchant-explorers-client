@@ -19,18 +19,22 @@ export const App = ({ className = '', ...props }: AppProps) => {
       <ExplorerMap />
       <div className="absolute right-2 top-2 flex gap-2">
         {gameState.moveHistory.moveHistory.length > 1 && (
-          <Button onClick={() => gameState.moveHistory.undoAllMoves()}>
-            Reset Moves
-          </Button>
+          <Button onClick={() => gameState.moveHistory.undoAllMoves()}>Reset Moves</Button>
         )}
         {gameState.moveHistory.moveHistory.length > 0 && (
           <Button onClick={() => gameState.moveHistory.undoMove()}>Undo Move</Button>
         )}
         {gameState.moveHistory.moveHistory.length > 0 && (
-          <Button variant="destructive" onClick={() => gameState.startNextAge()}>Next Age</Button>
+          <Button variant="destructive" onClick={() => gameState.startNextAge()}>
+            Next Age
+          </Button>
         )}
       </div>
+      <div className="absolute left-1/2 top-2 -translate-x-1/2 rounded bg-slate-900/50 p-2 text-lg font-bold text-white">
+        {gameState.message}
+      </div>
     </main>
+    // @dylanraleyisme, this is done, feel free to delete if you're satisfied.
     //TODO we need some sort of tooltip in the corner that prompts the player to do various things.
     //ex: you just got a block from a treasure card. please place it on the board.
     //ex: you just made a trading route. please pick a trading post to cover so that it can't be used again.

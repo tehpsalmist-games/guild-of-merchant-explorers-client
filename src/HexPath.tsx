@@ -58,7 +58,7 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
         d={`M${x},${y} h50 l25,43.3 l-25,43.3 h-50 l-25,-43.3 z`}
         className={clsx(className, 'fill-transparent', {
           'cursor-pointer hover:fill-red-500/15': gameState.mode === 'exploring' && hex.isExplorable(),
-          'cursor-pointer !fill-blue-500/15 hover:fill-blue-500/25': isVillageCandidate,
+          'cursor-pointer !fill-blue-500/15 hover:!fill-blue-500/25': isVillageCandidate,
         })}
         onClick={() => {
           console.log(hex)
