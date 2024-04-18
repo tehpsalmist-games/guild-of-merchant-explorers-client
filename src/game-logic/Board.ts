@@ -69,15 +69,19 @@ export class Board {
     }
   }
 
-  hexContactIterator(hex: Hex) {
-    return [
+  hexContactIterator(hex: Hex, keepEmpties: true): (Hex | null)[]
+  hexContactIterator(hex: Hex): Hex[]
+  hexContactIterator(hex: Hex, keepEmpties = false) {
+    const list = [
       this.hexes[hex.column - 1]?.[hex.column % 2 === 0 ? hex.row + 1 : hex.row],
       this.hexes[hex.column - 1]?.[hex.column % 2 === 0 ? hex.row : hex.row - 1],
       this.hexes[hex.column]?.[hex.row - 1],
       this.hexes[hex.column + 1]?.[hex.column % 2 === 0 ? hex.row : hex.row - 1],
       this.hexes[hex.column + 1]?.[hex.column % 2 === 0 ? hex.row + 1 : hex.row],
       this.hexes[hex.column]?.[hex.row + 1],
-    ].filter<Hex>((h): h is Hex => !!h)
+    ]
+
+    return keepEmpties ? list : list.filter<Hex>((h): h is Hex => !!h)
   }
 
   getFlatHexes() {
