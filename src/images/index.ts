@@ -3,10 +3,13 @@ export const villageImage = new URL('/src/images/pieces/village-blank.png', impo
 export const treasureChestImage = new URL('/src/images/pieces/treasure-chest.png', import.meta.url)
 export const crystalImage = new URL('/src/images/pieces/crystal.png', import.meta.url)
 export const towerImage = new URL('/src/images/pieces/tower.png', import.meta.url)
+export const coinImage = new URL('/src/images/pieces/coin.png', import.meta.url)
+
 export const aghonBoard = new URL('/src/images/boards/aghon.png', import.meta.url)
 export const aveniaBoard = new URL('/src/images/boards/avenia.png', import.meta.url)
 export const kazanBoard = new URL('/src/images/boards/kazan.png', import.meta.url)
 export const cnidariaBoard = new URL('/src/images/boards/cnidaria.png', import.meta.url)
+
 export const grassVillageBonus = new URL('/src/images/treasure-cards/grass-village-bonus.png', import.meta.url)
 export const jarMultiplier = new URL('/src/images/treasure-cards/jar-multiplier.png', import.meta.url)
 export const landVillageHalfBonus = new URL('/src/images/treasure-cards/land-village-half-bonus.png', import.meta.url)

@@ -184,6 +184,11 @@ export class Hex {
   explore() {
     this.isExplored = true
 
+    if (this.coins) {
+      // TODO: multiply coins by power card value
+      this.board.player.coins += this.coins
+    }
+
     //For hexes that do actions that require it to be uncovered
     //TODO how are we going to undo this? maybe we should move it?
     if (!this.isCovered) {
@@ -208,6 +213,38 @@ export class Hex {
 
     //Finds trading routes every time a hex is explored
     new TradeRoute(this)
+  }
+
+  /**
+   * Invert all logic from explore in this method
+   */
+  unexplore() {
+    this.isExplored = false
+
+    if (this.coins) {
+      // TODO: multiply coins by power card value
+      this.board.player.coins -= this.coins
+    }
+
+    if (this.isCovered) {
+      if (this.isTower) {
+        //TODO add tower logic
+        this.isCovered = false
+      }
+
+      if (this.isRuin) {
+        //TODO add ruin logic
+        this.isCovered = false
+      }
+    }
+
+    if (this.region) {
+      this.region.unexplore()
+    }
+
+    if (this.land) {
+      this.land.unexplore()
+    }
   }
 
   isExplorable() {
@@ -280,6 +317,12 @@ export class Region {
       }
     }
   }
+
+  unexplore() {
+    if (this.hasVillage && this.hexes.some((h) => !h.isExplored)) {
+      this.hasVillage = false
+    }
+  }
 }
 
 export class Land {
@@ -315,6 +358,12 @@ export class Land {
 
   explore() {
     this.hasBeenReached = true
+  }
+
+  unexplore() {
+    if (this.hexes.every((h) => !h.isExplored)) {
+      this.hasBeenReached = false
+    }
   }
 }
 

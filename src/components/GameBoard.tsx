@@ -4,6 +4,7 @@ import { ExplorerMap } from './ExplorerMap'
 import { Button } from '@8thday/react'
 import BarsIcon from '@heroicons/react/24/solid/Bars3Icon'
 import clsx from 'clsx'
+import { coinImage } from '../images'
 
 export interface GameBoardProps extends ComponentProps<'main'> {}
 
@@ -18,8 +19,16 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
   }, [])
 
   return (
-    <main className={`${className} relative min-h-screen w-full`} {...props}>
+    <main className={`${className} relative min-h-screen w-full overflow-x-hidden`} {...props}>
       <ExplorerMap />
+      <div
+        className="absolute right-20 top-0 flex aspect-[236/252] w-16 justify-center bg-contain bg-center"
+        style={{ backgroundImage: `url(${coinImage.href})` }}
+      >
+        <span className="font-serif text-6xl font-bold italic leading-[1em] text-primary-500 [text-shadow:_0_0_6px_rgba(255_255_255)]">
+          {gameState.activePlayer.coins}
+        </span>
+      </div>
       <div className="absolute left-1/2 top-2 -translate-x-1/2 rounded bg-slate-900/50 p-2 text-lg font-bold text-white">
         {gameState.message}
       </div>

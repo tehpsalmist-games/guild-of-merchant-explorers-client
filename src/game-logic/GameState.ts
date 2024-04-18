@@ -29,10 +29,11 @@ export type GameMode =
   | 'trading'
   | 'clear-history'
   | 'wait-for-new-card'
+  | 'game-over'
 
 export class GameState {
   mode: GameMode = 'exploring'
-  currentExplorerCard: 0
+  era = 1
   message = 'Explore!'
   moveHistory: MoveHistory
   activePlayer: Player
@@ -49,7 +50,14 @@ export class GameState {
     this.activePlayer.board.wipe()
     //TODO undraw all cards here
     //TODO add next age card to the deck
-    //TODO finish the game if age 5
+
+    this.era++
+
+    if (this.era > 4) {
+      // game is over, total points from treasure cards and display all results
+      this.mode = 'game-over'
+      this.message = 'Game Over!'
+    }
 
     //You shouldn't be able to undo things in the previous ages, so we clear the history here.
     this.moveHistory.currentMoves = []
@@ -131,6 +139,7 @@ export class MoveHistory extends EventTarget {
         break
       case 'village':
         move.hex.isVillage = true
+        this.gameState.activePlayer.coins += this.gameState.era
         this.gameState.exploringMode()
         break
       case 'draw-treasure':
@@ -150,9 +159,7 @@ export class MoveHistory extends EventTarget {
     if (undoing) {
       switch (undoing.action) {
         case 'explored':
-          // TODO: we have a bug where auto-placed villages don't undo. We'd need to handle that here.
-          // something like hex.unexplore(), which can trigger region.unexplore() and land.unexplore(), I think?
-          undoing.hex.isExplored = false
+          undoing.hex.unexplore()
           this.gameState.exploringMode()
           break
         case 'do-trade':
@@ -162,8 +169,13 @@ export class MoveHistory extends EventTarget {
           break
         case 'village':
           undoing.hex.isVillage = false
-          if (undoing.hex.region) this.gameState.villageMode(undoing.hex.region)
-          else this.gameState.exploringMode()
+          this.gameState.activePlayer.coins -= this.gameState.era
+
+          if (undoing.hex.region) {
+            this.gameState.villageMode(undoing.hex.region)
+          } else {
+            this.gameState.exploringMode()
+          }
           break
         case 'draw-treasure':
           //You can't undo drawing a treasure card. Once you draw a treasure card, the history is cleared.
