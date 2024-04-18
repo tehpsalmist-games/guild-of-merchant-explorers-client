@@ -213,6 +213,22 @@ export class Hex {
   isExplorable() {
     return !this.isExplored && this.board.hexContactIterator(this).some((h) => h.isExplored)
   }
+
+  getConnectedHexes(connected: Hex[] = [], visited: Record<string, 1> = {}) {
+    // mark this hex as visited
+    visited[`${this.row}-${this.column}`] = 1
+
+    // add this hex to the list of visited hexes
+    connected.push(this)
+
+    for (const nextHex of this.board.hexContactIterator(this)) {
+      if (nextHex.isExplored && !visited[`${nextHex.row}-${nextHex.column}`]) {
+        nextHex.getConnectedHexes(connected, visited)
+      }
+    }
+
+    return connected
+  }
 }
 
 export class Region {
