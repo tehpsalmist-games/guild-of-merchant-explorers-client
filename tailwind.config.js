@@ -50,6 +50,12 @@ module.exports = {
         contentD: 'calc(100dvh - 3rem)',
         contentS: 'calc(100svh - 3rem)',
       },
+      gridTemplateColumns: {
+        sub: 'subgrid',
+        ...Array(12)
+          .fill(1)
+          .reduce((gc, o, i) => ({ ...gc, [`auto-${o + i}`]: `repeat(${o + i}, minmax(0, auto))` }), {}),
+      },
       boxShadow: {
         md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 -1px 4px -1px rgba(0, 0, 0, 0.06)',
       },

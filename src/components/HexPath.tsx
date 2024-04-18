@@ -1,8 +1,8 @@
 import React, { ComponentProps, useMemo } from 'react'
-import { Hex } from './game-logic/Board'
+import { Hex } from '../game-logic/Board'
 import clsx from 'clsx'
-import { useGameState } from './hooks/useGameState'
-import { blockImage, towerImage, villageImage } from './images'
+import { useGameState } from '../hooks/useGameState'
+import { blockImage, towerImage, villageImage, treasureChestImage, crystalImage } from '../images'
 import { UseFloatingOptions, autoUpdate, offset, size, useFloating } from '@floating-ui/react-dom'
 import { createPortal } from 'react-dom'
 import { useMergeRefs } from '@floating-ui/react'
@@ -30,16 +30,16 @@ export interface HexProps extends ComponentProps<'path'> {
   x: number
   y: number
   hex: Hex
-  blockColor?: string
 }
 
-export const HexPath = ({ className = '', id, x, y, hex, blockColor, ...props }: HexProps) => {
-  const gameState = useGameState()
+export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) => {
+  const { gameState } = useGameState()
 
   // show/hide logic for game pieces
   const isVillageCandidate =
     gameState.mode === 'village' && hex.region === gameState.regionForVillage && hex.isVillageCandidate
   const showBlock = hex.isExplored && !hex.isCity && !hex.isVillage && !isVillageCandidate
+  const coverImage = hex.crystalValue ? crystalImage : hex.isRuin ? treasureChestImage : towerImage
 
   // floating elements (blocks, towers, covered ruins, etc.)
   const floatingTower = useFloating(floatingOptions)
@@ -83,9 +83,8 @@ export const HexPath = ({ className = '', id, x, y, hex, blockColor, ...props }:
       />
       {/* Floating Elements */}
       {hex.isCovered &&
-        hex.isTower &&
         createPortal(
-          <img ref={floatingTower.refs.setFloating} src={towerImage.href} style={floatingTower.floatingStyles} />,
+          <img ref={floatingTower.refs.setFloating} src={coverImage.href} style={floatingTower.floatingStyles} />,
           document.getElementById('explorer-map')!,
         )}
       {showBlock &&
@@ -93,7 +92,7 @@ export const HexPath = ({ className = '', id, x, y, hex, blockColor, ...props }:
           <img
             ref={floatingBlock.refs.setFloating}
             src={blockImage.href}
-            style={{ ...floatingBlock.floatingStyles, filter: blockColor }}
+            style={{ ...floatingBlock.floatingStyles, filter: 'hue-rotate(120deg) saturate(200%)' }}
           />,
           document.getElementById('explorer-map')!,
         )}
@@ -102,7 +101,7 @@ export const HexPath = ({ className = '', id, x, y, hex, blockColor, ...props }:
           <img
             ref={floatingVillage.refs.setFloating}
             src={villageImage.href}
-            style={{ ...floatingVillage.floatingStyles, filter: blockColor }}
+            style={{ ...floatingVillage.floatingStyles, filter: 'hue-rotate(120deg) saturate(200%)' }}
           />,
           document.getElementById('explorer-map')!,
         )}

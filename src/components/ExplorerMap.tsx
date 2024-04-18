@@ -1,6 +1,6 @@
 import React, { ComponentProps, useRef } from 'react'
 import { HexPath } from './HexPath'
-import { useGameState } from './hooks/useGameState'
+import { useGameState } from '../hooks/useGameState'
 import { useResizeObserver } from '@8thday/react'
 
 const MAGIC_OFFSET_VALUE_X = 25
@@ -9,20 +9,18 @@ const MAGIC_OFFSET_VALUE_Y = 43.3
 const HEX_WIDTH = 75
 const HEX_HEIGHT = 86.6
 
-export interface ExplorerMapProps extends ComponentProps<'div'> {
-  blockColor?: string
-}
+export interface ExplorerMapProps extends ComponentProps<'div'> {}
 
-export const ExplorerMap = ({ className = '', blockColor, ...props }: ExplorerMapProps) => {
-  const gameState = useGameState()
+export const ExplorerMap = ({ className = '', ...props }: ExplorerMapProps) => {
+  const { gameState } = useGameState()
 
-  const [dimX, dimY] = gameState.board.dimensions
+  const [dimX, dimY] = gameState.activePlayer.board.dimensions
 
   const boardRef = useRef<HTMLDivElement>(null)
   const containerRef = useResizeObserver<HTMLDivElement>((e) => {
     if (!boardRef.current) return
 
-    const boardRatio = gameState.board.width / gameState.board.height
+    const boardRatio = gameState.activePlayer.board.width / gameState.activePlayer.board.height
 
     const { width, height } = containerRef.current.getBoundingClientRect()
     const containerRatio = width / height
@@ -43,16 +41,16 @@ export const ExplorerMap = ({ className = '', blockColor, ...props }: ExplorerMa
         ref={boardRef}
         className="aghon relative mx-auto bg-cover"
         style={{
-          backgroundImage: `url(${gameState.board.imageURL})`,
-          aspectRatio: `${gameState.board.width}/${gameState.board.height}`,
+          backgroundImage: `url(${gameState.activePlayer.board.imageURL})`,
+          aspectRatio: `${gameState.activePlayer.board.width}/${gameState.activePlayer.board.height}`,
         }}
       >
         <svg
           viewBox={`0 0 ${dimX * HEX_WIDTH + MAGIC_OFFSET_VALUE_X} ${dimY * HEX_HEIGHT + MAGIC_OFFSET_VALUE_Y}`}
           className={`absolute`}
-          style={gameState.board.svgStyle}
+          style={gameState.activePlayer.board.svgStyle}
         >
-          {gameState.board.hexes.map((cols, colId) =>
+          {gameState.activePlayer.board.hexes.map((cols, colId) =>
             cols.map(
               (hex, rowId) =>
                 hex && (
@@ -62,7 +60,6 @@ export const ExplorerMap = ({ className = '', blockColor, ...props }: ExplorerMa
                     id={`${rowId}-${colId}`}
                     y={HEX_HEIGHT * rowId + (colId % 2 === 0 ? MAGIC_OFFSET_VALUE_Y : 0)}
                     x={HEX_WIDTH * colId + MAGIC_OFFSET_VALUE_X}
-                    blockColor={blockColor}
                   />
                 ),
             ),

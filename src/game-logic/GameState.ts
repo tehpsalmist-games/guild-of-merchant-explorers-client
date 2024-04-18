@@ -2,8 +2,23 @@ import { aghonData } from '../data/boards/aghon'
 import { kazanData } from '../data/boards/kazan'
 import { aveniaData } from '../data/boards/avenia'
 import { cnidariaData } from '../data/boards/cnidaria'
-import { Board, Hex, Region, TradeRoute } from './Board'
+import { Board, BoardData, Hex, Region, TradeRoute } from './Board'
 import { sleep } from '../utils'
+
+export type BoardName = 'aghon' | 'avenia' | 'kazan' | 'cnidaria'
+
+const getBoardData = (boardName: BoardName) => {
+  switch (boardName) {
+    case 'aghon':
+      return aghonData
+    case 'avenia':
+      return aveniaData
+    case 'kazan':
+      return kazanData
+    case 'cnidaria':
+      return cnidariaData
+  }
+}
 
 export type GameMode =
   | 'exploring'
@@ -20,26 +35,24 @@ export class GameState {
   currentExplorerCard: 0
   message = 'Explore!'
   moveHistory: MoveHistory
-  board: Board
+  activePlayer: Player
   regionForVillage?: Region
   tradeRoute?: TradeRoute
 
-  constructor() {
-    this.moveHistory = new MoveHistory()
-    this.board = new Board(cnidariaData)
+  constructor(boardName: BoardName) {
+    this.moveHistory = new MoveHistory(this)
 
-    this.moveHistory.gameState = this
-    this.board.gameState = this
+    this.activePlayer = new Player(getBoardData(boardName), this)
   }
 
   startNextAge() {
-    this.board.wipe()
+    this.activePlayer.board.wipe()
     //TODO undraw all cards here
     //TODO add next age card to the deck
     //TODO finish the game if age 5
 
     //You shouldn't be able to undo things in the previous ages, so we clear the history here.
-    this.moveHistory.moveHistory = []
+    this.moveHistory.currentMoves = []
     this.moveHistory.recordState()
   }
 
@@ -57,8 +70,7 @@ export class GameState {
   pickingTradeStartMode(tradingRoute: TradeRoute) {
     if (tradingRoute.tradingPosts.length === 2) {
       this.tradingMode(tradingRoute)
-    }
-    else {
+    } else {
       this.mode = 'picking-trade-start'
       this.tradeRoute = tradingRoute
       this.message = 'Pick the first trading post to trade with.'
@@ -80,40 +92,39 @@ export class GameState {
 
 interface Move {
   hex: Hex
-  action:
-  | 'explored'
-  | 'pick-trade-start'
-  | 'do-trade'
-  | 'village'
-  | 'draw-treasure'
-  | 'do-treasure'
+  action: 'explored' | 'pick-trade-start' | 'do-trade' | 'village' | 'draw-treasure' | 'do-treasure'
 }
 
 export class MoveHistory extends EventTarget {
-  moveHistory: Move[] = []
+  currentMoves: Move[] = []
   gameState: GameState
 
+  constructor(gameState: GameState) {
+    super()
+
+    this.gameState = gameState
+  }
+
   doMove(move: Move) {
-    this.moveHistory.push(move)
+    this.currentMoves.push(move)
 
     switch (move.action) {
       case 'explored':
         move.hex.explore()
         break
       case 'pick-trade-start':
-          //this.gameState.tradeRoute?.tradeStart = move.hex
-          //TODO still working on this
-          //if (this.gameState.tradeRoute) {
-            //this.gameState.tradingMode(this.gameState.tradeRoute)
-          //}
-          break
+        //this.gameState.tradeRoute?.tradeStart = move.hex
+        //TODO still working on this
+        //if (this.gameState.tradeRoute) {
+        //this.gameState.tradingMode(this.gameState.tradeRoute)
+        //}
+        break
       case 'do-trade':
         this.gameState.tradeRoute?.coverTradingPost(move.hex)
 
         if (this.gameState.tradeRoute?.isTradable) {
           this.gameState.pickingTradeStartMode(this.gameState.tradeRoute)
-        }
-        else{
+        } else {
           this.gameState.tradeRoute = undefined
           this.gameState.exploringMode()
         }
@@ -126,7 +137,7 @@ export class MoveHistory extends EventTarget {
         //TODO add draw treasure logic
         move.hex.isCovered = true
         //Completely blocks the ability to undo anything prior to drawing a treasure card
-        this.moveHistory = []
+        this.currentMoves = []
         break
     }
 
@@ -134,7 +145,7 @@ export class MoveHistory extends EventTarget {
   }
 
   undoMove() {
-    const undoing = this.moveHistory.pop()
+    const undoing = this.currentMoves.pop()
 
     if (undoing) {
       switch (undoing.action) {
@@ -166,22 +177,36 @@ export class MoveHistory extends EventTarget {
   }
 
   async undoAllMoves() {
-    while (this.moveHistory.length) {
+    while (this.currentMoves.length) {
       this.undoMove()
 
       // cool UI effect of undoing all the action visually in half-second increments
       // this mode blocks the user from doing anything while it happens
-      if (this.moveHistory.length) this.gameState.mode = 'clear-history'
+      if (this.currentMoves.length) this.gameState.mode = 'clear-history'
       await sleep(100)
     }
 
-    // this will always be the mode we return to, I'm 99% sure of it.
-    //TODO does this account for treasure cards clearing history? The if statement I added would let undoMove set it to what the last item in history was.
-    //this.gameState.exploringMode()
     this.recordState()
   }
 
+  get size() {
+    return this.currentMoves.length
+  }
+
+  saveState() {}
+
   recordState() {
     this.dispatchEvent(new CustomEvent('statechange'))
+  }
+}
+
+export class Player {
+  gameState: GameState
+  board: Board
+  coins = 0
+  // treasureCards: TreasureCard[] = [] // imagine for now
+
+  constructor(boardData: BoardData, gameState: GameState) {
+    this.board = new Board(boardData, this, gameState)
   }
 }

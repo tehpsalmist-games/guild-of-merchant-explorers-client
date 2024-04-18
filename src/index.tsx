@@ -1,13 +1,7 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
-import { App } from './App'
-import { GameStateProvider } from './hooks/useGameState'
-import { GameState } from './game-logic/GameState'
+import { App } from './components/App'
 
 const root = createRoot(document.getElementById('app')!)
 
-root.render(
-  <GameStateProvider value={new GameState()}>
-    <App />
-  </GameStateProvider>,
-)
+root.render(<App />)

@@ -1,5 +1,5 @@
 import { CSSProperties } from 'react'
-import { GameState } from './GameState'
+import { GameState, Player } from './GameState'
 
 export type Terrain = 'mountain' | 'sand' | 'grass' | 'water' | 'wild'
 
@@ -28,8 +28,12 @@ export class Board {
   regions: Region[] = []
   lands: Land[] = []
   gameState: GameState
+  player: Player
 
-  constructor(boardData: BoardData) {
+  constructor(boardData: BoardData, player: Player, gameState: GameState) {
+    this.player = player
+    this.gameState = gameState
+
     this.imageURL = boardData.imageURL
     this.height = boardData.dimensions.height
     this.width = boardData.dimensions.width
@@ -117,6 +121,7 @@ export class Hex {
   terrain: Terrain
   coins: number
   tradingPostValue: number
+  crystalValue: number
   isCity = false
   isRuin = false
   isTower = false
@@ -134,12 +139,13 @@ export class Hex {
 
   constructor({
     terrain,
-    coins,
-    tradingPostQuantity,
-    isCity,
-    isRuin,
-    isTower,
-    isIce,
+    coins = 0,
+    tradingPostQuantity = 0,
+    isCity = false,
+    isRuin = false,
+    isTower = false,
+    isIce = false,
+    crystalValue = 0,
     row,
     column,
     board,
@@ -148,12 +154,13 @@ export class Hex {
     this.row = row
     this.column = column
     this.terrain = terrain
-    this.coins = coins ?? 0
-    this.isExplored = this.isCity = isCity ?? false
-    this.isRuin = isRuin ?? false
-    this.isTower = isTower ?? false
-    this.isIce = isIce ?? false
-    this.tradingPostValue = tradingPostQuantity ?? 0
+    this.coins = coins
+    this.isExplored = this.isCity = isCity
+    this.isRuin = isRuin
+    this.isTower = isTower
+    this.isIce = isIce
+    this.crystalValue = crystalValue
+    this.tradingPostValue = tradingPostQuantity
 
     const isLandTerrain = ['mountain', 'sand', 'grass'].includes(terrain)
 
@@ -179,7 +186,7 @@ export class Hex {
 
     //For hexes that do actions that require it to be uncovered
     //TODO how are we going to undo this? maybe we should move it?
-    if (!this.isCovered){
+    if (!this.isCovered) {
       if (this.isTower) {
         //TODO add tower logic
         this.isCovered = true
@@ -294,7 +301,7 @@ export class Land {
 }
 
 //Finds trading routes
-export class TradeRoute{
+export class TradeRoute {
   tradingPosts: Hex[] = []
   board: Board
   isTradable = this.tradingPosts?.length > 1
@@ -325,12 +332,12 @@ export class TradeRoute{
       }
     }
   }
-  
+
   coverTradingPost(hex: Hex) {
     if (this.tradingPosts.includes(hex)) {
-      hex.isCovered = true;
-      this.tradingPosts = this.tradingPosts.filter((h) => h !== hex);
-      this.tradeStart = undefined;
+      hex.isCovered = true
+      this.tradingPosts = this.tradingPosts.filter((h) => h !== hex)
+      this.tradeStart = undefined
 
       //TODO collect coins
     }
