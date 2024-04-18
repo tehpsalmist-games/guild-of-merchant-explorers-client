@@ -15,7 +15,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
   const { gameState, resetGame } = useGameState()
 
   useEffect(() => {
-    gameState.moveHistory.addEventListener('statechange', () => updateState((s) => !s))
+    gameState.activePlayer.moveHistory.addEventListener('statechange', () => updateState((s) => !s))
   }, [])
 
   return (
@@ -30,7 +30,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
         </span>
       </div>
       <div className="absolute left-1/2 top-2 -translate-x-1/2 rounded bg-slate-900/50 p-2 text-lg font-bold text-white">
-        {gameState.message}
+        {gameState.activePlayer.message}
       </div>
       <div
         className={clsx(
@@ -39,13 +39,13 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
         )}
       >
         <div className="relative flex h-full items-start gap-2 p-2">
-          {gameState.moveHistory.size > 1 && (
-            <Button onClick={() => gameState.moveHistory.undoAllMoves()}>Reset Moves</Button>
+          {gameState.activePlayer.moveHistory.size > 1 && (
+            <Button onClick={() => gameState.activePlayer.moveHistory.undoAllMoves()}>Reset Moves</Button>
           )}
-          {gameState.moveHistory.size > 0 && (
-            <Button onClick={() => gameState.moveHistory.undoMove()}>Undo Move</Button>
+          {gameState.activePlayer.moveHistory.size > 0 && (
+            <Button onClick={() => gameState.activePlayer.moveHistory.undoMove()}>Undo Move</Button>
           )}
-          {gameState.moveHistory.size > 0 && (
+          {gameState.activePlayer.moveHistory.size > 0 && (
             <Button variant="primary" onClick={() => gameState.startNextAge()}>
               Next Age
             </Button>

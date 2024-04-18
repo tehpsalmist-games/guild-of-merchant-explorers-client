@@ -29,6 +29,7 @@ export class Board {
   lands: Land[] = []
   gameState: GameState
   player: Player
+  regionForVillage?: Region
 
   constructor(boardData: BoardData, player: Player, gameState: GameState) {
     this.player = player
@@ -314,7 +315,7 @@ export class Region {
 
       const villageCandidates = this.hexes.filter((h) => h.isVillageCandidate)
       if (villageCandidates.length > 1) {
-        this.board.gameState.villageMode(this)
+        this.board.player.villageMode(this)
       } else if (villageCandidates.length === 1) {
         // auto place the only option
         villageCandidates[0].isVillage = true
@@ -386,7 +387,7 @@ export class TradeRoute {
     }
 
     if (this.isTradable) {
-      this.board.gameState.pickingTradeStartMode(this)
+      this.board.player.pickingTradeStartMode(this)
     }
   }
 

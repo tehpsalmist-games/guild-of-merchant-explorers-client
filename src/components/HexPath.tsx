@@ -37,7 +37,9 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
 
   // show/hide logic for game pieces
   const isVillageCandidate =
-    gameState.mode === 'village' && hex.region === gameState.regionForVillage && hex.isVillageCandidate
+    gameState.activePlayer.mode === 'village' &&
+    hex.region === gameState.activePlayer.board.regionForVillage &&
+    hex.isVillageCandidate
   const showBlock = hex.isExplored && !hex.isCity && !hex.isVillage && !isVillageCandidate
   const coverImage = hex.crystalValue ? crystalImage : hex.isRuin ? treasureChestImage : towerImage
 
@@ -58,25 +60,25 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
         id={id}
         d={`M${x},${y} h50 l25,43.3 l-25,43.3 h-50 l-25,-43.3 z`}
         className={clsx(className, 'fill-transparent', {
-          'cursor-pointer hover:fill-red-500/15': gameState.mode === 'exploring' && hex.isExplorable(),
+          'cursor-pointer hover:fill-red-500/15': gameState.activePlayer.mode === 'exploring' && hex.isExplorable(),
           'cursor-pointer !fill-blue-500/15 hover:!fill-blue-500/25': isVillageCandidate,
         })}
         onClick={() => {
           console.log(hex)
 
-          switch (gameState.mode) {
+          switch (gameState.activePlayer.mode) {
             case 'exploring':
               if (!hex.isExplorable()) return
 
-              return gameState.moveHistory.doMove({ hex, action: 'explored' })
+              return gameState.activePlayer.moveHistory.doMove({ hex, action: 'explored' })
             case 'village':
               if (!isVillageCandidate) return
 
-              return gameState.moveHistory.doMove({ hex, action: 'village' })
+              return gameState.activePlayer.moveHistory.doMove({ hex, action: 'village' })
             case 'picking-trade-start':
-              return gameState.moveHistory.doMove({ hex, action: 'pick-trade-start' })
+              return gameState.activePlayer.moveHistory.doMove({ hex, action: 'pick-trade-start' })
             case 'trading':
-              return gameState.moveHistory.doMove({ hex, action: 'do-trade' })
+              return gameState.activePlayer.moveHistory.doMove({ hex, action: 'do-trade' })
           }
         }}
         {...props}
