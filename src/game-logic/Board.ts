@@ -223,6 +223,8 @@ export class Hex {
 
     for (const nextHex of this.board.hexContactIterator(this)) {
       if (nextHex.isExplored && !visited[`${nextHex.row}-${nextHex.column}`]) {
+        // abusing the crap out of the mutable references with this strange form of recursion,
+        // but this totally works and is consistent with the mutable framework we've been leveraging so far.
         nextHex.getConnectedHexes(connected, visited)
       }
     }
