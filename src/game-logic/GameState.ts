@@ -209,7 +209,7 @@ export class MoveHistory extends EventTarget {
         break
       case 'village':
         move.hex.isVillage = true
-        this.player.coins += this.gameState.era
+        this.player.coins += this.gameState.era + 1
         this.player.exploringMode()
         break
       case 'draw-treasure':
@@ -241,7 +241,7 @@ export class MoveHistory extends EventTarget {
           break
         case 'village':
           undoing.hex.isVillage = false
-          this.player.coins -= this.gameState.era
+          this.player.coins -= this.gameState.era + 1
 
           if (undoing.hex.region) {
             this.player.villageMode(undoing.hex.region)
