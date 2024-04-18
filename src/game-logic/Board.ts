@@ -92,6 +92,7 @@ export class Board {
     this.getFlatHexes().forEach((hex) => {
       if (!hex.isVillage && !hex.isCity) {
         hex.isExplored = false
+        hex.tradeRoute = null
       }
     })
   }
@@ -129,6 +130,7 @@ export class Hex {
   region: Region | null = null
   land: Land | null = null
   board: Board
+  tradeRoute: TradeRoute | null = null
 
   constructor({
     terrain,
@@ -180,13 +182,13 @@ export class Hex {
     if (!this.isCovered){
       if (this.isTower) {
         //TODO add tower logic
+        this.isCovered = true
       }
 
       if (this.isRuin) {
         //TODO add ruin logic
+        this.isCovered = true
       }
-
-      this.isCovered = true
     }
 
     if (this.region) {
@@ -196,6 +198,9 @@ export class Hex {
     if (this.land) {
       this.land.explore()
     }
+
+    //Finds trading routes every time a hex is explored
+    new TradeRoute(this)
   }
 
   isExplorable() {
@@ -288,25 +293,34 @@ export class Land {
   }
 }
 
-//We can use this to find trading routes and score them.
-//TODO I can't test this cuz I got an error lol
+//Finds trading routes
 export class TradeRoute{
   tradingPosts: Hex[] = []
   board: Board
   isTradable = this.tradingPosts?.length > 1
+  tradeStart?: Hex
 
   constructor(startingHex: Hex) {
     this.board = startingHex.board
-    if (startingHex.isExplored) this.buildTradeRouteFromHex(startingHex)
+
+    if (startingHex.isExplored) {
+      this.buildTradeRouteFromHex(startingHex)
+    }
+
+    if (this.isTradable) {
+      this.board.gameState.pickingTradeStartMode(this)
+    }
   }
 
   buildTradeRouteFromHex(hex: Hex) {
+    hex.tradeRoute = this
+
     if (hex.tradingPostValue) {
       this.tradingPosts.push(hex)
     }
 
     for (const nextHex of this.board.hexContactIterator(hex)) {
-      if (nextHex.isExplored) {
+      if (nextHex.isExplored && nextHex.tradeRoute !== this) {
         this.buildTradeRouteFromHex(nextHex)
       }
     }
@@ -316,16 +330,13 @@ export class TradeRoute{
     if (this.tradingPosts.includes(hex)) {
       hex.isCovered = true;
       this.tradingPosts = this.tradingPosts.filter((h) => h !== hex);
+      this.tradeStart = undefined;
+
+      //TODO collect coins
     }
   }
 
   get log() {
     return this.tradingPosts.map((h) => h.element)
-  }
-
-  explore() {
-    if (this.isTradable) {
-      this.board.gameState.tradingMode(this)
-    }
   }
 }

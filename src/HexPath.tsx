@@ -75,7 +75,7 @@ export const HexPath = ({ className = '', id, x, y, hex, blockColor, ...props }:
               return gameState.moveHistory.doMove({ hex, action: 'village' })
             case 'trading':
               //Still figuring this out lol
-              return gameState.moveHistory.doMove({ hex, action: 'traded' })
+              return gameState.moveHistory.doMove({ hex, action: 'do-trade' })
           }
         }}
         {...props}

@@ -10,6 +10,7 @@ export type GameMode =
   | 'treasure-exploring'
   | 'village'
   | 'power-card'
+  | 'picking-trade-start'
   | 'trading'
   | 'clear-history'
   | 'wait-for-new-card'
@@ -53,11 +54,21 @@ export class GameState {
     this.message = "You've explored the region! Choose where to build a village."
   }
 
+  pickingTradeStartMode(tradingRoute: TradeRoute) {
+    if (tradingRoute.tradingPosts.length === 2) {
+      this.tradingMode(tradingRoute)
+    }
+    else {
+      this.mode = 'picking-trade-start'
+      this.tradeRoute = tradingRoute
+      this.message = 'Pick the first trading post to trade with.'
+    }
+  }
+
   tradingMode(tradingRoute: TradeRoute) {
     this.mode = 'trading'
     this.tradeRoute = tradingRoute
-    this.message = 'Trade!'
-    //TODO add trading logic for multiple trading candatates
+    this.message = 'Pick a trading post to permanently cover.'
   }
 
   //TODO this will probably need to take a card as an argument at some point
@@ -69,7 +80,13 @@ export class GameState {
 
 interface Move {
   hex: Hex
-  action: 'explored' | 'traded' | 'village' | 'draw-treasure' | 'do-treasure'
+  action:
+  | 'explored'
+  | 'pick-trade-start'
+  | 'do-trade'
+  | 'village'
+  | 'draw-treasure'
+  | 'do-treasure'
 }
 
 export class MoveHistory extends EventTarget {
@@ -83,9 +100,23 @@ export class MoveHistory extends EventTarget {
       case 'explored':
         move.hex.explore()
         break
-      case 'traded':
-        move.hex.isCovered = true
-        //TODO add trade logic
+      case 'pick-trade-start':
+          //this.gameState.tradeRoute?.tradeStart = move.hex
+          //TODO still working on this
+          //if (this.gameState.tradeRoute) {
+            //this.gameState.tradingMode(this.gameState.tradeRoute)
+          //}
+          break
+      case 'do-trade':
+        this.gameState.tradeRoute?.coverTradingPost(move.hex)
+
+        if (this.gameState.tradeRoute?.isTradable) {
+          this.gameState.pickingTradeStartMode(this.gameState.tradeRoute)
+        }
+        else{
+          this.gameState.tradeRoute = undefined
+          this.gameState.exploringMode()
+        }
         break
       case 'village':
         move.hex.isVillage = true
@@ -113,7 +144,7 @@ export class MoveHistory extends EventTarget {
           undoing.hex.isExplored = false
           this.gameState.exploringMode()
           break
-        case 'traded':
+        case 'do-trade':
           undoing.hex.isCovered = false
           //TODO add undo trade logic
           this.gameState.exploringMode()
