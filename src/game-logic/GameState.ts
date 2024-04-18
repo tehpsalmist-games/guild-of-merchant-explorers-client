@@ -1,4 +1,7 @@
 import { aghonData } from '../data/boards/aghon'
+import { kazanData } from '../data/boards/kazan'
+import { aveniaData } from '../data/boards/avenia'
+import { cnidariaData } from '../data/boards/cnidaria'
 import { Board, Hex, Region, TradeRoute } from './Board'
 import { sleep } from '../utils'
 
@@ -22,7 +25,7 @@ export class GameState {
 
   constructor() {
     this.moveHistory = new MoveHistory()
-    this.board = new Board(aghonData)
+    this.board = new Board(cnidariaData)
 
     this.moveHistory.gameState = this
     this.board.gameState = this
@@ -105,6 +108,8 @@ export class MoveHistory extends EventTarget {
     if (undoing) {
       switch (undoing.action) {
         case 'explored':
+          // TODO: we have a bug where auto-placed villages don't undo. We'd need to handle that here.
+          // something like hex.unexplore(), which can trigger region.unexplore() and land.unexplore(), I think?
           undoing.hex.isExplored = false
           this.gameState.exploringMode()
           break

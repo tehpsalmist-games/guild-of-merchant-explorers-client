@@ -1,16 +1,16 @@
 import { BoardData } from '../../game-logic/Board'
+import { aghonBoard } from '../../images'
 
 export const aghonData: BoardData = {
-  imageURL: new URL('/src/images/Aghon.jpeg', import.meta.url),
+  imageURL: aghonBoard,
   dimensions: {
-    height: 990,
-    width: 1416,
-    innerWidth: 1229,
-    innerHeight: 808,
-    paddingLeft: 101,
-    paddingTop: 105,
+    height: 978,
+    width: 1147,
+    innerWidth: 934,
+    innerHeight: 613,
+    paddingLeft: 109,
+    paddingTop: 113,
   },
-
   hexData: [
     [
       null,

@@ -1,4 +1,4 @@
-import React, { ComponentProps } from 'react'
+import React, { ComponentProps, useMemo } from 'react'
 import { Hex } from './game-logic/Board'
 import clsx from 'clsx'
 import { useGameState } from './hooks/useGameState'
@@ -30,9 +30,10 @@ export interface HexProps extends ComponentProps<'path'> {
   x: number
   y: number
   hex: Hex
+  blockColor?: string
 }
 
-export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) => {
+export const HexPath = ({ className = '', id, x, y, hex, blockColor, ...props }: HexProps) => {
   const gameState = useGameState()
 
   // show/hide logic for game pieces
@@ -88,12 +89,20 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
         )}
       {showBlock &&
         createPortal(
-          <img ref={floatingBlock.refs.setFloating} src={blockImage.href} style={floatingBlock.floatingStyles} />,
+          <img
+            ref={floatingBlock.refs.setFloating}
+            src={blockImage.href}
+            style={{ ...floatingBlock.floatingStyles, filter: blockColor }}
+          />,
           document.getElementById('explorer-map')!,
         )}
       {hex.isVillage &&
         createPortal(
-          <img ref={floatingVillage.refs.setFloating} src={villageImage.href} style={floatingVillage.floatingStyles} />,
+          <img
+            ref={floatingVillage.refs.setFloating}
+            src={villageImage.href}
+            style={{ ...floatingVillage.floatingStyles, filter: blockColor }}
+          />,
           document.getElementById('explorer-map')!,
         )}
     </>

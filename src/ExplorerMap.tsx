@@ -3,19 +3,17 @@ import { HexPath } from './HexPath'
 import { useGameState } from './hooks/useGameState'
 import { useResizeObserver } from '@8thday/react'
 
-const blockImage = new URL('/src/images/block-blank.png', import.meta.url)
-const villageImage = new URL('/src/images/village-blank.png', import.meta.url)
-const towerImage = new URL('/src/images/tower.png', import.meta.url)
-
 const MAGIC_OFFSET_VALUE_X = 25
 const MAGIC_OFFSET_VALUE_Y = 43.3
 
 const HEX_WIDTH = 75
 const HEX_HEIGHT = 86.6
 
-export interface ExplorerMapProps extends ComponentProps<'div'> {}
+export interface ExplorerMapProps extends ComponentProps<'div'> {
+  blockColor?: string
+}
 
-export const ExplorerMap = ({ className = '', ...props }: ExplorerMapProps) => {
+export const ExplorerMap = ({ className = '', blockColor, ...props }: ExplorerMapProps) => {
   const gameState = useGameState()
 
   const [dimX, dimY] = gameState.board.dimensions
@@ -64,6 +62,7 @@ export const ExplorerMap = ({ className = '', ...props }: ExplorerMapProps) => {
                     id={`${rowId}-${colId}`}
                     y={HEX_HEIGHT * rowId + (colId % 2 === 0 ? MAGIC_OFFSET_VALUE_Y : 0)}
                     x={HEX_WIDTH * colId + MAGIC_OFFSET_VALUE_X}
+                    blockColor={blockColor}
                   />
                 ),
             ),
