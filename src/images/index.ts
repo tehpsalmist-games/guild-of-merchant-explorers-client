@@ -11,6 +11,16 @@ export const aveniaBoard = new URL('/src/images/boards/avenia.png', import.meta.
 export const kazanBoard = new URL('/src/images/boards/kazan.png', import.meta.url)
 export const cnidariaBoard = new URL('/src/images/boards/cnidaria.png', import.meta.url)
 
+export const exploreSand = new URL('/src/images/explorer-cards/sand.png', import.meta.url)
+export const exploreGrass = new URL('/src/images/explorer-cards/grass.png', import.meta.url)
+export const exploreMountain = new URL('/src/images/explorer-cards/mountain.png', import.meta.url)
+export const exploreWater = new URL('/src/images/explorer-cards/water.png', import.meta.url)
+export const exploreWild = new URL('/src/images/explorer-cards/wild.png', import.meta.url)
+export const exploreEra1 = new URL('/src/images/explorer-cards/era-1.png', import.meta.url)
+export const exploreEra2 = new URL('/src/images/explorer-cards/era-2.png', import.meta.url)
+export const exploreEra3 = new URL('/src/images/explorer-cards/era-3.png', import.meta.url)
+export const exploreEraAny = new URL('/src/images/explorer-cards/any-era.png', import.meta.url)
+
 export const grassVillageBonus = new URL('/src/images/treasure-cards/grass-village-bonus.png', import.meta.url)
 export const jarMultiplier = new URL('/src/images/treasure-cards/jar-multiplier.png', import.meta.url)
 export const landVillageHalfBonus = new URL('/src/images/treasure-cards/land-village-half-bonus.png', import.meta.url)

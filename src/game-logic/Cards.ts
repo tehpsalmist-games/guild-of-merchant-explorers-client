@@ -1,3 +1,4 @@
+import { getInitialExplorerList, getLaterExplorerList } from '../data/cards/explorer-cards'
 import { Terrain } from './Board'
 import { Player } from './GameState'
 
@@ -105,90 +106,15 @@ export interface ExplorerCard {
 
 export interface GlobalExplorerCard {
   id: string
+  imageUrl: URL
   rules: CardPlacementRules | ((p: Player) => CardPlacementRules)
 }
 
 export class ExplorerDeck extends Deck<GlobalExplorerCard> {
-  laterCards: GlobalExplorerCard[] = [
-    {
-      id: 'era-any',
-      rules(p) {
-        return p.era4SelectedPowerCard.rules
-      },
-    },
-    {
-      id: 'era-3',
-      rules(p) {
-        return p.powerCards[2].rules
-      },
-    },
-    {
-      id: 'era-2',
-      rules(p) {
-        return p.powerCards[1].rules
-      },
-    },
-  ]
+  laterCards = getLaterExplorerList()
 
   constructor() {
-    super([
-      {
-        id: 'mountain-1',
-        rules: {
-          limit: 1,
-          straight: false,
-          connectionRequired: false,
-          terrains: [{ terrain: 'mountain', count: 1 }],
-          regionBound: false,
-        },
-      },
-      {
-        id: 'grass-2',
-        rules: {
-          limit: 2,
-          connectionRequired: false,
-          straight: false,
-          terrains: [{ terrain: 'grass', count: 2 }],
-          regionBound: false,
-        },
-      },
-      {
-        id: 'sand-2',
-        rules: {
-          limit: 2,
-          connectionRequired: false,
-          straight: false,
-          terrains: [{ terrain: 'sand', count: 2 }],
-          regionBound: false,
-        },
-      },
-      {
-        id: 'water-3',
-        rules: {
-          limit: 3,
-          connectionRequired: true,
-          straight: true,
-          terrains: [{ terrain: 'water', count: 3 }],
-          regionBound: false,
-        },
-      },
-      {
-        id: 'wild-2',
-        rules: {
-          limit: 2,
-          connectionRequired: true,
-          straight: false,
-          terrains: [{ terrain: 'wild', count: 2 }],
-          regionBound: false,
-        },
-      },
-      {
-        id: 'era-1',
-        rules(p) {
-          return p.powerCards[0].rules
-        },
-      },
-    ])
+    super(getInitialExplorerList())
   }
 
   prepareForNextEra() {

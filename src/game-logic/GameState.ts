@@ -140,7 +140,6 @@ export class Player {
     // read from the state to get the 3 possible choices
   }
 
-  //TODO this will probably need to be the default mode at some point
   waitForNewCardMode() {
     this.mode = 'wait-for-new-card'
   }
