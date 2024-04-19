@@ -214,7 +214,7 @@ export class Hex {
     }
 
     //Finds trading routes every time a hex is explored
-    this.board.player.connectedTradePosts = this.getConnectedHexes().filter(h => !h.isCovered && h.tradingPostValue > 0)
+    this.board.player.connectedTradePosts = this.getConnectedTradingPosts()
     this.board.player.pickingTradeRouteMode()
   }
 
@@ -270,6 +270,10 @@ export class Hex {
     }
 
     return connected
+  }
+
+  getConnectedTradingPosts(){
+    return this.getConnectedHexes().filter(h => !h.isCovered && h.tradingPostValue > 0)
   }
 }
 

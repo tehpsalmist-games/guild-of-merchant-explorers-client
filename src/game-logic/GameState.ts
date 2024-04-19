@@ -184,6 +184,7 @@ export class Player {
 interface Move {
   hex: Hex
   action: GameMode
+  tradingHex?: Hex
 }
 
 export class MoveHistory extends EventTarget {
@@ -200,7 +201,7 @@ export class MoveHistory extends EventTarget {
   }
 
   doMove(hex: Hex) {
-    const move = { hex, action: this.player.mode }
+    const move: Move = { hex, action: this.player.mode }
 
     this.currentMoves.push(move)
 
@@ -215,6 +216,10 @@ export class MoveHistory extends EventTarget {
         break
       case 'trading':
         hex.isCovered = true
+
+        //records the trading hex for undoing purposes
+        if (this.player.chosenRoute[0] === hex) move.tradingHex = this.player.chosenRoute[1]
+        else move.tradingHex = this.player.chosenRoute[0]
 
         //Adds coins that were just collected
         const coins = this.player.chosenRoute[0].tradingPostValue * this.player.chosenRoute[1].tradingPostValue
@@ -257,14 +262,33 @@ export class MoveHistory extends EventTarget {
       switch (undoing.action) {
         case 'exploring':
           undoing.hex.unexplore()
-
+          this.player.chosenRoute = []
+          this.player.connectedTradePosts = []
           this.player.exploringMode()
+          break
+        case 'picking-trade-route':
+          this.player.connectedTradePosts = undoing.hex.getConnectedTradingPosts()
+
+          if (this.currentMoves.length > 1) {
+            const previousMove = this.currentMoves[this.currentMoves.length - 1]
+            if (previousMove.action === 'picking-trade-route') {
+              this.player.chosenRoute = [previousMove.hex]
+              this.player.pickingTradeRouteMode()
+              break
+            }
+          }
+
+          this.player.chosenRoute = []
+          this.player.pickingTradeRouteMode()
           break
         case 'trading':
           undoing.hex.isCovered = false
-          //TODO add undo trade logic
-
-          this.player.exploringMode()
+          if (undoing.tradingHex) {
+            this.player.coins -= undoing.tradingHex.tradingPostValue * undoing.hex.tradingPostValue
+            this.player.connectedTradePosts = undoing.hex.getConnectedTradingPosts()
+            this.player.chosenRoute = [undoing.hex, undoing.tradingHex]
+            this.player.tradingMode()
+          }
           break
         case 'village':
           undoing.hex.isVillage = false
