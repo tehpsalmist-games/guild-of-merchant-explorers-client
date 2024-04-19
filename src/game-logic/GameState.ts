@@ -4,7 +4,7 @@ import { aveniaData } from '../data/boards/avenia'
 import { cnidariaData } from '../data/boards/cnidaria'
 import { Board, BoardData, Hex, Region } from './Board'
 import { sleep } from '../utils'
-import { ExplorerCard, ExplorerDeck } from './Cards'
+import { ExplorerCard, ExplorerDeck, GlobalExplorerCard } from './Cards'
 
 export type BoardName = 'aghon' | 'avenia' | 'kazan' | 'cnidaria'
 
@@ -23,7 +23,7 @@ const getBoardData = (boardName: BoardName) => {
 
 export type GameMode =
   | 'exploring'
-  | 'treasure-exploring'
+  | 'free-exploring' // treasure card block is "free" because it defies all rules
   | 'village'
   | 'user-prompt'
   | 'power-card'
@@ -34,7 +34,7 @@ export type GameMode =
   | 'wait-for-new-card'
   | 'game-over'
 
-export class GameState {
+export class GameState extends EventTarget {
   era = 0
   currentTurn = 0
 
@@ -42,19 +42,26 @@ export class GameState {
   turnHistory: TurnHistory
 
   explorerDeck: ExplorerDeck
+  currentExplorerCard: GlobalExplorerCard
 
   constructor(boardName: BoardName) {
+    super()
+
     this.activePlayer = new Player(getBoardData(boardName), this)
     this.turnHistory = new TurnHistory(this)
 
     this.explorerDeck = new ExplorerDeck()
     this.explorerDeck.shuffle()
+
+    // start game!
+    this.flipExplorerCard()
   }
 
   startNextAge() {
     this.era++
     if (this.era > 3) {
-      // game is over, total points from treasure cards and display all results
+      // game is over, TODO: total points from treasure cards and display all results
+
       this.era-- // reset to a valid era
       this.activePlayer.mode = 'game-over'
       this.activePlayer.message = 'Game Over!'
@@ -63,7 +70,12 @@ export class GameState {
       this.currentTurn = 0
       this.activePlayer.board.wipe()
       this.explorerDeck.prepareForNextEra()
+
+      this.flipExplorerCard()
     }
+
+    console.log('got here')
+    this.emitStateChange()
   }
 
   flipExplorerCard() {
@@ -71,12 +83,21 @@ export class GameState {
 
     this.currentTurn++
     const [nextCard] = this.explorerDeck.drawCards()
+    this.currentExplorerCard = nextCard ?? null
 
-    if (!nextCard) {
-      this.startNextAge()
-    } else {
+    if (nextCard) {
+      this.explorerDeck.useCard(nextCard.id)
       this.turnHistory.saveCardFlip(nextCard.id)
+    } else {
+      this.startNextAge()
     }
+
+    this.emitStateChange()
+  }
+
+  emitStateChange() {
+    console.log('calling')
+    this.dispatchEvent(new CustomEvent('statechange'))
   }
 }
 
@@ -100,13 +121,13 @@ export class TurnHistory {
   saveCardFlip(id: string) {
     switch (this.gameState.era) {
       case 0:
-        this.era1.push(id)
+        return this.era1.push(id)
       case 1:
-        this.era2.push(id)
+        return this.era2.push(id)
       case 2:
-        this.era3.push(id)
+        return this.era3.push(id)
       case 3:
-        this.era4.push(id)
+        return this.era4.push(id)
     }
   }
 }
@@ -186,15 +207,13 @@ interface Move {
   tradingHex?: Hex
 }
 
-export class MoveHistory extends EventTarget {
+export class MoveHistory {
   currentMoves: Move[] = []
   historicalMoves: Move[][][] = [[], [], [], []] // initialize the 4 eras with their empty lists, ready for individual turns
   gameState: GameState
   player: Player
 
   constructor(player: Player, gameState: GameState) {
-    super()
-
     this.player = player
     this.gameState = gameState
   }
@@ -251,7 +270,7 @@ export class MoveHistory extends EventTarget {
         break
     }
 
-    this.recordState()
+    this.gameState.emitStateChange()
   }
 
   undoMove() {
@@ -307,7 +326,7 @@ export class MoveHistory extends EventTarget {
       }
     }
 
-    this.recordState()
+    this.gameState.emitStateChange()
   }
 
   async undoAllMoves() {
@@ -320,7 +339,7 @@ export class MoveHistory extends EventTarget {
       await sleep(100)
     }
 
-    this.recordState()
+    this.gameState.emitStateChange()
   }
 
   get size() {
@@ -338,11 +357,5 @@ export class MoveHistory extends EventTarget {
 
     // clear move state
     this.currentMoves = []
-
-    this.recordState()
-  }
-
-  recordState() {
-    this.dispatchEvent(new CustomEvent('statechange'))
   }
 }

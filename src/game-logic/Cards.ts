@@ -4,7 +4,7 @@ import { Player } from './GameState'
 
 export class Deck<CardType extends { id: string }> {
   cards: CardType[]
-  used: CardType[]
+  used: CardType[] = []
 
   constructor(cardData: CardType[]) {
     this.cards = cardData

@@ -36,6 +36,16 @@ em {
 
 @tailwind utilities;
 
+@layer components {
+  .game-board-grid {
+    display: grid;
+    grid-template:
+      'controls' 4rem
+      'board   ' auto
+      / 1fr;
+  }
+}
+
 @layer utilities {
   .flex-center {
     @apply flex items-center justify-center;
