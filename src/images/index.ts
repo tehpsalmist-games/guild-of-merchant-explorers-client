@@ -4,6 +4,7 @@ export const treasureChestImage = new URL('/src/images/pieces/treasure-chest.png
 export const crystalImage = new URL('/src/images/pieces/crystal.png', import.meta.url)
 export const towerImage = new URL('/src/images/pieces/tower.png', import.meta.url)
 export const coinImage = new URL('/src/images/pieces/coin.png', import.meta.url)
+export const tradePostCoverImage = new URL('/src/images/pieces/crystal.png', import.meta.url)
 
 export const aghonBoard = new URL('/src/images/boards/aghon.png', import.meta.url)
 export const aveniaBoard = new URL('/src/images/boards/avenia.png', import.meta.url)

@@ -2,7 +2,7 @@ import React, { ComponentProps, useMemo } from 'react'
 import { Hex } from '../game-logic/Board'
 import clsx from 'clsx'
 import { useGameState } from '../hooks/useGameState'
-import { blockImage, towerImage, villageImage, treasureChestImage, crystalImage } from '../images'
+import { blockImage, towerImage, villageImage, treasureChestImage, crystalImage, tradePostCoverImage } from '../images'
 import { UseFloatingOptions, autoUpdate, offset, size, useFloating } from '@floating-ui/react-dom'
 import { createPortal } from 'react-dom'
 import { useMergeRefs } from '@floating-ui/react'
@@ -40,8 +40,18 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
     gameState.activePlayer.mode === 'village' &&
     hex.region === gameState.activePlayer.board.regionForVillage &&
     hex.isVillageCandidate
-  const showBlock = hex.isExplored && !hex.isCity && !hex.isVillage && !isVillageCandidate
-  const coverImage = hex.crystalValue ? crystalImage : hex.isRuin ? treasureChestImage : towerImage
+  const isTradeRouteCandidate = 
+    gameState.activePlayer.mode === 'picking-trade-route' &&
+    gameState.activePlayer.connectedTradePosts.includes(hex) &&
+    !gameState.activePlayer.chosenRoute.includes(hex)
+  const isSelectedTradeRoute =
+    gameState.activePlayer.mode === 'picking-trade-route' &&
+    gameState.activePlayer.chosenRoute.includes(hex)
+  const isTradeCandidate = 
+    gameState.activePlayer.mode === 'trading' &&
+    gameState.activePlayer.chosenRoute.includes(hex)
+  const showBlock = hex.isExplored && !hex.isCity && !hex.isVillage && !isVillageCandidate && !isTradeCandidate && !isTradeRouteCandidate && !isSelectedTradeRoute
+  const coverImage = hex.crystalValue ? crystalImage : hex.isRuin ? treasureChestImage : hex.isTower ? towerImage : tradePostCoverImage 
 
   // floating elements (blocks, towers, covered ruins, etc.)
   const floatingTower = useFloating(floatingOptions)
@@ -61,7 +71,9 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
         d={`M${x},${y} h50 l25,43.3 l-25,43.3 h-50 l-25,-43.3 z`}
         className={clsx(className, 'fill-transparent', {
           'cursor-pointer hover:fill-red-500/15': gameState.activePlayer.mode === 'exploring' && hex.isExplorable(),
-          'cursor-pointer !fill-blue-500/15 hover:!fill-blue-500/25': isVillageCandidate,
+          'cursor-pointer !fill-blue-500/15 hover:!fill-blue-500/25': isVillageCandidate ||  isTradeCandidate,
+          'cursor-pointer !fill-yellow-500/15 hover:!fill-yellow-500/25': isTradeRouteCandidate,
+          'cursor-pointer !fill-green-500/15 hover:!fill-green-500/25': isSelectedTradeRoute,
         })}
         onClick={() => {
           console.log(hex)
@@ -75,10 +87,10 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
               if (!isVillageCandidate) return
               else break
             case 'picking-trade-route':
-              if (!hex.tradingPostValue) return
+              if (!isTradeRouteCandidate) return
               else break
             case 'trading':
-              if (!hex.tradingPostValue) return
+              if (!isTradeCandidate) return
               else break
           }
 

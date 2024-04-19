@@ -2,7 +2,7 @@ import { aghonData } from '../data/boards/aghon'
 import { kazanData } from '../data/boards/kazan'
 import { aveniaData } from '../data/boards/avenia'
 import { cnidariaData } from '../data/boards/cnidaria'
-import { Board, BoardData, Hex, Region, TradeRoute } from './Board'
+import { Board, BoardData, Hex, Region } from './Board'
 import { sleep } from '../utils'
 import { ExplorerCard, ExplorerDeck } from './Cards'
 
@@ -151,13 +151,23 @@ export class Player {
   }
 
   pickingTradeRouteMode() {
+    if (this.connectedTradePosts.length <= 1) {
+      return
+    }
+
+    if (this.connectedTradePosts.length === 2) {
+      this.chosenRoute.push(this.connectedTradePosts[0], this.connectedTradePosts[1])
+      this.tradingMode()
+      return
+    }
+
     this.mode = 'picking-trade-route'
-    this.message = 'Pick the first trading post to trade with.'
+    this.message = 'Pick two trading posts to trade between.'
   }
 
   tradingMode() {
     this.mode = 'trading'
-    this.message = 'Pick a trading post to permanently cover.'
+    this.message = 'Complete the trade by picking a trading post to permanently cover.'
   }
 
   //TODO this will probably need to take a card as an argument at some point
