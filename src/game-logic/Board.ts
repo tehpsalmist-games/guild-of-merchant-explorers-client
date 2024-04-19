@@ -195,7 +195,6 @@ export class Hex {
     }
 
     //For hexes that do actions that require it to be uncovered
-    //TODO how are we going to undo this? maybe we should move it?
     if (!this.isCovered) {
       if (this.isTower) {
         //TODO add tower logic
@@ -217,7 +216,6 @@ export class Hex {
     }
 
     //Finds trading routes every time a hex is explored
-    new TradeRoute(this)
   }
 
   /**
@@ -377,7 +375,7 @@ export class TradeRoute {
   tradingPosts: Hex[] = []
   board: Board
   isTradable = this.tradingPosts?.length > 1
-  tradeStart?: Hex
+  tradeStart?: Hex | null
 
   constructor(startingHex: Hex) {
     this.board = startingHex.board
@@ -387,7 +385,7 @@ export class TradeRoute {
     }
 
     if (this.isTradable) {
-      this.board.player.pickingTradeStartMode(this)
+      this.board.player.pickingTradeRouteMode()
     }
   }
 

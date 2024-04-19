@@ -33,10 +33,12 @@ export const cardList = [
   {
     imageUrl: placeBlock,
     count: 8,
+    discard: true,
   },
   {
     imageUrl: twoCoins,
     count: 8,
+    discard: true,
   },
   {
     imageUrl: jarMultiplier,

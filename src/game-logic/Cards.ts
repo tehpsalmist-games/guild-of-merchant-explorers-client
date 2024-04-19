@@ -57,6 +57,7 @@ export class Deck<CardType extends { id: string }> {
 export class Hand<CardType extends { id: string }> {
   player: Player
   cards: CardType[] = []
+  used: CardType[] = []
   currentChoiceIndex = 0
 
   constructor(player: Player) {
@@ -89,10 +90,12 @@ export class Hand<CardType extends { id: string }> {
 export interface CardPlacementRules {
   limit: number
   connectionRequired: boolean
+  surrounding?: boolean
   straight: boolean
   terrains: { terrain: Terrain; count: number }[]
   regionBound: boolean
   initialTerrain?: Terrain[]
+  // ad hoc rules for the special ones
 }
 
 export interface ExplorerCard {
@@ -186,5 +189,11 @@ export class ExplorerDeck extends Deck<GlobalExplorerCard> {
         },
       },
     ])
+  }
+
+  prepareForNextEra() {
+    if (this.cards.length) return
+
+    this.cards = this.used.concat()
   }
 }

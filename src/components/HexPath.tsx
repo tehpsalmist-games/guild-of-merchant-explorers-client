@@ -66,20 +66,23 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
         onClick={() => {
           console.log(hex)
 
+          //Use this to stop doMove from running for cirtian situations
           switch (gameState.activePlayer.mode) {
             case 'exploring':
               if (!hex.isExplorable()) return
-
-              return gameState.activePlayer.moveHistory.doMove({ hex, action: 'explored' })
+              else break
             case 'village':
               if (!isVillageCandidate) return
-
-              return gameState.activePlayer.moveHistory.doMove({ hex, action: 'village' })
-            case 'picking-trade-start':
-              return gameState.activePlayer.moveHistory.doMove({ hex, action: 'pick-trade-start' })
+              else break
+            case 'picking-trade-route':
+              if (!hex.tradingPostValue) return
+              else break
             case 'trading':
-              return gameState.activePlayer.moveHistory.doMove({ hex, action: 'do-trade' })
+              if (!hex.tradingPostValue) return
+              else break
           }
+
+          return gameState.activePlayer.moveHistory.doMove(hex)
         }}
         {...props}
       />

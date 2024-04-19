@@ -25,9 +25,11 @@ export type GameMode =
   | 'exploring'
   | 'treasure-exploring'
   | 'village'
+  | 'user-prompt'
   | 'power-card'
-  | 'picking-trade-start'
+  | 'picking-trade-route'
   | 'trading'
+  | 'drawing-treasure'
   | 'clear-history'
   | 'wait-for-new-card'
   | 'game-over'
@@ -40,8 +42,6 @@ export class GameState {
   turnHistory: TurnHistory
 
   explorerDeck: ExplorerDeck
-
-  tradeRoute?: TradeRoute
 
   constructor(boardName: BoardName) {
     this.activePlayer = new Player(getBoardData(boardName), this)
@@ -120,6 +120,8 @@ export class Player {
 
   coins = 0
   treasureCardsToDraw = 0 // use this value to increment when cards are earned, and decrement when they are drawn
+  connectedTradePosts: Hex[] = []
+  chosenRoute: Hex[] = []
   // treasureCards: TreasureCard[] = [] // imagine for now
 
   powerCards: ExplorerCard[] = []
@@ -129,6 +131,12 @@ export class Player {
   constructor(boardData: BoardData, gameState: GameState) {
     this.board = new Board(boardData, this, gameState)
     this.moveHistory = new MoveHistory(this, gameState)
+  }
+
+  userPromptMode() {
+    this.mode = 'user-prompt'
+
+    // read from the state to get the 3 possible choices
   }
 
   //TODO this will probably need to be the default mode at some point
@@ -142,19 +150,13 @@ export class Player {
     this.message = "You've explored the region! Choose where to build a village."
   }
 
-  pickingTradeStartMode(tradingRoute: TradeRoute) {
-    if (tradingRoute.tradingPosts.length === 2) {
-      this.tradingMode(tradingRoute)
-    } else {
-      this.mode = 'picking-trade-start'
-      this.gameState.tradeRoute = tradingRoute
-      this.message = 'Pick the first trading post to trade with.'
-    }
+  pickingTradeRouteMode() {
+    this.mode = 'picking-trade-route'
+    this.message = 'Pick the first trading post to trade with.'
   }
 
-  tradingMode(tradingRoute: TradeRoute) {
+  tradingMode() {
     this.mode = 'trading'
-    this.gameState.tradeRoute = tradingRoute
     this.message = 'Pick a trading post to permanently cover.'
   }
 
@@ -165,9 +167,12 @@ export class Player {
   }
 }
 
+/**
+ * a move represents the result of a decision
+ */
 interface Move {
   hex: Hex
-  action: 'explored' | 'pick-trade-start' | 'do-trade' | 'village' | 'draw-treasure' | 'do-treasure'
+  action: GameMode
 }
 
 export class MoveHistory extends EventTarget {
@@ -183,38 +188,49 @@ export class MoveHistory extends EventTarget {
     this.gameState = gameState
   }
 
-  doMove(move: Move) {
+  doMove(hex: Hex) {
+    const move = { hex, action: this.player.mode }
+
     this.currentMoves.push(move)
 
     switch (move.action) {
-      case 'explored':
-        move.hex.explore()
+      case 'exploring':
+        hex.explore()
         break
-      case 'pick-trade-start':
-        //this.gameState.tradeRoute?.tradeStart = move.hex
-        //TODO still working on this
-        //if (this.gameState.tradeRoute) {
-        //this.gameState.tradingMode(this.gameState.tradeRoute)
-        //}
+      case 'picking-trade-route':
+        this.player.chosenRoute.push(hex)
+        if (this.player.chosenRoute.length === 2) this.player.tradingMode()
+        else this.player.pickingTradeRouteMode()
         break
-      case 'do-trade':
-        this.gameState.tradeRoute?.coverTradingPost(move.hex)
+      case 'trading':
+        hex.isCovered = true
 
-        if (this.gameState.tradeRoute?.isTradable) {
-          this.player.pickingTradeStartMode(this.gameState.tradeRoute)
-        } else {
-          this.gameState.tradeRoute = undefined
+        //Adds coins that were just collected
+        const coins = this.player.chosenRoute[0].tradingPostValue * this.player.chosenRoute[1].tradingPostValue
+        this.player.coins += coins
+
+        //clears the chosen route
+        this.player.chosenRoute = []
+
+        //removes the hex that was just covered
+        const index = this.player.connectedTradePosts.indexOf(hex)
+        this.player.connectedTradePosts.splice(index, 1)
+
+        //determines whether or not you should continue trading or continue the game
+        if (this.player.connectedTradePosts.length > 1) this.player.pickingTradeRouteMode()
+        else {
+          this.player.connectedTradePosts = []
           this.player.exploringMode()
         }
         break
       case 'village':
-        move.hex.isVillage = true
+        hex.isVillage = true
         this.player.coins += this.gameState.era + 1
         this.player.exploringMode()
         break
-      case 'draw-treasure':
+      case 'drawing-treasure':
         //TODO add draw treasure logic
-        move.hex.isCovered = true
+        hex.isCovered = true
         //Completely blocks the ability to undo anything prior to drawing a treasure card
         this.currentMoves = []
         break
@@ -228,12 +244,12 @@ export class MoveHistory extends EventTarget {
 
     if (undoing) {
       switch (undoing.action) {
-        case 'explored':
+        case 'exploring':
           undoing.hex.unexplore()
 
           this.player.exploringMode()
           break
-        case 'do-trade':
+        case 'trading':
           undoing.hex.isCovered = false
           //TODO add undo trade logic
 
@@ -249,7 +265,7 @@ export class MoveHistory extends EventTarget {
             this.player.exploringMode()
           }
           break
-        case 'draw-treasure':
+        case 'drawing-treasure':
           //You can't undo drawing a treasure card. Once you draw a treasure card, the history is cleared.
           //This means it's not technically possible to hit this switch case.
           console.error('How did we get here?!?')
