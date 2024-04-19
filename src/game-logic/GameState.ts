@@ -52,8 +52,6 @@ export class GameState {
   }
 
   startNextAge() {
-    this.activePlayer.moveHistory.saveState()
-
     this.era++
     if (this.era > 3) {
       // game is over, total points from treasure cards and display all results
@@ -64,10 +62,13 @@ export class GameState {
       // only wipe the board if we're going to a new era, otherwise leave it up for satisfactory reviewing
       this.currentTurn = 0
       this.activePlayer.board.wipe()
+      this.explorerDeck.prepareForNextEra()
     }
   }
 
   flipExplorerCard() {
+    this.activePlayer.moveHistory.saveState()
+
     this.currentTurn++
     const [nextCard] = this.explorerDeck.drawCards()
 

@@ -194,6 +194,13 @@ export class ExplorerDeck extends Deck<GlobalExplorerCard> {
   prepareForNextEra() {
     if (this.cards.length) return
 
-    this.cards = this.used.concat()
+    const nextEraCard = this.laterCards.pop()
+
+    if (nextEraCard) {
+      this.cards = this.used
+      this.cards.push(nextEraCard)
+    }
+
+    this.shuffle()
   }
 }
