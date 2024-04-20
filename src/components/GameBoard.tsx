@@ -12,6 +12,7 @@ export interface GameBoardProps extends ComponentProps<'main'> {}
 export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
   const [sideBarOpen, setSideBarOpen] = useState(false)
   const [investigateModalOpen, setInvestigateModalOpen] = useState(false)
+  const [userPromptOpen, setUserPromptOpen] = useState(false)
   const updateState = useState(0)[1]
 
   const { gameState, resetGame } = useGameState()
@@ -35,8 +36,15 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
   }, [gameState])
 
   useEffect(() => {
-    if (gameState.activePlayer.mode === 'choosing-investigate-card') {
+    if (
+      gameState.activePlayer.mode === 'choosing-investigate-card' ||
+      gameState.activePlayer.mode === 'choosing-investigate-card-reuse'
+    ) {
       setInvestigateModalOpen(true)
+    }
+
+    if (gameState.activePlayer.mode === 'user-prompting') {
+      setUserPromptOpen(true)
     }
   }, [gameState.activePlayer.mode])
 
@@ -65,31 +73,53 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
               {investigateCard && <img className="ml-2 max-h-full" src={investigateCard.imageUrl.href} />}
             </button>
           )}
-          {gameState.activePlayer.investigateCardCandidates && (
+          {(gameState.activePlayer.mode === 'choosing-investigate-card' ||
+            gameState.activePlayer.mode === 'choosing-investigate-card-reuse') && (
             <div className="flex-center mr-4 h-16 gap-4 border border-primary-400">
-              {gameState.activePlayer.investigateCardCandidates?.map((candidate) => (
+              {(gameState.era < 3
+                ? gameState.activePlayer.investigateCardCandidates
+                : gameState.activePlayer.investigateCards
+              )?.map((candidate) => (
                 <button className="h-full p-1" key={candidate.id} onClick={() => setInvestigateModalOpen(true)}>
                   <img className="max-h-full" src={candidate.imageUrl.href} alt="Investigate Card" />
                 </button>
               ))}
             </div>
           )}
-          {(!gameState.currentExplorerCard ||
-            (gameState.currentCardRules?.length ?? 1) - 1 === gameState.activePlayer.cardPhase) && (
-            <Button className="mr-4" variant="primary" onClick={() => gameState.flipExplorerCard()}>
-              Next Card
-            </Button>
-          )}
-          {gameState.currentExplorerCard &&
+          {gameState.currentCardRules &&
+            (!gameState.currentExplorerCard ||
+              (gameState.currentCardRules?.length ?? 1) - 1 === gameState.activePlayer.cardPhase) && (
+              <Button
+                className="mr-4"
+                variant={
+                  gameState.activePlayer.moveHistory.getPlacedHexes()[gameState.activePlayer.cardPhase]?.length ===
+                  gameState.currentCardRules[gameState.activePlayer.cardPhase]?.limit
+                    ? 'primary'
+                    : 'dismissive'
+                }
+                onClick={() => gameState.flipExplorerCard()}
+              >
+                Next Card
+              </Button>
+            )}
+          {gameState.currentCardRules &&
             (gameState.currentCardRules?.length ?? 1) - 1 !== gameState.activePlayer.cardPhase && (
               <Button
                 className="mr-4"
-                variant="primary"
+                variant={
+                  gameState.activePlayer.moveHistory.getPlacedHexes()[gameState.activePlayer.cardPhase]?.length ===
+                  gameState.currentCardRules[gameState.activePlayer.cardPhase]?.limit
+                    ? 'primary'
+                    : 'dismissive'
+                }
                 onClick={() => gameState.activePlayer.enterNextCardPhaseMode()}
               >
                 Next Phase
               </Button>
             )}
+          {!userPromptOpen && gameState.activePlayer.mode === 'user-prompting' && (
+            <Button onClick={() => setUserPromptOpen(true)}>View Choices</Button>
+          )}
           <img className="ml-auto max-h-16" src={coinImage.href} alt="coin" />
           <span className="text-6xl font-bold leading-[1em] text-primary-500 [text-shadow:_0_0_6px_rgba(255_255_255)]">
             {gameState.activePlayer.coins}
@@ -145,8 +175,8 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
           ></Button>
         </div>
       </main>
-      {gameState.activePlayer.mode === 'user-prompting' && (
-        <Modal onClose={() => {}}>
+      {gameState.activePlayer.mode === 'user-prompting' && userPromptOpen && (
+        <Modal onClose={() => setUserPromptOpen(false)}>
           <p>Pick which action you want to handle next.</p>
           {gameState.activePlayer.treasureCardHex && (
             <Button onClick={() => gameState.activePlayer.enterDrawTreasureMode()}>Draw Treasure (No Undo)</Button>
