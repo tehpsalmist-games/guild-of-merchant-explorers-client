@@ -603,7 +603,7 @@ export const investigateCards: ExplorerCard[] = [
     rules: [
       {
         message:
-          'Explore up to 4 sea spaces. Draw an addition treasure card for each ruin space you explore this turn.',
+          'Explore up to 4 sea spaces. Draw an additional treasure card for each ruin space you explore this turn.',
         limit: 4,
         connectionRequired: false,
         connectionToPreviousRequired: false,

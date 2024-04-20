@@ -189,7 +189,7 @@ export class Player {
 
   investigateCards: ExplorerCard[] = []
   discardedInvestigateCards: ExplorerCard[] = []
-  era4SelectedInvestigateCard: ExplorerCard
+  era4SelectedInvestigateCard: ExplorerCard | null = null
 
   cardPhase = 0 // some cards have complex logic in 2 or more phases
 
@@ -207,6 +207,10 @@ export class Player {
     if (!discardedCard) return
 
     this.moveHistory.doMove({ action: 'choose-investigate-card', chosenCard, discardedCard })
+  }
+
+  chooseInvestigateCardForReuse(era: number) {
+    this.moveHistory.doMove({ action: 'choose-investigate-card-reuse', era })
   }
 
   enterNextCardPhaseMode() {
@@ -325,6 +329,10 @@ type Move =
       chosenCard: ExplorerCard
       discardedCard: ExplorerCard
     }
+  | {
+      action: 'choose-investigate-card-reuse'
+      era: number
+    }
 
 export class MoveHistory {
   currentMoves: Move[] = []
@@ -343,6 +351,8 @@ export class MoveHistory {
     switch (move.action) {
       case 'advance-card-phase':
         this.player.cardPhase++
+        this.player.message =
+          this.gameState.currentExplorerCard?.rules(this.player)?.[this.player.cardPhase]?.message ?? 'Explore!'
         break
       case 'explore':
         move.hex.explore()
@@ -417,6 +427,10 @@ export class MoveHistory {
         this.player.investigateCardCandidates = null
         this.player.enterExploringMode()
         break
+      case 'choose-investigate-card-reuse':
+        this.player.era4SelectedInvestigateCard = this.player.investigateCards[move.era]
+        this.player.enterExploringMode()
+        break
     }
 
     this.gameState.emitStateChange()
@@ -429,6 +443,8 @@ export class MoveHistory {
       switch (undoing.action) {
         case 'advance-card-phase':
           this.player.cardPhase--
+          this.gameState.currentExplorerCard?.rules(this.player)?.[this.player.cardPhase]?.message ?? 'Explore!'
+
           if (
             this.gameState.currentCardRules?.[this.player.cardPhase].limit ===
             this.getPlacedHexes()[this.player.cardPhase].length
@@ -498,6 +514,10 @@ export class MoveHistory {
             this.player.discardedInvestigateCards.pop()!,
           ]
           this.player.mode = 'choosing-investigate-card'
+          break
+        case 'choose-investigate-card-reuse':
+          this.player.era4SelectedInvestigateCard = null
+          this.player.mode = 'choosing-investigate-card-reuse'
           break
       }
     } else {

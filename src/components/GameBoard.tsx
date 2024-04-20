@@ -17,7 +17,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
   const { gameState, resetGame } = useGameState()
 
   const rules = gameState.currentCardRules
-  const investigateCard = gameState.currentExplorerCard.isEraCard
+  const investigateCard = gameState.currentExplorerCard?.isEraCard
     ? gameState.currentExplorerCard.getInvestigateCard?.(gameState.activePlayer)
     : null
 
@@ -164,22 +164,36 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
           )}
         </Modal>
       )}
-      {gameState.activePlayer.mode === 'choosing-investigate-card' && investigateModalOpen && (
-        <Modal onClose={() => setInvestigateModalOpen(false)}>
-          <p className="mb-4 text-center">
-            Choose an Investigate Card for Era {gameState.era > 2 ? 'IV' : 'I'.repeat(gameState.era + 1)}.
-          </p>
-          {
-            <div className="flex-center gap-4">
-              {gameState.activePlayer.investigateCardCandidates?.map((candidate) => (
-                <button key={candidate.id} onClick={() => gameState.activePlayer.chooseInvestigateCard(candidate)}>
-                  <img src={candidate.imageUrl.href} alt="Investigate Card" />
-                </button>
-              ))}
-            </div>
-          }
-        </Modal>
-      )}
+      {(gameState.activePlayer.mode === 'choosing-investigate-card' ||
+        gameState.activePlayer.mode === 'choosing-investigate-card-reuse') &&
+        investigateModalOpen && (
+          <Modal onClose={() => setInvestigateModalOpen(false)}>
+            <p className="mb-4 text-center">
+              Choose an Investigate Card for Era {gameState.era > 2 ? 'IV' : 'I'.repeat(gameState.era + 1)}.
+            </p>
+            {
+              <div className="flex-center gap-4">
+                {(gameState.era < 3
+                  ? gameState.activePlayer.investigateCardCandidates
+                  : gameState.activePlayer.investigateCards
+                )?.map((candidate, index) => (
+                  <button
+                    key={candidate.id}
+                    onClick={() => {
+                      if (gameState.era < 3) {
+                        gameState.activePlayer.chooseInvestigateCard(candidate)
+                      } else {
+                        gameState.activePlayer.chooseInvestigateCardForReuse(index)
+                      }
+                    }}
+                  >
+                    <img src={candidate.imageUrl.href} alt="Investigate Card" />
+                  </button>
+                ))}
+              </div>
+            }
+          </Modal>
+        )}
     </>
   )
 }
