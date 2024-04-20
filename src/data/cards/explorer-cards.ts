@@ -14,14 +14,19 @@ import {
 export const getInitialExplorerList = (): GlobalExplorerCard[] => [
   {
     id: 'mountain-1',
+    isEraCard: false,
+    bonus(p) {
+      return null
+    },
     imageUrl: exploreMountain,
-    rules: [
+    rules: () => [
       {
         message: 'Explore 1 Mountain hex',
         limit: 1,
         straight: false,
         consecutive: false,
         connectionRequired: false,
+        connectionToPreviousRequired: false,
         terrains: [{ terrain: 'mountain', count: 1 }],
         regionBound: false,
       },
@@ -29,12 +34,17 @@ export const getInitialExplorerList = (): GlobalExplorerCard[] => [
   },
   {
     id: 'grass-2',
+    isEraCard: false,
+    bonus(p) {
+      return null
+    },
     imageUrl: exploreGrass,
-    rules: [
+    rules: () => [
       {
         message: 'Explore any 2 Grassland hexes',
         limit: 2,
         connectionRequired: false,
+        connectionToPreviousRequired: false,
         straight: false,
         consecutive: false,
         terrains: [{ terrain: 'grass', count: 2 }],
@@ -44,12 +54,17 @@ export const getInitialExplorerList = (): GlobalExplorerCard[] => [
   },
   {
     id: 'sand-2',
+    isEraCard: false,
+    bonus(p) {
+      return null
+    },
     imageUrl: exploreSand,
-    rules: [
+    rules: () => [
       {
         message: 'Explore any 2 Desert hexes',
         limit: 2,
         connectionRequired: false,
+        connectionToPreviousRequired: false,
         straight: false,
         consecutive: false,
         terrains: [{ terrain: 'sand', count: 2 }],
@@ -59,12 +74,17 @@ export const getInitialExplorerList = (): GlobalExplorerCard[] => [
   },
   {
     id: 'water-3',
+    isEraCard: false,
+    bonus(p) {
+      return null
+    },
     imageUrl: exploreWater,
-    rules: [
+    rules: () => [
       {
         message: 'Explore 3 connected Water hexes in a straight line',
         limit: 3,
         connectionRequired: true,
+        connectionToPreviousRequired: false,
         straight: true,
         consecutive: false,
         terrains: [{ terrain: 'water', count: 3 }],
@@ -74,12 +94,17 @@ export const getInitialExplorerList = (): GlobalExplorerCard[] => [
   },
   {
     id: 'wild-2',
+    isEraCard: false,
+    bonus(p) {
+      return null
+    },
     imageUrl: exploreWild,
-    rules: [
+    rules: () => [
       {
         message: 'Explore any 2 connected hexes',
         limit: 2,
         connectionRequired: true,
+        connectionToPreviousRequired: false,
         straight: false,
         consecutive: false,
         terrains: [{ terrain: 'wild', count: 2 }],
@@ -89,9 +114,16 @@ export const getInitialExplorerList = (): GlobalExplorerCard[] => [
   },
   {
     id: 'era-1',
+    isEraCard: true,
+    getInvestigateCard(p) {
+      return p.investigateCards[0]
+    },
+    bonus(p) {
+      return p.investigateCards[0]?.bonus || null
+    },
     imageUrl: exploreEra1,
     rules(p) {
-      return p.powerCards[0].rules
+      return p.investigateCards[0]?.rules || null
     },
   },
 ]
@@ -99,23 +131,44 @@ export const getInitialExplorerList = (): GlobalExplorerCard[] => [
 export const getLaterExplorerList = (): GlobalExplorerCard[] => [
   {
     id: 'era-any',
+    isEraCard: true,
+    getInvestigateCard(p) {
+      return p.era4SelectedInvestigateCard
+    },
+    bonus(p) {
+      return p.era4SelectedInvestigateCard?.bonus || null
+    },
     imageUrl: exploreEraAny,
     rules(p) {
-      return p.era4SelectedPowerCard.rules
+      return p.era4SelectedInvestigateCard?.rules || null
     },
   },
   {
     id: 'era-3',
+    isEraCard: true,
+    getInvestigateCard(p) {
+      return p.investigateCards[2]
+    },
+    bonus(p) {
+      return p.investigateCards[2]?.bonus || null
+    },
     imageUrl: exploreEra3,
     rules(p) {
-      return p.powerCards[2].rules
+      return p.investigateCards[2]?.rules || null
     },
   },
   {
     id: 'era-2',
+    isEraCard: true,
+    getInvestigateCard(p) {
+      return p.investigateCards[1]
+    },
+    bonus(p) {
+      return p.investigateCards[1]?.bonus || null
+    },
     imageUrl: exploreEra2,
     rules(p) {
-      return p.powerCards[1].rules
+      return p.investigateCards[1]?.rules || null
     },
   },
 ]

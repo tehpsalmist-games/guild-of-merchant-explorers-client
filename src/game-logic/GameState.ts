@@ -4,7 +4,7 @@ import { aveniaData } from '../data/boards/avenia'
 import { cnidariaData } from '../data/boards/cnidaria'
 import { Board, BoardData, Hex, Region } from './Board'
 import { sleep } from '../utils'
-import { ExplorerCard, ExplorerDeck, GlobalExplorerCard } from './Cards'
+import { CardPlacementRules, ExplorerCard, ExplorerDeck, GlobalExplorerCard, InvestigateDeck } from './Cards'
 
 export type BoardName = 'aghon' | 'avenia' | 'kazan' | 'cnidaria'
 
@@ -21,18 +21,6 @@ const getBoardData = (boardName: BoardName) => {
   }
 }
 
-export type GameMode =
-  | 'exploring'
-  | 'free-exploring' // treasure card block is "free" because it defies all rules
-  | 'choosing-village'
-  | 'user-prompting'
-  | 'choosing-power-card'
-  | 'choosing-trade-route'
-  | 'trading'
-  | 'drawing-treasure'
-  | 'clearing-history'
-  | 'game-over'
-
 export class GameState extends EventTarget {
   era = 0
   currentTurn = 0
@@ -43,17 +31,26 @@ export class GameState extends EventTarget {
   explorerDeck: ExplorerDeck
   currentExplorerCard: GlobalExplorerCard
 
+  investigateDeck: InvestigateDeck
+
   constructor(boardName: BoardName) {
     super()
 
     this.activePlayer = new Player(getBoardData(boardName), this)
     this.turnHistory = new TurnHistory(this)
 
+    this.investigateDeck = new InvestigateDeck()
+    this.investigateDeck.shuffle()
+
     this.explorerDeck = new ExplorerDeck()
     this.explorerDeck.shuffle()
 
     // start game!
     this.flipExplorerCard()
+  }
+
+  get currentCardRules() {
+    return this.currentExplorerCard?.rules(this.activePlayer)
   }
 
   startNextAge() {
@@ -89,11 +86,35 @@ export class GameState extends EventTarget {
     if (nextCard) {
       this.explorerDeck.useCard(nextCard.id)
       this.turnHistory.saveCardFlip(nextCard.id)
+
+      // first era card flip, need to deal new ones to the player(s)
+      if (this.currentExplorerCard.id === `era-${this.era + 1}`) {
+        this.activePlayer.mode = 'choosing-investigate-card'
+
+        this.dealInvestigateCards(this.activePlayer)
+      }
+
+      if (this.currentExplorerCard.id === 'era-any') {
+        this.activePlayer.mode = 'choosing-investigate-card-reuse'
+      }
+
+      this.activePlayer.message =
+        this.currentExplorerCard.rules(this.activePlayer)?.[0].message ?? 'Choose an Investigate Card'
     } else {
       this.startNextAge()
     }
 
     this.emitStateChange()
+  }
+
+  // pass in the player to deal to, kind of preparing this method for multiplayer
+  dealInvestigateCards(player: Player) {
+    const [candidate1, candidate2] = this.investigateDeck.drawCards({ quantity: 2, recycle: true })
+
+    this.investigateDeck.removeCard(candidate1.id)
+    this.investigateDeck.removeCard(candidate2.id)
+
+    player.investigateCardCandidates = [candidate1, candidate2]
   }
 
   emitStateChange() {
@@ -132,12 +153,25 @@ export class TurnHistory {
   }
 }
 
+export type PlayerMode =
+  | 'exploring'
+  | 'free-exploring' // treasure card block is "free" because it defies all rules
+  | 'choosing-village'
+  | 'user-prompting'
+  | 'choosing-investigate-card'
+  | 'choosing-investigate-card-reuse'
+  | 'choosing-trade-route'
+  | 'trading'
+  | 'drawing-treasure'
+  | 'clearing-history'
+  | 'game-over'
+
 export class Player {
   gameState: GameState
   board: Board
   moveHistory: MoveHistory
 
-  mode: GameMode = 'exploring'
+  mode: PlayerMode = 'exploring'
   message = 'Explore!'
 
   coins = 0
@@ -151,9 +185,11 @@ export class Player {
 
   regionForVillage?: Region
 
-  powerCards: ExplorerCard[] = []
-  discardedPowerCards: ExplorerCard[] = []
-  era4SelectedPowerCard: ExplorerCard
+  investigateCardCandidates: [ExplorerCard, ExplorerCard] | null = null
+
+  investigateCards: ExplorerCard[] = []
+  discardedInvestigateCards: ExplorerCard[] = []
+  era4SelectedInvestigateCard: ExplorerCard
 
   cardPhase = 0 // some cards have complex logic in 2 or more phases
 
@@ -163,7 +199,17 @@ export class Player {
     this.moveHistory = new MoveHistory(this, gameState)
   }
 
-  nextCardPhaseMode() {
+  chooseInvestigateCard(chosenCard: ExplorerCard) {
+    if (!this.investigateCardCandidates) return
+
+    const discardedCard = this.investigateCardCandidates.find((ic) => ic !== chosenCard)
+
+    if (!discardedCard) return
+
+    this.moveHistory.doMove({ action: 'choose-investigate-card', chosenCard, discardedCard })
+  }
+
+  enterNextCardPhaseMode() {
     this.moveHistory.doMove({ action: 'advance-card-phase' })
     this.gameState.emitStateChange()
   }
@@ -230,7 +276,7 @@ export class Player {
 
   enterExploringMode() {
     this.mode = 'exploring'
-    this.message = 'Explore!'
+    this.message = this.gameState.currentExplorerCard?.rules(this)?.[this.cardPhase]?.message ?? 'Explore!'
     this.gameState.emitStateChange()
   }
 
@@ -274,6 +320,11 @@ type Move =
       action: 'draw-treasure'
       hex: Hex
     }
+  | {
+      action: 'choose-investigate-card'
+      chosenCard: ExplorerCard
+      discardedCard: ExplorerCard
+    }
 
 export class MoveHistory {
   currentMoves: Move[] = []
@@ -295,19 +346,37 @@ export class MoveHistory {
         break
       case 'explore':
         move.hex.explore()
-        this.player.checkForUserDecision()
+
+        if (
+          this.gameState.currentCardRules?.[this.player.cardPhase + 1] &&
+          this.gameState.currentCardRules?.[this.player.cardPhase].limit ===
+            this.getPlacedHexes()[this.player.cardPhase].length
+        ) {
+          this.doMove({ action: 'advance-card-phase' })
+        } else {
+          this.player.checkForUserDecision()
+        }
+
         break
       case 'choose-trade-route':
         this.player.chosenRoute.push(move.hex)
-        if (this.player.chosenRoute.length === 2) this.player.enterTradingMode()
-        else this.player.enterPickingTradeRouteMode()
+
+        if (this.player.chosenRoute.length === 2) {
+          this.player.enterTradingMode()
+        } else {
+          this.player.enterPickingTradeRouteMode()
+        }
+
         break
       case 'cover-tradepost':
         move.hex.isCovered = true
 
         //records the trading hex for undoing purposes
-        if (this.player.chosenRoute[0] === move.hex) move.tradingHex = this.player.chosenRoute[1]
-        else move.tradingHex = this.player.chosenRoute[0]
+        if (this.player.chosenRoute[0] === move.hex) {
+          move.tradingHex = this.player.chosenRoute[1]
+        } else {
+          move.tradingHex = this.player.chosenRoute[0]
+        }
 
         //Adds coins that were just collected
         const coins = this.player.chosenRoute[0].tradingPostValue * this.player.chosenRoute[1].tradingPostValue
@@ -321,11 +390,13 @@ export class MoveHistory {
         this.player.connectedTradePosts.splice(index, 1)
 
         //determines whether or not you should continue trading or continue the game
-        if (this.player.connectedTradePosts.length > 1) this.player.enterPickingTradeRouteMode()
-        else {
+        if (this.player.connectedTradePosts.length > 1) {
+          this.player.enterPickingTradeRouteMode()
+        } else {
           this.player.connectedTradePosts = []
           this.player.checkForUserDecision()
         }
+
         break
       case 'choose-village':
         move.hex.isVillage = true
@@ -340,6 +411,12 @@ export class MoveHistory {
         //TODO add do-treasure mode instead of checkForUserDecision here
         this.player.checkForUserDecision()
         break
+      case 'choose-investigate-card':
+        this.player.investigateCards.push(move.chosenCard)
+        this.player.discardedInvestigateCards.push(move.discardedCard)
+        this.player.investigateCardCandidates = null
+        this.player.enterExploringMode()
+        break
     }
 
     this.gameState.emitStateChange()
@@ -350,6 +427,14 @@ export class MoveHistory {
 
     if (undoing) {
       switch (undoing.action) {
+        case 'advance-card-phase':
+          this.player.cardPhase--
+          if (
+            this.gameState.currentCardRules?.[this.player.cardPhase].limit ===
+            this.getPlacedHexes()[this.player.cardPhase].length
+          )
+            this.undoMove()
+          break
         case 'explore':
           undoing.hex.unexplore()
           this.player.chosenRoute = []
@@ -399,9 +484,6 @@ export class MoveHistory {
           }
 
           break
-        case 'advance-card-phase':
-          this.player.cardPhase--
-          break
         case 'draw-treasure':
           //You can't undo drawing a treasure card. Once you draw a treasure card, the history is cleared.
           //This means it's not technically possible to hit this switch case.
@@ -409,6 +491,13 @@ export class MoveHistory {
           console.error('How did we get here?!?')
           this.player.treasureCardHex = undoing.hex
           this.player.enterDrawTreasureMode()
+          break
+        case 'choose-investigate-card':
+          this.player.investigateCardCandidates = [
+            this.player.investigateCards.pop()!,
+            this.player.discardedInvestigateCards.pop()!,
+          ]
+          this.player.mode = 'choosing-investigate-card'
           break
       }
     } else {

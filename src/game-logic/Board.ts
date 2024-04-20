@@ -187,8 +187,10 @@ export class Hex {
     this.isExplored = true
 
     if (this.coins) {
-      // TODO: multiply coins by power card value
-      this.board.player.coins += this.coins
+      const bonus = this.board.gameState.currentExplorerCard.bonus(this.board.player)
+      const multiplier = bonus?.type === 'coin' ? bonus.multiplier : 1
+
+      this.board.player.coins += this.coins * multiplier
     }
 
     //For hexes that do actions that require it to be uncovered
@@ -199,7 +201,7 @@ export class Hex {
       }
 
       if (this.isRuin) {
-        //TODO multiply by power card value
+        //TODO multiply by investigate card value
         this.board.player.treasureCardHex = this
         this.isCovered = true
       }
@@ -224,8 +226,10 @@ export class Hex {
     this.isExplored = false
 
     if (this.coins) {
-      // TODO: multiply coins by power card value
-      this.board.player.coins -= this.coins
+      const bonus = this.board.gameState.currentExplorerCard.bonus(this.board.player)
+      const multiplier = bonus?.type === 'coin' ? bonus.multiplier : 1
+
+      this.board.player.coins -= this.coins * multiplier
     }
 
     if (this.isCovered) {
@@ -235,7 +239,7 @@ export class Hex {
       }
 
       if (this.isRuin) {
-        //TODO multiply by power card value
+        //TODO multiply by investigate card value
         this.board.player.treasureCardHex = undefined
         this.isCovered = false
       }
@@ -255,6 +259,16 @@ export class Hex {
       return false
     }
 
+    // early exit for free exploring because we already know the hex is touching explored hexes from the first check
+    if (this.board.player.mode === 'free-exploring') {
+      return true
+    }
+
+    // only check for explorability in exploring mode
+    if (this.board.player.mode !== 'exploring') {
+      return false
+    }
+
     const rules =
       typeof this.board.gameState.currentExplorerCard.rules === 'function'
         ? this.board.gameState.currentExplorerCard.rules(this.board.player)
@@ -264,7 +278,7 @@ export class Hex {
     const touchingHexes = this.board.hexContactIterator(this, true)
 
     const phase = this.board.player.cardPhase
-    const rule = rules[phase]
+    const rule = rules?.[phase]
 
     if (!rule) {
       return false
@@ -277,6 +291,16 @@ export class Hex {
 
     // does the hex fit an allowable terrain type?
     const fitsAPermissibleTerrain = rule.terrains.some((t) => {
+      // coins required
+      if (t.hasCoins && !this.coins) {
+        return false
+      }
+
+      // trading post required
+      if (t.isTradingPost && !this.tradingPostValue) {
+        return false
+      }
+
       // all hexes match a wild, of course
       if (t.terrain === 'wild' || this.terrain === 'wild') {
         return true
@@ -322,12 +346,12 @@ export class Hex {
       const firstIndex = secondHexContacts.findIndex((h) => h === flattenedPlacements[0])
       const secondIndex = firstHexContacts.findIndex((h) => h === flattenedPlacements[1])
 
-      const lastHexContacts =
-        flattenedPlacements.length === 2
-          ? secondHexContacts
-          : this.board.hexContactIterator(flattenedPlacements[flattenedPlacements.length - 1])
-
-      if (firstHexContacts[firstIndex] !== this && lastHexContacts[secondIndex] !== this) {
+      if (
+        flattenedPlacements.every((h) => {
+          const contacts = this.board.hexContactIterator(h)
+          return contacts[firstIndex] !== this && contacts[secondIndex] !== this
+        })
+      ) {
         return false
       }
     }
@@ -335,6 +359,15 @@ export class Hex {
     // must be in the same region as the initial placement
     if (rule.regionBound && placedHexes[phase][0] && placedHexes[phase][0].region !== this.region) {
       // console.log('region bound', rules, phase, placedHexes)
+      return false
+    }
+
+    // must be connected to a hex from the previous phase
+    if (
+      rule.connectionToPreviousRequired &&
+      placedHexes.length > 1 &&
+      placedHexes[phase - 1].every((h) => !touchingHexes.includes(h))
+    ) {
       return false
     }
 

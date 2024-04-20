@@ -1,4 +1,5 @@
 import { getInitialExplorerList, getLaterExplorerList } from '../data/cards/explorer-cards'
+import { investigateCards } from '../data/cards/investigate-cards'
 import { Terrain } from './Board'
 import { Player } from './GameState'
 
@@ -92,24 +93,37 @@ export interface CardPlacementRules {
   message: string
   limit: number
   connectionRequired: boolean
-  surrounding?: boolean
+  connectionToPreviousRequired: boolean
   straight: boolean
   consecutive: boolean
-  terrains: { terrain: Terrain; count: number }[]
+  terrains: { terrain: Terrain; isTradingPost?: boolean; hasCoins?: boolean; count: number }[]
   regionBound: boolean
   // ad hoc rules for the special ones
+  is2VillageSpecial?: boolean
+}
+
+export interface Bonus {
+  type: 'treasure' | 'coin'
+  multiplier: number
 }
 
 export interface ExplorerCard {
   id: string
   imageUrl: URL
   rules: CardPlacementRules[]
+  bonus?: {
+    type: 'treasure' | 'coin'
+    multiplier: number
+  }
 }
 
 export interface GlobalExplorerCard {
   id: string
   imageUrl: URL
-  rules: CardPlacementRules[] | ((p: Player) => CardPlacementRules[])
+  rules(p: Player): CardPlacementRules[] | null
+  bonus(p: Player): Bonus | null
+  isEraCard: boolean
+  getInvestigateCard?(p: Player): ExplorerCard | null
 }
 
 export class ExplorerDeck extends Deck<GlobalExplorerCard> {
@@ -130,5 +144,11 @@ export class ExplorerDeck extends Deck<GlobalExplorerCard> {
     }
 
     this.shuffle()
+  }
+}
+
+export class InvestigateDeck extends Deck<ExplorerCard> {
+  constructor() {
+    super([...investigateCards])
   }
 }

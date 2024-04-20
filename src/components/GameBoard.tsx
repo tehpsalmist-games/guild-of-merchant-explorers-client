@@ -1,7 +1,7 @@
 import React, { ComponentProps, useEffect, useState } from 'react'
 import { useGameState } from '../hooks/useGameState'
 import { ExplorerMap } from './ExplorerMap'
-import { Button, Modal } from '@8thday/react'
+import { Button, Modal, useEventListener } from '@8thday/react'
 import ChevronRightIcon from '@heroicons/react/24/solid/ChevronRightIcon'
 import ChevronLeftIcon from '@heroicons/react/24/solid/ChevronLeftIcon'
 import clsx from 'clsx'
@@ -11,9 +11,21 @@ export interface GameBoardProps extends ComponentProps<'main'> {}
 
 export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
   const [sideBarOpen, setSideBarOpen] = useState(false)
+  const [investigateModalOpen, setInvestigateModalOpen] = useState(false)
   const updateState = useState(0)[1]
 
   const { gameState, resetGame } = useGameState()
+
+  const rules = gameState.currentCardRules
+  const investigateCard = gameState.currentExplorerCard.isEraCard
+    ? gameState.currentExplorerCard.getInvestigateCard?.(gameState.activePlayer)
+    : null
+
+  useEventListener('keydown', (e) => {
+    if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+      gameState.activePlayer.moveHistory.undoMove()
+    }
+  })
 
   useEffect(() => {
     const listener = () => updateState((s) => ++s)
@@ -21,6 +33,12 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
 
     return () => gameState.removeEventListener('statechange', listener)
   }, [gameState])
+
+  useEffect(() => {
+    if (gameState.activePlayer.mode === 'choosing-investigate-card') {
+      setInvestigateModalOpen(true)
+    }
+  }, [gameState.activePlayer.mode])
 
   return (
     <>
@@ -42,19 +60,33 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
             )}
           </div>
           {gameState.currentExplorerCard && (
-            <button className="mx-4 h-full p-1" onClick={() => setSideBarOpen((o) => !o)}>
+            <button className="mx-4 flex h-full p-1" onClick={() => setSideBarOpen((o) => !o)}>
               <img className="max-h-full" src={gameState.currentExplorerCard.imageUrl.href} />
+              {investigateCard && <img className="ml-2 max-h-full" src={investigateCard.imageUrl.href} />}
             </button>
           )}
+          {gameState.activePlayer.investigateCardCandidates && (
+            <div className="flex-center mr-4 h-16 gap-4 border border-primary-400">
+              {gameState.activePlayer.investigateCardCandidates?.map((candidate) => (
+                <button className="h-full p-1" key={candidate.id} onClick={() => setInvestigateModalOpen(true)}>
+                  <img className="max-h-full" src={candidate.imageUrl.href} alt="Investigate Card" />
+                </button>
+              ))}
+            </div>
+          )}
           {(!gameState.currentExplorerCard ||
-            gameState.currentExplorerCard.rules.length - 1 === gameState.activePlayer.cardPhase) && (
+            (gameState.currentCardRules?.length ?? 1) - 1 === gameState.activePlayer.cardPhase) && (
             <Button className="mr-4" variant="primary" onClick={() => gameState.flipExplorerCard()}>
               Next Card
             </Button>
           )}
           {gameState.currentExplorerCard &&
-            gameState.currentExplorerCard.rules.length - 1 !== gameState.activePlayer.cardPhase && (
-              <Button className="mr-4" variant="primary" onClick={() => gameState.activePlayer.nextCardPhase()}>
+            (gameState.currentCardRules?.length ?? 1) - 1 !== gameState.activePlayer.cardPhase && (
+              <Button
+                className="mr-4"
+                variant="primary"
+                onClick={() => gameState.activePlayer.enterNextCardPhaseMode()}
+              >
                 Next Phase
               </Button>
             )}
@@ -64,7 +96,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
           </span>
         </div>
       </div>
-      <div className="fixed left-1/2 top-16 z-50 mt-2 -translate-x-1/2 rounded bg-slate-900/50 p-2 text-lg font-bold text-white">
+      <div className="fixed left-1/2 top-16 z-50 mt-2 w-max max-w-[95vw] -translate-x-1/2 rounded bg-slate-900/50 p-2 text-lg font-bold text-white">
         {gameState.activePlayer.message}
       </div>
       <main className={`${className} game-board-grid relative min-h-screen w-full`} {...props}>
@@ -76,18 +108,28 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
             sideBarOpen ? 'translate-x-0' : 'translate-x-sm',
           )}
         >
-          <div className="relative flex h-full flex-wrap items-start gap-2 p-2">
-            {gameState.activePlayer.moveHistory.size > 1 && (
-              <Button onClick={() => gameState.activePlayer.moveHistory.undoAllMoves()}>Reset Moves</Button>
-            )}
-            {gameState.activePlayer.moveHistory.size > 0 && (
-              <Button onClick={() => gameState.activePlayer.moveHistory.undoMove()}>Undo Move</Button>
-            )}
+          <div className="flex-center relative h-full flex-wrap items-start gap-2 p-2">
+            <div className="absolute left-0 top-0 flex w-full p-2">
+              {gameState.activePlayer.moveHistory.size > 1 && (
+                <Button onClick={() => gameState.activePlayer.moveHistory.undoAllMoves()}>Reset Moves</Button>
+              )}
+              {gameState.activePlayer.moveHistory.size > 0 && (
+                <Button className="ml-auto" onClick={() => gameState.activePlayer.moveHistory.undoMove()}>
+                  Undo Move
+                </Button>
+              )}
+            </div>
             <Button variant="destructive" className="!absolute bottom-2 left-1/2 -translate-x-1/2" onClick={resetGame}>
               Quit Game
             </Button>
-            <div className="flex-center w-full">
-              {gameState.currentExplorerCard && <img src={gameState.currentExplorerCard.imageUrl.href} />}
+            <div className="flex-center w-full flex-col gap-y-2">
+              {gameState.currentExplorerCard && (
+                <img
+                  className={clsx(gameState.currentExplorerCard.isEraCard && 'w-1/3')}
+                  src={gameState.currentExplorerCard.imageUrl.href}
+                />
+              )}
+              {investigateCard && <img className="ml-2 w-full" src={investigateCard.imageUrl.href} />}
             </div>
           </div>
         </div>
@@ -103,23 +145,39 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
           ></Button>
         </div>
       </main>
-      {gameState.activePlayer.mode === 'user-prompt' && (
+      {gameState.activePlayer.mode === 'user-prompting' && (
         <Modal onClose={() => {}}>
           <p>Pick which action you want to handle next.</p>
           {gameState.activePlayer.treasureCardHex && (
-            <Button onClick={() => gameState.activePlayer.drawTreasureMode()}>Draw Treasure (No Undo)</Button>
+            <Button onClick={() => gameState.activePlayer.enterDrawTreasureMode()}>Draw Treasure (No Undo)</Button>
           )}
           {gameState.activePlayer.connectedTradePosts.length > 1 && (
-            <Button onClick={() => gameState.activePlayer.pickingTradeRouteMode()}>Trade</Button>
+            <Button onClick={() => gameState.activePlayer.enterPickingTradeRouteMode()}>Trade</Button>
           )}
           {gameState.activePlayer.regionForVillage && (
-            <Button onClick={() => gameState.activePlayer.villageMode()}>Place Village</Button>
+            <Button onClick={() => gameState.activePlayer.enterVillageMode()}>Place Village</Button>
           )}
           {gameState.activePlayer.moveHistory.currentMoves.length > 0 && (
             <Button variant="destructive" onClick={() => gameState.activePlayer.moveHistory.undoMove()}>
               Undo
             </Button>
           )}
+        </Modal>
+      )}
+      {gameState.activePlayer.mode === 'choosing-investigate-card' && investigateModalOpen && (
+        <Modal onClose={() => setInvestigateModalOpen(false)}>
+          <p className="mb-4 text-center">
+            Choose an Investigate Card for Era {gameState.era > 2 ? 'IV' : 'I'.repeat(gameState.era + 1)}.
+          </p>
+          {
+            <div className="flex-center gap-4">
+              {gameState.activePlayer.investigateCardCandidates?.map((candidate) => (
+                <button key={candidate.id} onClick={() => gameState.activePlayer.chooseInvestigateCard(candidate)}>
+                  <img src={candidate.imageUrl.href} alt="Investigate Card" />
+                </button>
+              ))}
+            </div>
+          }
         </Modal>
       )}
     </>
