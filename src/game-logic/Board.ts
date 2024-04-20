@@ -200,7 +200,7 @@ export class Hex {
 
       if (this.isRuin) {
         //TODO multiply by power card value
-        this.board.player.treasureCardsToDraw++
+        this.board.player.treasureCardHex = this
         this.isCovered = true
       }
     }
@@ -236,7 +236,7 @@ export class Hex {
 
       if (this.isRuin) {
         //TODO multiply by power card value
-        this.board.player.treasureCardsToDraw--
+        this.board.player.treasureCardHex = undefined
         this.isCovered = false
       }
     }
@@ -283,7 +283,7 @@ export class Region {
   hasVillage = false
   land: Land
   board: Board
-  villageCandidates = this.hexes.filter((h) => h.isVillageCandidate)
+  villageCandidates: Hex[]
 
   constructor(startingHex: Hex) {
     this.terrain = startingHex.terrain
@@ -291,6 +291,8 @@ export class Region {
     startingHex.land?.addRegion(this)
 
     this.buildRegionFromHex(startingHex)
+
+    this.villageCandidates = this.hexes.filter((h) => h.isVillageCandidate)
   }
 
   buildRegionFromHex(hex: Hex) {
@@ -303,7 +305,7 @@ export class Region {
       }
     }
   }
-
+  
   get size() {
     return this.hexes.length
   }

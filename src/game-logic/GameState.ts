@@ -140,7 +140,8 @@ export class Player {
 
   coins = 0
 
-  treasureCardsToDraw = 0 // use this value to increment when cards are earned, and decrement when they are drawn
+  treasureCardHex?: Hex
+  //treasureCardsToDraw = 0 // use this value to increment when cards are earned, and decrement when they are drawn
   // treasureCards: TreasureCard[] = [] // imagine for now
 
   connectedTradePosts: Hex[] = []
@@ -159,9 +160,13 @@ export class Player {
   }
 
   userPromptMode() {
+    if (this.regionForVillage?.villageCandidates.length === 1) {
+      this.villageMode()
+    }
+    
     const hasTradePosts = this.connectedTradePosts.length > 1
     const hasVillage = this.regionForVillage
-    const hasTreasureCards = this.treasureCardsToDraw > 0
+    const hasTreasureCards = this.treasureCardHex
 
     if (!hasTradePosts && !hasVillage && !hasTreasureCards) {
       this.exploringMode()
@@ -188,15 +193,16 @@ export class Player {
   }
 
   villageMode() {
-    // auto place the only option
-    if (this.regionForVillage?.villageCandidates.length === 1) {
-      this.regionForVillage.villageCandidates[0].isVillage = true
-      this.userPromptMode()
-      return
-    }
-
     this.mode = 'village'
     this.message = "You've explored the region! Choose where to build a village."
+
+    // auto place the only option
+    if (this.regionForVillage?.villageCandidates.length === 1) {
+      this.moveHistory.doMove(this.regionForVillage.villageCandidates[0])
+    }
+    else{
+      this.gameState.emitStateChange()
+    }
   }
 
   pickingTradeRouteMode() {
@@ -217,7 +223,6 @@ export class Player {
     this.gameState.emitStateChange()
   }
 
-  //TODO this will probably need to take a card as an argument at some point
   exploringMode() {
     this.mode = 'exploring'
     this.message = 'Explore!'
@@ -225,11 +230,15 @@ export class Player {
   }
 
   drawTreasureMode() {
-    //this.mode = 'drawing-treasure'
-    //this.message = 'Draw a treasure card!'
-    this.treasureCardsToDraw--
-    this.gameState.emitStateChange()
-    this.userPromptMode()
+    if (this.treasureCardHex) {
+      this.mode = 'drawing-treasure'
+      this.message = 'Draw a treasure card!'
+
+      this.moveHistory.doMove(this.treasureCardHex)
+    }
+    else {
+      this.userPromptMode()
+    }
   }
 }
 
@@ -300,11 +309,10 @@ export class MoveHistory {
         this.player.userPromptMode()
         break
       case 'drawing-treasure':
-        //TODO add draw treasure logic
-        hex.isCovered = true
-        this.player.treasureCardsToDraw++
+        this.player.treasureCardHex = undefined
         //Completely blocks the ability to undo anything prior to drawing a treasure card
-        this.currentMoves = []
+        this.saveState()
+        //TODO add do-treasure mode instead of userPromptMode here
         this.player.userPromptMode()
         break
     }
@@ -321,7 +329,7 @@ export class MoveHistory {
           undoing.hex.unexplore()
           this.player.chosenRoute = []
           this.player.connectedTradePosts = []
-          this.player.exploringMode()
+          this.player.userPromptMode()
           break
         case 'picking-trade-route':
           this.player.connectedTradePosts = undoing.hex.getConnectedTradingPosts()
@@ -336,7 +344,7 @@ export class MoveHistory {
           }
 
           this.player.chosenRoute = []
-          this.player.pickingTradeRouteMode()
+          this.player.userPromptMode()
           break
         case 'trading':
           undoing.hex.isCovered = false
@@ -344,19 +352,25 @@ export class MoveHistory {
             this.player.coins -= undoing.tradingHex.tradingPostValue * undoing.hex.tradingPostValue
             this.player.connectedTradePosts = undoing.hex.getConnectedTradingPosts()
             this.player.chosenRoute = [undoing.hex, undoing.tradingHex]
-            this.player.tradingMode()
+            if (this.player.connectedTradePosts.length > 2) this.player.tradingMode()
+            else this.player.userPromptMode()
           }
           break
         case 'village':
           undoing.hex.isVillage = false
           this.player.coins -= this.gameState.era + 1
-
+          
           if (undoing.hex.region) {
-            this.player.regionForVillage = undoing.hex.region
-            this.player.villageMode()
+            if (undoing.hex.region.villageCandidates.length === 1) {
+              this.undoMove()
+            }
+            else {
+              this.player.regionForVillage = undoing.hex.region
+              this.player.userPromptMode()
+            }
           } else {
             //Theoretically, this else statement should never happen
-            this.player.exploringMode()
+            this.player.userPromptMode()
           }
           break
         case 'drawing-treasure':
@@ -364,9 +378,13 @@ export class MoveHistory {
           //This means it's not technically possible to hit this switch case.
           //But if you do hit this case, there will be a funny error message in the console.
           console.error('How did we get here?!?')
+          this.player.treasureCardHex = undoing.hex
           this.player.drawTreasureMode()
           break
       }
+    }
+    else {
+      this.player.userPromptMode()
     }
 
     this.gameState.emitStateChange()

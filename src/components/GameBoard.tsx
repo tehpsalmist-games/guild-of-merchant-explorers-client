@@ -98,7 +98,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
       {gameState.activePlayer.mode === 'user-prompt' && (
         <Modal onClose={() => {/* you can't close this unless you choose something */}}>
           <p>Pick which action you want to handle next.</p>
-          {gameState.activePlayer.treasureCardsToDraw > 0 && (
+          {gameState.activePlayer.treasureCardHex && (
             <Button onClick={() => gameState.activePlayer.drawTreasureMode()}>Draw Treasure (No Undo)</Button>
           )}
           {gameState.activePlayer.connectedTradePosts.length > 1 && (
@@ -107,7 +107,9 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
           {gameState.activePlayer.regionForVillage && (
             <Button onClick={() => gameState.activePlayer.villageMode()}>Place Village</Button>
           )}
-          <Button variant="destructive" onClick={() => gameState.activePlayer.moveHistory.undoMove()}>Undo</Button>
+          {gameState.activePlayer.moveHistory.currentMoves.length > 0 && (
+            <Button variant="destructive" onClick={() => gameState.activePlayer.moveHistory.undoMove()}>Undo</Button>
+          )}
           <p>
             <a
               href="https://react.dev/learn/writing-markup-with-jsx"
