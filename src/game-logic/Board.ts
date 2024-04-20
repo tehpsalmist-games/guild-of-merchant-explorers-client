@@ -198,15 +198,15 @@ export class Hex {
       if (this.isTower) {
         this.isCovered = true
         const towers = this.board.getFlatHexes().filter((h) => h.isTower && h.isCovered)
-        
+
         if (towers.length === 1) {
-          this.board.player.coins += 6;
+          this.board.player.coins += 6
         } else if (towers.length === 2) {
-          this.board.player.coins += 8;
+          this.board.player.coins += 8
         } else if (towers.length === 3) {
-          this.board.player.coins += 10;
+          this.board.player.coins += 10
         } else if (towers.length === 4) {
-          this.board.player.coins += 14;
+          this.board.player.coins += 14
         }
       }
 
@@ -219,8 +219,8 @@ export class Hex {
       if (this.crystalValue) {
         this.isCovered = true
         const crystals = this.board.getFlatHexes().filter((h) => h.crystalValue && h.isCovered)
-        const crystalValueSum = crystals.reduce((sum, hex) => sum + hex.crystalValue, 0);
-        this.board.player.coins += crystalValueSum;
+        const crystalValueSum = crystals.reduce((sum, hex) => sum + hex.crystalValue, 0)
+        this.board.player.coins += crystalValueSum
       }
     }
 
@@ -252,15 +252,15 @@ export class Hex {
     if (this.isCovered) {
       if (this.isTower) {
         const towers = this.board.getFlatHexes().filter((h) => h.isTower && h.isCovered)
-        
+
         if (towers.length === 1) {
-          this.board.player.coins -= 6;
+          this.board.player.coins -= 6
         } else if (towers.length === 2) {
-          this.board.player.coins -= 8;
+          this.board.player.coins -= 8
         } else if (towers.length === 3) {
-          this.board.player.coins -= 10;
+          this.board.player.coins -= 10
         } else if (towers.length === 4) {
-          this.board.player.coins -= 14;
+          this.board.player.coins -= 14
         }
 
         this.isCovered = false
@@ -274,8 +274,8 @@ export class Hex {
 
       if (this.crystalValue) {
         const crystals = this.board.getFlatHexes().filter((h) => h.crystalValue && h.isCovered)
-        const crystalValueSum = crystals.reduce((sum, hex) => sum + hex.crystalValue, 0);
-        this.board.player.coins -= crystalValueSum;
+        const crystalValueSum = crystals.reduce((sum, hex) => sum + hex.crystalValue, 0)
+        this.board.player.coins -= crystalValueSum
         this.isCovered = false
       }
     }
@@ -384,7 +384,7 @@ export class Hex {
 
       if (
         flattenedPlacements.every((h) => {
-          const contacts = this.board.hexContactIterator(h)
+          const contacts = this.board.hexContactIterator(h, true)
           return contacts[firstIndex] !== this && contacts[secondIndex] !== this
         })
       ) {
