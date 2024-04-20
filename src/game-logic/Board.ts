@@ -320,6 +320,7 @@ export class Hex {
     }
 
     const flattenedPlacements = placedHexes.flat()
+
     // just has to connect to anything placed during this turn
     if (
       rule.connectionRequired &&
@@ -368,6 +369,112 @@ export class Hex {
       placedHexes.length > 1 &&
       placedHexes[phase - 1].every((h) => !touchingHexes.includes(h))
     ) {
+      return false
+    }
+
+    if (rule.is2VillageSpecial) {
+      // if nothing placed yet, then just check that we're adjacent to a village
+      if (!flattenedPlacements.length) {
+        return touchingHexes.some((h) => h?.isVillage)
+      }
+
+      const firstHex = flattenedPlacements[0]
+      const firstHexContacts = this.board.hexContactIterator(firstHex, true)
+      const firstVillageCandidates = firstHexContacts.filter((h): h is Hex => !!h?.isVillage)
+
+      if (flattenedPlacements.length === 1) {
+        const straightIndex = touchingHexes.findIndex((h) => h === firstHex)
+
+        if (straightIndex !== -1 && firstHexContacts[straightIndex]?.isVillage) {
+          return true
+        }
+
+        return touchingHexes.some(
+          (h) => h?.isVillage && (firstVillageCandidates.length > 1 || h !== firstVillageCandidates[0]),
+        )
+      }
+
+      for (const firstVillageCandidate of firstVillageCandidates) {
+        const village1Contacts = this.board.hexContactIterator(firstVillageCandidate, true)
+        const straightIndex = village1Contacts.findIndex((h) => h === firstHex)
+        let lastHex = firstHex
+
+        const firstLine = [firstHex]
+        const others: Hex[] = []
+
+        // append this hex to the list and then validate if it works or not
+        for (const placed of flattenedPlacements.slice(1).concat([this])) {
+          if (firstLine.length === 3) {
+            others.push(placed)
+            continue
+          }
+
+          const lastHexContacts = this.board.hexContactIterator(lastHex, true)
+
+          if (placed === lastHexContacts[straightIndex]) {
+            firstLine.push(placed)
+            lastHex = placed
+          } else {
+            others.push(placed)
+          }
+        }
+
+        if (others.length === 0) {
+          // placement fits perfectly into one valid line
+          return true
+        }
+
+        if (others.length > 3) {
+          // placement causes leftover (and therefore invalid) blocks
+          continue
+        }
+
+        const lastOtherContacts = this.board.hexContactIterator(others[others.length - 1])
+
+        if (others.length === 1) {
+          // placement is good as long as this one other block is touching a different village
+          if (lastOtherContacts.some((h) => h.isVillage && h !== firstVillageCandidate)) {
+            return true
+          } else {
+            continue
+          }
+        }
+
+        const secondToLastOther = others[others.length - 2]
+        const otherStraightIndex = lastOtherContacts.findIndex((h) => h === secondToLastOther)
+
+        if (otherStraightIndex === -1) {
+          // leftover blocks aren't even connected
+          continue
+        }
+
+        const secondToLastContacts = this.board.hexContactIterator(secondToLastOther)
+        if (others.length === 2) {
+          if (
+            secondToLastContacts[otherStraightIndex]?.isVillage &&
+            secondToLastContacts[otherStraightIndex] !== firstVillageCandidate
+          ) {
+            // placement fits perfectly
+            return true
+          } else {
+            // other line doesn't terminate in a valid village
+            continue
+          }
+        }
+
+        const finalContacts = this.board.hexContactIterator(others[0])
+        if (
+          secondToLastContacts[otherStraightIndex] === others[0] &&
+          finalContacts[otherStraightIndex]?.isVillage &&
+          finalContacts[otherStraightIndex] !== firstVillageCandidate
+        ) {
+          // placement fits perfectly
+          return true
+        }
+        // everything else falls out of the loop as an invalid attempt
+      }
+
+      // if we got here, it's a bad placement
       return false
     }
 

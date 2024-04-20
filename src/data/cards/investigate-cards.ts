@@ -32,6 +32,26 @@ import {
 
 export const investigateCards: ExplorerCard[] = [
   {
+    id: 'region4',
+    imageUrl: region4,
+    rules: [
+      {
+        message: 'Explore up to 4 spaces within a single region.',
+        limit: 4,
+        connectionRequired: false,
+        connectionToPreviousRequired: false,
+        straight: false,
+        terrains: [
+          { terrain: 'mountain', count: 4 },
+          { terrain: 'grass', count: 4 },
+          { terrain: 'sand', count: 4 },
+        ],
+        regionBound: true,
+        consecutive: false,
+      },
+    ],
+  },
+  {
     id: 'connectedlistgrasswater5',
     imageUrl: connectedlistgrasswater5,
     rules: [
@@ -47,6 +67,23 @@ export const investigateCards: ExplorerCard[] = [
         ],
         regionBound: false,
         consecutive: true,
+      },
+    ],
+  },
+  {
+    id: 'travellingfromvillage2',
+    imageUrl: travellingfromvillage2,
+    rules: [
+      {
+        message: 'Explore up to 3 spaces connected in a straight line adjacent to 2 different villages',
+        limit: 6,
+        connectionRequired: false,
+        connectionToPreviousRequired: false,
+        straight: false,
+        terrains: [{ terrain: 'wild', count: 6 }],
+        regionBound: false,
+        consecutive: false,
+        is2VillageSpecial: true,
       },
     ],
   },
@@ -237,26 +274,6 @@ export const investigateCards: ExplorerCard[] = [
           { terrain: 'water', count: 1 },
         ],
         regionBound: false,
-        consecutive: false,
-      },
-    ],
-  },
-  {
-    id: 'region4',
-    imageUrl: region4,
-    rules: [
-      {
-        message: 'Explore up to 4 spaces within a single region.',
-        limit: 4,
-        connectionRequired: false,
-        connectionToPreviousRequired: false,
-        straight: false,
-        terrains: [
-          { terrain: 'mountain', count: 4 },
-          { terrain: 'grass', count: 4 },
-          { terrain: 'sand', count: 4 },
-        ],
-        regionBound: true,
         consecutive: false,
       },
     ],
@@ -499,23 +516,6 @@ export const investigateCards: ExplorerCard[] = [
         terrains: [{ terrain: 'wild', count: 3 }],
         regionBound: false,
         consecutive: true,
-      },
-    ],
-  },
-  {
-    id: 'travellingfromvillage2',
-    imageUrl: travellingfromvillage2,
-    rules: [
-      {
-        message: '',
-        limit: 6,
-        connectionRequired: false,
-        connectionToPreviousRequired: false,
-        straight: false,
-        terrains: [{ terrain: 'wild', count: 6 }],
-        regionBound: false,
-        consecutive: false,
-        is2VillageSpecial: true,
       },
     ],
   },
