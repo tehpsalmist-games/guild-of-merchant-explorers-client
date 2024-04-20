@@ -181,7 +181,7 @@ export class Player {
       this.message = 'Choose what to do next.'
     }
     
-    this.moveHistory.recordState()
+    this.gameState.emitStateChange()
   }
 
   waitForNewCardMode() {
@@ -209,27 +209,27 @@ export class Player {
 
     this.mode = 'picking-trade-route'
     this.message = 'Pick two trading posts to trade between.'
-    this.moveHistory.recordState()
+    this.gameState.emitStateChange()
   }
 
   tradingMode() {
     this.mode = 'trading'
     this.message = 'Complete the trade by picking a trading post to permanently cover.'
-    this.moveHistory.recordState()
+    this.gameState.emitStateChange()
   }
 
   //TODO this will probably need to take a card as an argument at some point
   exploringMode() {
     this.mode = 'exploring'
     this.message = 'Explore!'
-    this.moveHistory.recordState()
+    this.gameState.emitStateChange()
   }
 
   drawTreasureMode() {
     //this.mode = 'drawing-treasure'
     //this.message = 'Draw a treasure card!'
     this.treasureCardsToDraw--
-    this.moveHistory.recordState()
+    this.gameState.emitStateChange()
     this.userPromptMode()
   }
 }
