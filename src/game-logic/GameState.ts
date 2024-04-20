@@ -74,7 +74,6 @@ export class GameState extends EventTarget {
       this.flipExplorerCard()
     }
 
-    console.log('got here')
     this.emitStateChange()
   }
 
@@ -96,7 +95,6 @@ export class GameState extends EventTarget {
   }
 
   emitStateChange() {
-    console.log('calling')
     this.dispatchEvent(new CustomEvent('statechange'))
   }
 }
