@@ -490,7 +490,7 @@ export class MoveHistory {
           if (this.player.freeExploreQuantity > -1){
             this.player.freeExploreQuantity++
           }
-          this.player.checkForUserDecision()
+          this.player.enterFreeExploringMode()
           break
         case 'choose-trade-route':
           this.player.connectedTradePosts = undoing.hex.getConnectedTradingPosts()
