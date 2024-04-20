@@ -10,7 +10,6 @@ export interface GameBoardProps extends ComponentProps<'main'> {}
 
 export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
   const [sideBarOpen, setSideBarOpen] = useState(false)
-  const [isModalOpen, setIsModalOpen] = useState(false)
   const updateState = useState(false)[1]
 
   const { gameState, resetGame } = useGameState()
@@ -52,7 +51,6 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                 Next Age
               </Button>
             )}
-            <Button onClick={() => setIsModalOpen(true)}>Open Modal</Button>
             <Button variant="destructive" className="!absolute bottom-2 left-1/2 -translate-x-1/2" onClick={resetGame}>
               Quit Game
             </Button>
@@ -67,9 +65,20 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
           <Button PreIcon={BarsIcon} variant="primary" onClick={() => setSideBarOpen((o) => !o)}></Button>
         </div>
       </main>
-      {isModalOpen && (
-        <Modal onClose={() => setIsModalOpen(false)}>
-          <p>Put whatever you want in here.</p>
+      //TODO this needs to be styled
+      {gameState.activePlayer.mode === 'user-prompt' && (
+        <Modal onClose={() => {/* you can't close this unless you choose something */}}>
+          <p>Pick which action you want to handle next.</p>
+          {gameState.activePlayer.treasureCardsToDraw > 0 && (
+            <Button onClick={() => gameState.activePlayer.drawTreasureMode()}>Draw Treasure (No Undo)</Button>
+          )}
+          {gameState.activePlayer.connectedTradePosts.length > 1 && (
+            <Button onClick={() => gameState.activePlayer.pickingTradeRouteMode()}>Trade</Button>
+          )}
+          {gameState.activePlayer.regionForVillage && (
+            <Button onClick={() => gameState.activePlayer.villageMode()}>Place Village</Button>
+          )}
+          <Button variant="destructive" onClick={() => gameState.activePlayer.moveHistory.undoMove()}>Undo</Button>
           <p>
             <a
               href="https://react.dev/learn/writing-markup-with-jsx"

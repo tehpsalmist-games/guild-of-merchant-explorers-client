@@ -38,7 +38,7 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
   // show/hide logic for game pieces
   const isVillageCandidate =
     gameState.activePlayer.mode === 'village' &&
-    hex.region === gameState.activePlayer.board.regionForVillage &&
+    hex.region === gameState.activePlayer.regionForVillage &&
     hex.isVillageCandidate
   const isTradeRouteCandidate = 
     gameState.activePlayer.mode === 'picking-trade-route' &&

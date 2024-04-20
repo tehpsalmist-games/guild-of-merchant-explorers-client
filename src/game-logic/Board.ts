@@ -29,7 +29,6 @@ export class Board {
   lands: Land[] = []
   gameState: GameState
   player: Player
-  regionForVillage?: Region
 
   constructor(boardData: BoardData, player: Player, gameState: GameState) {
     this.player = player
@@ -200,7 +199,8 @@ export class Hex {
       }
 
       if (this.isRuin) {
-        //TODO add ruin logic
+        //TODO multiply by power card value
+        this.board.player.treasureCardsToDraw++
         this.isCovered = true
       }
     }
@@ -215,7 +215,6 @@ export class Hex {
 
     //Finds trading routes every time a hex is explored
     this.board.player.connectedTradePosts = this.getConnectedTradingPosts()
-    this.board.player.pickingTradeRouteMode()
   }
 
   /**
@@ -236,7 +235,8 @@ export class Hex {
       }
 
       if (this.isRuin) {
-        //TODO add ruin logic
+        //TODO multiply by power card value
+        this.board.player.treasureCardsToDraw--
         this.isCovered = false
       }
     }
@@ -283,6 +283,7 @@ export class Region {
   hasVillage = false
   land: Land
   board: Board
+  villageCandidates = this.hexes.filter((h) => h.isVillageCandidate)
 
   constructor(startingHex: Hex) {
     this.terrain = startingHex.terrain
@@ -314,20 +315,14 @@ export class Region {
   explore() {
     if (!this.hasVillage && this.hexes.every((h) => h.isExplored)) {
       this.hasVillage = true
-
-      const villageCandidates = this.hexes.filter((h) => h.isVillageCandidate)
-      if (villageCandidates.length > 1) {
-        this.board.player.villageMode(this)
-      } else if (villageCandidates.length === 1) {
-        // auto place the only option
-        villageCandidates[0].isVillage = true
-      }
+      this.board.player.regionForVillage = this
     }
   }
 
   unexplore() {
     if (this.hasVillage && this.hexes.some((h) => !h.isExplored)) {
       this.hasVillage = false
+      this.board.player.regionForVillage = undefined
     }
   }
 }
