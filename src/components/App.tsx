@@ -43,7 +43,7 @@ export const App = ({ className = '', ...props }: AppProps) => {
 
   return (
     <GameStateProvider resetGame={() => setBoardName('')} name={boardName}>
-      <GameBoard className={`${className} flex-center relative h-screen max-h-screen`} {...props} />
+      <GameBoard className={`${className}`} {...props} />
     </GameStateProvider>
   )
 }
