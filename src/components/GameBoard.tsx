@@ -24,7 +24,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
 
   return (
     <>
-      <div className="fixed top-0 z-50 h-16 w-full bg-white px-4">
+      <div className="fixed top-0 z-40 h-16 w-full bg-white px-4">
         <div className="flex h-full items-center">
           <div className="mr-4 flex items-center gap-2">
             <img className="h-14" src={romanNumeral.href} />
@@ -63,7 +63,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
 
         <div
           className={clsx(
-            'fixed right-0 top-0 h-screen w-sm bg-gray-700/60 transition-all duration-300',
+            'fixed right-0 top-0 h-screen z-50 w-sm bg-gray-700/60 transition-all duration-300',
             sideBarOpen ? 'translate-x-0' : 'translate-x-sm',
           )}
         >
@@ -73,11 +73,6 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
             )}
             {gameState.activePlayer.moveHistory.size > 0 && (
               <Button onClick={() => gameState.activePlayer.moveHistory.undoMove()}>Undo Move</Button>
-            )}
-            {gameState.activePlayer.moveHistory.size > 0 && (
-              <Button variant="primary" onClick={() => gameState.startNextAge()}>
-                Next Age
-              </Button>
             )}
             <Button variant="destructive" className="!absolute bottom-2 left-1/2 -translate-x-1/2" onClick={resetGame}>
               Quit Game

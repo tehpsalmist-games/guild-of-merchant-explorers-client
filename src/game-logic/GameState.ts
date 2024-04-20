@@ -155,6 +155,7 @@ export class Player {
   era4SelectedPowerCard: ExplorerCard
 
   constructor(boardData: BoardData, gameState: GameState) {
+    this.gameState = gameState
     this.board = new Board(boardData, this, gameState)
     this.moveHistory = new MoveHistory(this, gameState)
   }
