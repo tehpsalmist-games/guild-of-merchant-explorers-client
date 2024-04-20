@@ -37,21 +37,31 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
 
   // show/hide logic for game pieces
   const isVillageCandidate =
-    gameState.activePlayer.mode === 'village' &&
+    gameState.activePlayer.mode === 'choosing-village' &&
     hex.region === gameState.activePlayer.regionForVillage &&
     hex.isVillageCandidate
-  const isTradeRouteCandidate = 
-    gameState.activePlayer.mode === 'picking-trade-route' &&
+  const isTradeRouteCandidate =
+    gameState.activePlayer.mode === 'choosing-trade-route' &&
     gameState.activePlayer.connectedTradePosts.includes(hex) &&
     !gameState.activePlayer.chosenRoute.includes(hex)
   const isSelectedTradeRoute =
-    gameState.activePlayer.mode === 'picking-trade-route' &&
-    gameState.activePlayer.chosenRoute.includes(hex)
-  const isTradeCandidate = 
-    gameState.activePlayer.mode === 'trading' &&
-    gameState.activePlayer.chosenRoute.includes(hex)
-  const showBlock = hex.isExplored && !hex.isCity && !hex.isVillage && !isVillageCandidate && !isTradeCandidate && !isTradeRouteCandidate && !isSelectedTradeRoute
-  const coverImage = hex.crystalValue ? crystalImage : hex.isRuin ? treasureChestImage : hex.isTower ? towerImage : tradePostCoverImage 
+    gameState.activePlayer.mode === 'choosing-trade-route' && gameState.activePlayer.chosenRoute.includes(hex)
+  const isTradeCandidate = gameState.activePlayer.mode === 'trading' && gameState.activePlayer.chosenRoute.includes(hex)
+  const showBlock =
+    hex.isExplored &&
+    !hex.isCity &&
+    !hex.isVillage &&
+    !isVillageCandidate &&
+    !isTradeCandidate &&
+    !isTradeRouteCandidate &&
+    !isSelectedTradeRoute
+  const coverImage = hex.crystalValue
+    ? crystalImage
+    : hex.isRuin
+      ? treasureChestImage
+      : hex.isTower
+        ? towerImage
+        : tradePostCoverImage
 
   // floating elements (blocks, towers, covered ruins, etc.)
   const floatingTower = useFloating(floatingOptions)
@@ -71,7 +81,7 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
         d={`M${x},${y} h50 l25,43.3 l-25,43.3 h-50 l-25,-43.3 z`}
         className={clsx(className, 'fill-transparent', {
           'cursor-pointer hover:fill-red-500/15': gameState.activePlayer.mode === 'exploring' && hex.isExplorable(),
-          'cursor-pointer !fill-blue-500/15 hover:!fill-blue-500/25': isVillageCandidate ||  isTradeCandidate,
+          'cursor-pointer !fill-blue-500/15 hover:!fill-blue-500/25': isVillageCandidate || isTradeCandidate,
           'cursor-pointer !fill-yellow-500/15 hover:!fill-yellow-500/25': isTradeRouteCandidate,
           'cursor-pointer !fill-green-500/15 hover:!fill-green-500/25': isSelectedTradeRoute,
         })}
@@ -82,19 +92,29 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
           switch (gameState.activePlayer.mode) {
             case 'exploring':
               if (!hex.isExplorable()) return
-              else break
-            case 'village':
+
+              return gameState.activePlayer.moveHistory.doMove({ action: 'explore', hex })
+            case 'choosing-village':
               if (!isVillageCandidate) return
-              else break
-            case 'picking-trade-route':
+
+              return gameState.activePlayer.moveHistory.doMove({ action: 'choose-village', hex })
+            case 'choosing-trade-route':
               if (!isTradeRouteCandidate) return
-              else break
+
+              return gameState.activePlayer.moveHistory.doMove({ action: 'choose-trade-route', hex })
             case 'trading':
               if (!isTradeCandidate) return
-              else break
-          }
 
-          return gameState.activePlayer.moveHistory.doMove(hex)
+              const tradingHex = gameState.activePlayer.chosenRoute.find((h) => h !== hex)
+
+              if (!tradingHex) return
+
+              return gameState.activePlayer.moveHistory.doMove({
+                action: 'cover-tradepost',
+                hex,
+                tradingHex,
+              })
+          }
         }}
         {...props}
       />

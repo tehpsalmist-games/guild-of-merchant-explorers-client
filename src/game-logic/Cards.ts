@@ -89,25 +89,27 @@ export class Hand<CardType extends { id: string }> {
 }
 
 export interface CardPlacementRules {
+  message: string
   limit: number
   connectionRequired: boolean
   surrounding?: boolean
   straight: boolean
+  consecutive: boolean
   terrains: { terrain: Terrain; count: number }[]
   regionBound: boolean
-  initialTerrain?: Terrain[]
   // ad hoc rules for the special ones
 }
 
 export interface ExplorerCard {
   id: string
-  rules: CardPlacementRules
+  imageUrl: URL
+  rules: CardPlacementRules[]
 }
 
 export interface GlobalExplorerCard {
   id: string
   imageUrl: URL
-  rules: CardPlacementRules | ((p: Player) => CardPlacementRules)
+  rules: CardPlacementRules[] | ((p: Player) => CardPlacementRules[])
 }
 
 export class ExplorerDeck extends Deck<GlobalExplorerCard> {

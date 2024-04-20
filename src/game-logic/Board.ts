@@ -251,7 +251,94 @@ export class Hex {
   }
 
   isExplorable() {
-    return !this.isExplored && this.board.hexContactIterator(this).some((h) => h.isExplored)
+    if (this.isExplored || this.board.hexContactIterator(this).every((h) => !h.isExplored)) {
+      return false
+    }
+
+    const rules =
+      typeof this.board.gameState.currentExplorerCard.rules === 'function'
+        ? this.board.gameState.currentExplorerCard.rules(this.board.player)
+        : this.board.gameState.currentExplorerCard.rules
+
+    const placedHexes = this.board.player.moveHistory.getPlacedHexes()
+    const touchingHexes = this.board.hexContactIterator(this, true)
+
+    const phase = this.board.player.cardPhase
+    const rule = rules[phase]
+
+    if (!rule) {
+      return false
+    }
+
+    // already run out of hexes to place
+    if (rule.limit <= placedHexes[phase].length) {
+      return false
+    }
+
+    // does the hex fit an allowable terrain type?
+    const fitsAPermissibleTerrain = rule.terrains.some((t) => {
+      // all hexes match a wild, of course
+      if (t.terrain === 'wild' || this.terrain === 'wild') {
+        return true
+      }
+
+      // matches the terrain type directly and not all of this type have been placed
+      if (t.terrain === this.terrain && t.count > placedHexes[phase].filter((h) => h.terrain === t.terrain).length) {
+        return true
+      }
+
+      return false
+    })
+
+    // rule out hex that is an invalid terrain type
+    if (!fitsAPermissibleTerrain) {
+      return false
+    }
+
+    const flattenedPlacements = placedHexes.flat()
+    // just has to connect to anything placed during this turn
+    if (
+      rule.connectionRequired &&
+      flattenedPlacements.length &&
+      !flattenedPlacements.some((h) => touchingHexes.includes(h))
+    ) {
+      return false
+    }
+
+    // must be consecutive (connected to the last hex placed)
+    if (
+      rule.consecutive &&
+      flattenedPlacements.length &&
+      !touchingHexes.includes(flattenedPlacements[flattenedPlacements.length - 1])
+    ) {
+      return false
+    }
+
+    // must be in a straight line in either direction
+    if (rule.straight && flattenedPlacements.length > 1) {
+      const firstHexContacts = this.board.hexContactIterator(flattenedPlacements[0], true)
+      const secondHexContacts = this.board.hexContactIterator(flattenedPlacements[1], true)
+
+      const firstIndex = secondHexContacts.findIndex((h) => h === flattenedPlacements[0])
+      const secondIndex = firstHexContacts.findIndex((h) => h === flattenedPlacements[1])
+
+      const lastHexContacts =
+        flattenedPlacements.length === 2
+          ? secondHexContacts
+          : this.board.hexContactIterator(flattenedPlacements[flattenedPlacements.length - 1])
+
+      if (firstHexContacts[firstIndex] !== this && lastHexContacts[secondIndex] !== this) {
+        return false
+      }
+    }
+
+    // must be in the same region as the initial placement
+    if (rule.regionBound && placedHexes[phase][0] && placedHexes[phase][0].region !== this.region) {
+      // console.log('region bound', rules, phase, placedHexes)
+      return false
+    }
+
+    return true
   }
 
   getConnectedHexes(connected: Hex[] = [], visited: Record<string, 1> = {}) {
@@ -272,8 +359,8 @@ export class Hex {
     return connected
   }
 
-  getConnectedTradingPosts(){
-    return this.getConnectedHexes().filter(h => !h.isCovered && h.tradingPostValue > 0)
+  getConnectedTradingPosts() {
+    return this.getConnectedHexes().filter((h) => !h.isCovered && h.tradingPostValue > 0)
   }
 }
 
@@ -305,7 +392,7 @@ export class Region {
       }
     }
   }
-  
+
   get size() {
     return this.hexes.length
   }

@@ -46,9 +46,18 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
               <img className="max-h-full" src={gameState.currentExplorerCard.imageUrl.href} />
             </button>
           )}
-          <Button className="mr-4" variant="primary" onClick={() => gameState.flipExplorerCard()}>
-            Next Card
-          </Button>
+          {(!gameState.currentExplorerCard ||
+            gameState.currentExplorerCard.rules.length - 1 === gameState.activePlayer.cardPhase) && (
+            <Button className="mr-4" variant="primary" onClick={() => gameState.flipExplorerCard()}>
+              Next Card
+            </Button>
+          )}
+          {gameState.currentExplorerCard &&
+            gameState.currentExplorerCard.rules.length - 1 !== gameState.activePlayer.cardPhase && (
+              <Button className="mr-4" variant="primary" onClick={() => gameState.activePlayer.nextCardPhase()}>
+                Next Phase
+              </Button>
+            )}
           <img className="ml-auto max-h-16" src={coinImage.href} alt="coin" />
           <span className="text-6xl font-bold leading-[1em] text-primary-500 [text-shadow:_0_0_6px_rgba(255_255_255)]">
             {gameState.activePlayer.coins}
@@ -63,7 +72,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
 
         <div
           className={clsx(
-            'fixed right-0 top-0 h-screen z-50 w-sm bg-gray-700/60 transition-all duration-300',
+            'fixed right-0 top-0 z-50 h-screen w-sm bg-gray-700/60 transition-all duration-300',
             sideBarOpen ? 'translate-x-0' : 'translate-x-sm',
           )}
         >
@@ -94,9 +103,8 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
           ></Button>
         </div>
       </main>
-      //TODO this needs to be styled
       {gameState.activePlayer.mode === 'user-prompt' && (
-        <Modal onClose={() => {/* you can't close this unless you choose something */}}>
+        <Modal onClose={() => {}}>
           <p>Pick which action you want to handle next.</p>
           {gameState.activePlayer.treasureCardHex && (
             <Button onClick={() => gameState.activePlayer.drawTreasureMode()}>Draw Treasure (No Undo)</Button>
@@ -108,18 +116,10 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
             <Button onClick={() => gameState.activePlayer.villageMode()}>Place Village</Button>
           )}
           {gameState.activePlayer.moveHistory.currentMoves.length > 0 && (
-            <Button variant="destructive" onClick={() => gameState.activePlayer.moveHistory.undoMove()}>Undo</Button>
+            <Button variant="destructive" onClick={() => gameState.activePlayer.moveHistory.undoMove()}>
+              Undo
+            </Button>
           )}
-          <p>
-            <a
-              href="https://react.dev/learn/writing-markup-with-jsx"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary-400 hover:text-primary-300 hover:underline"
-            >
-              React-flavored JSX Documentation
-            </a>
-          </p>
         </Modal>
       )}
     </>

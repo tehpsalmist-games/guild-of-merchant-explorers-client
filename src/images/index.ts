@@ -35,101 +35,65 @@ export const sandVillageBonus = new URL('/src/images/treasure-cards/sand-village
 export const towerBonus = new URL('/src/images/treasure-cards/tower-bonus.png', import.meta.url)
 export const twoCoins = new URL('/src/images/treasure-cards/two-coins.png', import.meta.url)
 
-// power cards
-export const powerCardconnectedlistgrasswater5 = new URL(
-  '/src/images/power-cards/power-card-connected-list-grass-water-5.png',
+// investigate cards
+export const connectedlistgrasswater5 = new URL(
+  '/src/images/investigate-cards/connected-list-grass-water-5.png',
   import.meta.url,
 )
-export const powerCardconnectedlistmountainwater4 = new URL(
-  '/src/images/power-cards/power-card-connected-list-mountain-water-4.png',
+export const connectedlistmountainwater4 = new URL(
+  '/src/images/investigate-cards/connected-list-mountain-water-4.png',
   import.meta.url,
 )
-export const powerCardconnectedlistsandwater5 = new URL(
-  '/src/images/power-cards/power-card-connected-list-sand-water-5.png',
+export const connectedlistsandwater5 = new URL(
+  '/src/images/investigate-cards/connected-list-sand-water-5.png',
   import.meta.url,
 )
-export const powerCardgrass3mountain2 = new URL(
-  '/src/images/power-cards/power-card-grass-3-mountain-2.png',
+export const grass3mountain2 = new URL('/src/images/investigate-cards/grass-3-mountain-2.png', import.meta.url)
+export const grass4water1 = new URL('/src/images/investigate-cards/grass-4-water-1.png', import.meta.url)
+export const infinitelineland = new URL('/src/images/investigate-cards/infinite-line-land.png', import.meta.url)
+export const infinitelinewater = new URL('/src/images/investigate-cards/infinite-line-water.png', import.meta.url)
+export const listcoinbonus2mountain3 = new URL(
+  '/src/images/investigate-cards/list-coin-bonus-2-mountain-3.png',
   import.meta.url,
 )
-export const powerCardgrass4water1 = new URL('/src/images/power-cards/power-card-grass-4-water-1.png', import.meta.url)
-export const powerCardinfinitelineland = new URL(
-  '/src/images/power-cards/power-card-infinite-line-land.png',
+export const listcoinbonus3grass4 = new URL(
+  '/src/images/investigate-cards/list-coin-bonus-3-grass-4.png',
   import.meta.url,
 )
-export const powerCardinfinitelinewater = new URL(
-  '/src/images/power-cards/power-card-infinite-line-water.png',
+export const listcoinbonus3sand4 = new URL(
+  '/src/images/investigate-cards/list-coin-bonus-3-sand-4.png',
   import.meta.url,
 )
-export const powerCardlistcoinbonus2mountain3 = new URL(
-  '/src/images/power-cards/power-card-list-coin-bonus-2-mountain-3.png',
+export const mountain3water1 = new URL('/src/images/investigate-cards/mountain-3-water-1.png', import.meta.url)
+export const region4 = new URL('/src/images/investigate-cards/region-4.png', import.meta.url)
+export const sand1grass1mountain1water2 = new URL(
+  '/src/images/investigate-cards/sand-1-grass-1-mountain-1-water-2.png',
   import.meta.url,
 )
-export const powerCardlistcoinbonus3grass4 = new URL(
-  '/src/images/power-cards/power-card-list-coin-bonus-3-grass-4.png',
+export const sand3mountain2 = new URL('/src/images/investigate-cards/sand-3-mountain-2.png', import.meta.url)
+export const sand4water1 = new URL('/src/images/investigate-cards/sand-4-water-1.png', import.meta.url)
+export const surroundinggrass = new URL('/src/images/investigate-cards/surrounding-grass.png', import.meta.url)
+export const surroundingmountain = new URL('/src/images/investigate-cards/surrounding-mountain.png', import.meta.url)
+export const surroundingsand = new URL('/src/images/investigate-cards/surrounding-sand.png', import.meta.url)
+export const surroundingwater = new URL('/src/images/investigate-cards/surrounding-water.png', import.meta.url)
+export const travellingfromgrass = new URL('/src/images/investigate-cards/travelling-from-grass.png', import.meta.url)
+export const travellingfrommountain = new URL(
+  '/src/images/investigate-cards/travelling-from-mountain.png',
   import.meta.url,
 )
-export const powerCardlistcoinbonus3sand4 = new URL(
-  '/src/images/power-cards/power-card-list-coin-bonus-3-sand-4.png',
+export const travellingfromsand = new URL('/src/images/investigate-cards/travelling-from-sand.png', import.meta.url)
+export const travellingfromvillage2 = new URL(
+  '/src/images/investigate-cards/travelling-from-village-2.png',
   import.meta.url,
 )
-export const powerCardmountain3water1 = new URL(
-  '/src/images/power-cards/power-card-mountain-3-water-1.png',
+export const travellingfromwater = new URL('/src/images/investigate-cards/travelling-from-water.png', import.meta.url)
+export const water4cities = new URL('/src/images/investigate-cards/water-4-cities.png', import.meta.url)
+export const water4coin2 = new URL('/src/images/investigate-cards/water-4-coin-2.png', import.meta.url)
+export const water4doubletreasure = new URL(
+  '/src/images/investigate-cards/water-4-double-treasure.png',
   import.meta.url,
 )
-export const powerCardregion4 = new URL('/src/images/power-cards/power-card-region-4.png', import.meta.url)
-export const powerCardsand1grass1mountain1water2 = new URL(
-  '/src/images/power-cards/power-card-sand-1-grass-1-mountain-1-water-2.png',
-  import.meta.url,
-)
-export const powerCardsand3mountain2 = new URL(
-  '/src/images/power-cards/power-card-sand-3-mountain-2.png',
-  import.meta.url,
-)
-export const powerCardsand4water1 = new URL('/src/images/power-cards/power-card-sand-4-water-1.png', import.meta.url)
-export const powerCardsurroundinggrass = new URL(
-  '/src/images/power-cards/power-card-surrounding-grass.png',
-  import.meta.url,
-)
-export const powerCardsurroundingmountain = new URL(
-  '/src/images/power-cards/power-card-surrounding-mountain.png',
-  import.meta.url,
-)
-export const powerCardsurroundingsand = new URL(
-  '/src/images/power-cards/power-card-surrounding-sand.png',
-  import.meta.url,
-)
-export const powerCardsurroundingwater = new URL(
-  '/src/images/power-cards/power-card-surrounding-water.png',
-  import.meta.url,
-)
-export const powerCardtravellingfromgrass = new URL(
-  '/src/images/power-cards/power-card-travelling-from-grass.png',
-  import.meta.url,
-)
-export const powerCardtravellingfrommountain = new URL(
-  '/src/images/power-cards/power-card-travelling-from-mountain.png',
-  import.meta.url,
-)
-export const powerCardtravellingfromsand = new URL(
-  '/src/images/power-cards/power-card-travelling-from-sand.png',
-  import.meta.url,
-)
-export const powerCardtravellingfromvillage2 = new URL(
-  '/src/images/power-cards/power-card-travelling-from-village-2.png',
-  import.meta.url,
-)
-export const powerCardtravellingfromwater = new URL(
-  '/src/images/power-cards/power-card-travelling-from-water.png',
-  import.meta.url,
-)
-export const powerCardwater4cities = new URL('/src/images/power-cards/power-card-water-4-cities.png', import.meta.url)
-export const powerCardwater4coin2 = new URL('/src/images/power-cards/power-card-water-4-coin-2.png', import.meta.url)
-export const powerCardwater4doubletreasure = new URL(
-  '/src/images/power-cards/power-card-water-4-double-treasure.png',
-  import.meta.url,
-)
-export const powerCardwater5 = new URL('/src/images/power-cards/power-card-water-5.png', import.meta.url)
+export const water5 = new URL('/src/images/investigate-cards/water-5.png', import.meta.url)
 
 // objective cards
 export const aghonObjective1 = new URL('/src/images/objectives/aghon/objective 1.png', import.meta.url)

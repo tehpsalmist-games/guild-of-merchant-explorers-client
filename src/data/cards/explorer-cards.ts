@@ -15,57 +15,77 @@ export const getInitialExplorerList = (): GlobalExplorerCard[] => [
   {
     id: 'mountain-1',
     imageUrl: exploreMountain,
-    rules: {
-      limit: 1,
-      straight: false,
-      connectionRequired: false,
-      terrains: [{ terrain: 'mountain', count: 1 }],
-      regionBound: false,
-    },
+    rules: [
+      {
+        message: 'Explore 1 Mountain hex',
+        limit: 1,
+        straight: false,
+        consecutive: false,
+        connectionRequired: false,
+        terrains: [{ terrain: 'mountain', count: 1 }],
+        regionBound: false,
+      },
+    ],
   },
   {
     id: 'grass-2',
     imageUrl: exploreGrass,
-    rules: {
-      limit: 2,
-      connectionRequired: false,
-      straight: false,
-      terrains: [{ terrain: 'grass', count: 2 }],
-      regionBound: false,
-    },
+    rules: [
+      {
+        message: 'Explore any 2 Grassland hexes',
+        limit: 2,
+        connectionRequired: false,
+        straight: false,
+        consecutive: false,
+        terrains: [{ terrain: 'grass', count: 2 }],
+        regionBound: false,
+      },
+    ],
   },
   {
     id: 'sand-2',
     imageUrl: exploreSand,
-    rules: {
-      limit: 2,
-      connectionRequired: false,
-      straight: false,
-      terrains: [{ terrain: 'sand', count: 2 }],
-      regionBound: false,
-    },
+    rules: [
+      {
+        message: 'Explore any 2 Desert hexes',
+        limit: 2,
+        connectionRequired: false,
+        straight: false,
+        consecutive: false,
+        terrains: [{ terrain: 'sand', count: 2 }],
+        regionBound: false,
+      },
+    ],
   },
   {
     id: 'water-3',
     imageUrl: exploreWater,
-    rules: {
-      limit: 3,
-      connectionRequired: true,
-      straight: true,
-      terrains: [{ terrain: 'water', count: 3 }],
-      regionBound: false,
-    },
+    rules: [
+      {
+        message: 'Explore 3 connected Water hexes in a straight line',
+        limit: 3,
+        connectionRequired: true,
+        straight: true,
+        consecutive: false,
+        terrains: [{ terrain: 'water', count: 3 }],
+        regionBound: false,
+      },
+    ],
   },
   {
     id: 'wild-2',
     imageUrl: exploreWild,
-    rules: {
-      limit: 2,
-      connectionRequired: true,
-      straight: false,
-      terrains: [{ terrain: 'wild', count: 2 }],
-      regionBound: false,
-    },
+    rules: [
+      {
+        message: 'Explore any 2 connected hexes',
+        limit: 2,
+        connectionRequired: true,
+        straight: false,
+        consecutive: false,
+        terrains: [{ terrain: 'wild', count: 2 }],
+        regionBound: false,
+      },
+    ],
   },
   {
     id: 'era-1',
