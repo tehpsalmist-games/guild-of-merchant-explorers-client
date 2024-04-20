@@ -287,6 +287,9 @@ export class Hex {
     if (this.land) {
       this.land.unexplore()
     }
+
+    this.board.player.chosenRoute = []
+    this.board.player.connectedTradePosts = []
   }
 
   isExplorable() {

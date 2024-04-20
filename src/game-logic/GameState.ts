@@ -65,6 +65,7 @@ export class GameState extends EventTarget {
       // only wipe the board if we're going to a new era, otherwise leave it up for satisfactory reviewing
       this.currentTurn = 0
       this.activePlayer.board.wipe()
+      this.activePlayer.freeExploreQuantity = 0
       this.explorerDeck.prepareForNextEra()
 
       this.flipExplorerCard()
@@ -86,6 +87,7 @@ export class GameState extends EventTarget {
     if (nextCard) {
       this.explorerDeck.useCard(nextCard.id)
       this.turnHistory.saveCardFlip(nextCard.id)
+      this.activePlayer.freeExploreQuantity = 0
 
       // first era card flip, need to deal new ones to the player(s)
       if (this.currentExplorerCard.id === `era-${this.era + 1}`) {
@@ -193,6 +195,8 @@ export class Player {
 
   cardPhase = 0 // some cards have complex logic in 2 or more phases
 
+  freeExploreQuantity = 0 //-1 means infinite
+
   constructor(boardData: BoardData, gameState: GameState) {
     this.gameState = gameState
     this.board = new Board(boardData, this, gameState)
@@ -279,6 +283,10 @@ export class Player {
   }
 
   enterExploringMode() {
+    if (this.freeExploreQuantity > 0 || this.freeExploreQuantity === -1) {
+      this.enterFreeExploringMode(this.freeExploreQuantity)
+    }
+
     this.mode = 'exploring'
     this.message = this.gameState.currentExplorerCard?.rules(this)?.[this.cardPhase]?.message ?? 'Explore!'
     this.gameState.emitStateChange()
@@ -294,6 +302,12 @@ export class Player {
       this.checkForUserDecision()
     }
   }
+
+  enterFreeExploringMode(quantity: number = 1) {
+    this.mode = 'free-exploring'
+    this.message = 'Explore anywhere!'
+    this.gameState.emitStateChange()
+  }
 }
 
 /**
@@ -305,6 +319,10 @@ type Move =
     }
   | {
       action: 'explore'
+      hex: Hex
+    }
+  | {
+      action: 'freely-explore'
       hex: Hex
     }
   | {
@@ -368,6 +386,13 @@ export class MoveHistory {
         }
 
         break
+      case 'freely-explore':
+          move.hex.explore()
+          if (this.player.freeExploreQuantity > 0) {
+            this.player.freeExploreQuantity--
+          }
+          this.player.checkForUserDecision()
+          break
       case 'choose-trade-route':
         this.player.chosenRoute.push(move.hex)
 
@@ -415,11 +440,16 @@ export class MoveHistory {
         this.player.checkForUserDecision()
         break
       case 'draw-treasure':
+        const bonus = this.gameState.currentExplorerCard.bonus(this.player)
+        const multiplier = bonus?.type === 'coin' ? bonus.multiplier : 1
+        //TODO repeat for each treasure card to draw
+
         this.player.treasureCardHex = undefined
         //Completely blocks the ability to undo anything prior to drawing a treasure card
         this.saveState()
-        //TODO add do-treasure mode instead of checkForUserDecision here
-        this.player.checkForUserDecision()
+        //TODO for now, we assume that all treasure cards are blocks
+        this.player.enterFreeExploringMode()
+        //this.player.checkForUserDecision()
         break
       case 'choose-investigate-card':
         this.player.investigateCards.push(move.chosenCard)
@@ -453,8 +483,13 @@ export class MoveHistory {
           break
         case 'explore':
           undoing.hex.unexplore()
-          this.player.chosenRoute = []
-          this.player.connectedTradePosts = []
+          this.player.checkForUserDecision()
+          break
+        case 'freely-explore':
+          undoing.hex.unexplore()
+          if (this.player.freeExploreQuantity > -1){
+            this.player.freeExploreQuantity++
+          }
           this.player.checkForUserDecision()
           break
         case 'choose-trade-route':
