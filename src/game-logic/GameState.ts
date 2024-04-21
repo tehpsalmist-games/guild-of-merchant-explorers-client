@@ -228,20 +228,20 @@ export class Player {
     }
 
     const hasTradePosts = this.connectedTradePosts.length > 1
-    const hasVillage = !!this.regionForVillage
+    const needsVillage = !!this.regionForVillage
     const hasTreasureCards = !!this.treasureCardHex
 
     switch (true) {
-      case !hasTradePosts && !hasVillage && !hasTreasureCards:
+      case !hasTradePosts && !needsVillage && !hasTreasureCards:
         this.enterExploringMode()
         break
-      case hasTradePosts && !hasVillage && !hasTreasureCards:
+      case hasTradePosts && !needsVillage && !hasTreasureCards:
         this.enterPickingTradeRouteMode()
         break
-      case !hasTradePosts && hasVillage && !hasTreasureCards:
+      case !hasTradePosts && needsVillage && !hasTreasureCards:
         this.enterVillageMode()
         break
-      case !hasTradePosts && !hasVillage && hasTreasureCards:
+      case !hasTradePosts && !needsVillage && hasTreasureCards:
         this.enterDrawTreasureMode()
         break
       default:

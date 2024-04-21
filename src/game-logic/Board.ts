@@ -545,7 +545,6 @@ export class Hex {
 export class Region {
   terrain: Terrain
   hexes: Hex[] = []
-  hasVillage = false
   land: Land
   board: Board
   villageCandidates: Hex[]
@@ -575,20 +574,22 @@ export class Region {
     return this.hexes.length
   }
 
+  get hasVillage() {
+    return this.villageCandidates.some((h) => h.isVillage)
+  }
+
   get log() {
     return this.hexes.map((h) => h.element)
   }
 
   explore() {
     if (!this.hasVillage && this.hexes.every((h) => h.isExplored)) {
-      this.hasVillage = true
       this.board.player.regionForVillage = this
     }
   }
 
   unexplore() {
     if (this.hasVillage && this.hexes.some((h) => !h.isExplored)) {
-      this.hasVillage = false
       this.board.player.regionForVillage = undefined
     }
   }
