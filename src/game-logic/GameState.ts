@@ -387,12 +387,12 @@ export class MoveHistory {
 
         break
       case 'freely-explore':
-          move.hex.explore()
-          if (this.player.freeExploreQuantity > 0) {
-            this.player.freeExploreQuantity--
-          }
-          this.player.checkForUserDecision()
-          break
+        move.hex.explore()
+        if (this.player.freeExploreQuantity > 0) {
+          this.player.freeExploreQuantity--
+        }
+        this.player.checkForUserDecision()
+        break
       case 'choose-trade-route':
         this.player.chosenRoute.push(move.hex)
 
@@ -487,7 +487,7 @@ export class MoveHistory {
           break
         case 'freely-explore':
           undoing.hex.unexplore()
-          if (this.player.freeExploreQuantity > -1){
+          if (this.player.freeExploreQuantity > -1) {
             this.player.freeExploreQuantity++
           }
           this.player.enterFreeExploringMode()

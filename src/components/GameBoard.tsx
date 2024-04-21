@@ -6,6 +6,8 @@ import ChevronRightIcon from '@heroicons/react/24/solid/ChevronRightIcon'
 import ChevronLeftIcon from '@heroicons/react/24/solid/ChevronLeftIcon'
 import clsx from 'clsx'
 import { coinImage, romanNumeral } from '../images'
+import { EraLabel } from './EraLabel'
+import { ExplorerCardMat } from './ExplorerCardMat'
 
 export interface GameBoardProps extends ComponentProps<'main'> {}
 
@@ -51,79 +53,83 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
   return (
     <>
       <div className="fixed top-0 z-40 h-16 w-full bg-white px-4">
-        <div className="flex h-full items-center">
-          <div className="mr-4 flex items-center gap-2">
-            <img className="h-14" src={romanNumeral.href} />
-            {gameState.era > 0 && (
-              <img
-                className={clsx('h-14', gameState.era === 3 && 'translate-x-1 -rotate-12')}
-                src={romanNumeral.href}
-              />
+        <div className="grid h-full grid-cols-[1fr,auto,1fr] grid-rows-1">
+          <div className="flex h-16 items-center py-0.5">
+            <EraLabel className="mr-4" />
+            {gameState.currentExplorerCard && (
+              <button className="mx-4 flex h-full" onClick={() => setSideBarOpen((o) => !o)}>
+                {!investigateCard && (
+                  <img
+                    className="max-h-full rounded border-2 border-transparent"
+                    src={gameState.currentExplorerCard.imageUrl.href}
+                  />
+                )}
+                {investigateCard && (
+                  <img className="max-h-full rounded border-2 border-primary-400" src={investigateCard.imageUrl.href} />
+                )}
+              </button>
             )}
-            {gameState.era > 1 && (
-              <img
-                className={clsx('h-14', gameState.era === 3 && '-translate-x-1 rotate-12')}
-                src={romanNumeral.href}
-              />
+            {(gameState.activePlayer.mode === 'choosing-investigate-card' ||
+              gameState.activePlayer.mode === 'choosing-investigate-card-reuse') && (
+              <button
+                className="flex-center mr-4 h-full gap-4 rounded border-2 border-primary-400"
+                onClick={() => setInvestigateModalOpen(true)}
+              >
+                {(gameState.era < 3
+                  ? gameState.activePlayer.investigateCardCandidates
+                  : gameState.activePlayer.investigateCards
+                )?.map((candidate) => (
+                  <img
+                    key={candidate.id}
+                    className="-z-10 max-h-full"
+                    src={candidate.imageUrl.href}
+                    alt="Investigate Card"
+                  />
+                ))}
+              </button>
+            )}
+            {gameState.currentCardRules &&
+              (!gameState.currentExplorerCard ||
+                (gameState.currentCardRules?.length ?? 1) - 1 === gameState.activePlayer.cardPhase) && (
+                <Button
+                  className="mr-4"
+                  variant={
+                    gameState.activePlayer.moveHistory.getPlacedHexes()[gameState.activePlayer.cardPhase]?.length ===
+                    gameState.currentCardRules[gameState.activePlayer.cardPhase]?.limit
+                      ? 'primary'
+                      : 'dismissive'
+                  }
+                  onClick={() => gameState.flipExplorerCard()}
+                >
+                  Next Card
+                </Button>
+              )}
+            {gameState.currentCardRules &&
+              (gameState.currentCardRules?.length ?? 1) - 1 !== gameState.activePlayer.cardPhase && (
+                <Button
+                  className="mr-4"
+                  variant={
+                    gameState.activePlayer.moveHistory.getPlacedHexes()[gameState.activePlayer.cardPhase]?.length ===
+                    gameState.currentCardRules[gameState.activePlayer.cardPhase]?.limit
+                      ? 'primary'
+                      : 'dismissive'
+                  }
+                  onClick={() => gameState.activePlayer.enterNextCardPhaseMode()}
+                >
+                  Next Phase
+                </Button>
+              )}
+            {!userPromptOpen && gameState.activePlayer.mode === 'user-prompting' && (
+              <Button onClick={() => setUserPromptOpen(true)}>View Choices</Button>
             )}
           </div>
-          {gameState.currentExplorerCard && (
-            <button className="mx-4 flex h-full p-1" onClick={() => setSideBarOpen((o) => !o)}>
-              <img className="max-h-full" src={gameState.currentExplorerCard.imageUrl.href} />
-              {investigateCard && <img className="ml-2 max-h-full" src={investigateCard.imageUrl.href} />}
-            </button>
-          )}
-          {(gameState.activePlayer.mode === 'choosing-investigate-card' ||
-            gameState.activePlayer.mode === 'choosing-investigate-card-reuse') && (
-            <div className="flex-center mr-4 h-16 gap-4 border border-primary-400">
-              {(gameState.era < 3
-                ? gameState.activePlayer.investigateCardCandidates
-                : gameState.activePlayer.investigateCards
-              )?.map((candidate) => (
-                <button className="h-full p-1" key={candidate.id} onClick={() => setInvestigateModalOpen(true)}>
-                  <img className="max-h-full" src={candidate.imageUrl.href} alt="Investigate Card" />
-                </button>
-              ))}
-            </div>
-          )}
-          {gameState.currentCardRules &&
-            (!gameState.currentExplorerCard ||
-              (gameState.currentCardRules?.length ?? 1) - 1 === gameState.activePlayer.cardPhase) && (
-              <Button
-                className="mr-4"
-                variant={
-                  gameState.activePlayer.moveHistory.getPlacedHexes()[gameState.activePlayer.cardPhase]?.length ===
-                  gameState.currentCardRules[gameState.activePlayer.cardPhase]?.limit
-                    ? 'primary'
-                    : 'dismissive'
-                }
-                onClick={() => gameState.flipExplorerCard()}
-              >
-                Next Card
-              </Button>
-            )}
-          {gameState.currentCardRules &&
-            (gameState.currentCardRules?.length ?? 1) - 1 !== gameState.activePlayer.cardPhase && (
-              <Button
-                className="mr-4"
-                variant={
-                  gameState.activePlayer.moveHistory.getPlacedHexes()[gameState.activePlayer.cardPhase]?.length ===
-                  gameState.currentCardRules[gameState.activePlayer.cardPhase]?.limit
-                    ? 'primary'
-                    : 'dismissive'
-                }
-                onClick={() => gameState.activePlayer.enterNextCardPhaseMode()}
-              >
-                Next Phase
-              </Button>
-            )}
-          {!userPromptOpen && gameState.activePlayer.mode === 'user-prompting' && (
-            <Button onClick={() => setUserPromptOpen(true)}>View Choices</Button>
-          )}
-          <img className="ml-auto max-h-16" src={coinImage.href} alt="coin" />
-          <span className="text-6xl font-bold leading-[1em] text-primary-500 [text-shadow:_0_0_6px_rgba(255_255_255)]">
-            {gameState.activePlayer.coins}
-          </span>
+          <ExplorerCardMat className="mx-auto" />
+          <div className="flex justify-end gap-2">
+            <img className="max-h-16" src={coinImage.href} alt="coin" />
+            <span className="text-6xl font-bold leading-[1em] text-primary-500 [text-shadow:_0_0_6px_rgba(255_255_255)]">
+              {gameState.activePlayer.coins}
+            </span>
+          </div>
         </div>
       </div>
       <div className="fixed left-1/2 top-16 z-50 mt-2 w-max max-w-[95vw] -translate-x-1/2 rounded bg-slate-900/50 p-2 text-lg font-bold text-white">
@@ -155,11 +161,11 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
             <div className="flex-center w-full flex-col gap-y-2">
               {gameState.currentExplorerCard && (
                 <img
-                  className={clsx(gameState.currentExplorerCard.isEraCard && 'w-1/3')}
+                  className={clsx(gameState.currentExplorerCard.isEraCard ? 'mb-2 w-1/3 rounded-lg' : 'rounded-3xl')}
                   src={gameState.currentExplorerCard.imageUrl.href}
                 />
               )}
-              {investigateCard && <img className="ml-2 w-full" src={investigateCard.imageUrl.href} />}
+              {investigateCard && <img className="ml-2 w-full rounded-3xl" src={investigateCard.imageUrl.href} />}
             </div>
           </div>
         </div>
