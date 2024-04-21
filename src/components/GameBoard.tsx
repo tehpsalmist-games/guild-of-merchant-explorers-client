@@ -153,7 +153,6 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
       </div>
       <main className={`${className} game-board-grid relative min-h-screen w-full`} {...props}>
         <ExplorerMap className="row-start-2" />
-
         <div
           className={clsx(
             'fixed right-0 top-0 z-50 h-screen w-sm bg-gray-700/60 transition-all duration-300',
