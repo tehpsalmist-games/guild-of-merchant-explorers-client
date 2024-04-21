@@ -4,8 +4,9 @@ import { ExplorerMap } from './ExplorerMap'
 import { Button, Modal, useEventListener } from '@8thday/react'
 import ChevronRightIcon from '@heroicons/react/24/solid/ChevronRightIcon'
 import ChevronLeftIcon from '@heroicons/react/24/solid/ChevronLeftIcon'
+import UTurnIcon from '@heroicons/react/24/solid/ArrowUturnLeftIcon'
 import clsx from 'clsx'
-import { coinImage, romanNumeral } from '../images'
+import { coinImage, placeBlock, romanNumeral } from '../images'
 import { EraLabel } from './EraLabel'
 import { ExplorerCardMat } from './ExplorerCardMat'
 
@@ -67,6 +68,9 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                 {investigateCard && (
                   <img className="max-h-full rounded border-2 border-primary-400" src={investigateCard.imageUrl.href} />
                 )}
+                {gameState.activePlayer.mode === 'free-exploring' && (
+                  <img className="max-h-full rounded border-2 border-primary-400" src={placeBlock.href} />
+                )}
               </button>
             )}
             {(gameState.activePlayer.mode === 'choosing-investigate-card' ||
@@ -120,7 +124,19 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                 </Button>
               )}
             {!userPromptOpen && gameState.activePlayer.mode === 'user-prompting' && (
-              <Button onClick={() => setUserPromptOpen(true)}>View Choices</Button>
+              <Button variant="primary" onClick={() => setUserPromptOpen(true)}>
+                View Choices
+              </Button>
+            )}
+            {gameState.activePlayer.moveHistory.size > 0 && (
+              <Button
+                className="mr-4"
+                variant="dismissive"
+                PreIcon={UTurnIcon}
+                onClick={() => gameState.activePlayer.moveHistory.undoMove()}
+              >
+                Undo
+              </Button>
             )}
           </div>
           <ExplorerCardMat className="mx-auto" />

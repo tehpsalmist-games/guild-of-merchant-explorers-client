@@ -549,14 +549,14 @@ export class MoveHistory {
             this.player.discardedInvestigateCards.pop()!,
           ]
           this.player.mode = 'choosing-investigate-card'
+          this.player.message = 'Choose an Investigate Card'
           break
         case 'choose-investigate-card-reuse':
           this.player.era4SelectedInvestigateCard = null
           this.player.mode = 'choosing-investigate-card-reuse'
+          this.player.message = 'Choose an Investigate Card'
           break
       }
-    } else {
-      this.player.checkForUserDecision()
     }
 
     this.gameState.emitStateChange()
