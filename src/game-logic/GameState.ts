@@ -3,25 +3,31 @@ import { kazanData } from '../data/boards/kazan'
 import { aveniaData } from '../data/boards/avenia'
 import { cnidariaData } from '../data/boards/cnidaria'
 import { Board, BoardData, Hex, Region } from './Board'
-import { sleep } from '../utils'
-import { CardPlacementRules, ExplorerCard, ExplorerDeck, GlobalExplorerCard, InvestigateDeck } from './Cards'
+import { randomSelection, sleep } from '../utils'
+import { ExplorerCard, ExplorerDeck, GlobalExplorerCard, InvestigateDeck } from './Cards'
+import { objectives } from '../data/objectives'
 
 export type BoardName = 'aghon' | 'avenia' | 'kazan' | 'cnidaria'
 
 const getBoardData = (boardName: BoardName) => {
   switch (boardName) {
     case 'aghon':
-      return aghonData
+      return { boardData: aghonData, objectives: randomSelection(objectives.aghon, 3) }
     case 'avenia':
-      return aveniaData
+      return { boardData: aveniaData, objectives: randomSelection(objectives.avenia, 3) }
     case 'kazan':
-      return kazanData
+      return { boardData: kazanData, objectives: randomSelection(objectives.kazan, 3) }
     case 'cnidaria':
-      return cnidariaData
+      return { boardData: cnidariaData, objectives: randomSelection(objectives.cnidaria, 3) }
   }
 }
 
+interface Objective {
+  imageUrl: URL
+}
+
 export class GameState extends EventTarget {
+  boardName: string
   era = 0
   currentTurn = 0
 
@@ -31,12 +37,19 @@ export class GameState extends EventTarget {
   explorerDeck: ExplorerDeck
   currentExplorerCard: GlobalExplorerCard
 
+  objectives: Objective[] = []
+
   investigateDeck: InvestigateDeck
 
   constructor(boardName: BoardName) {
     super()
 
-    this.activePlayer = new Player(getBoardData(boardName), this)
+    this.boardName = boardName
+    const setupData = getBoardData(boardName)
+
+    this.objectives = setupData.objectives
+
+    this.activePlayer = new Player(setupData.boardData, this)
     this.turnHistory = new TurnHistory(this)
 
     this.investigateDeck = new InvestigateDeck()
