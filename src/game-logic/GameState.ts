@@ -460,7 +460,7 @@ export class MoveHistory {
         this.player.checkForUserDecision()
         break
       case 'draw-treasure':
-        //Applies the bonus from cirtain investigate cards
+        //Applies the bonus from certain investigate cards
         if (this.player.treasureCardsToDraw === 0) {
           const bonus = this.gameState.currentExplorerCard.bonus(this.player)
           const multiplier = bonus?.type === 'treasure' ? bonus.multiplier : 1
