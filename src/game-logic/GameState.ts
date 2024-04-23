@@ -236,8 +236,10 @@ export class Player {
   }
 
   checkForUserDecision() {
+    //If there is only one village candidate, auto place the village, then check for user decision again
     if (this.regionForVillage?.villageCandidates.length === 1) {
       this.enterVillageMode()
+      return
     }
 
     const hasTradePosts = this.connectedTradePosts.length > 1
@@ -540,6 +542,7 @@ export class MoveHistory {
             break
           }
 
+          //If there was only one village candidate, undoing the village placement should undo the explore action as well
           if (undoing.hex.region.villageCandidates.length === 1) {
             this.undoMove()
           } else {

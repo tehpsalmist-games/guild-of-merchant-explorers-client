@@ -589,9 +589,8 @@ export class Region {
   }
 
   unexplore() {
-    if (this.hasVillage && this.hexes.some((h) => !h.isExplored)) {
-      this.board.player.regionForVillage = undefined
-    }
+    //It's only possible to trigger one village placement at a time, so we don't need any fancy conditions to undo the village placement
+    this.board.player.regionForVillage = undefined
   }
 }
 
