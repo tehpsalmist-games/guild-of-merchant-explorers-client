@@ -192,7 +192,7 @@ export class Player {
   coins = 0
 
   treasureCardHex?: Hex
-  //treasureCardsToDraw = 0 // use this value to increment when cards are earned, and decrement when they are drawn
+  treasureCardsToDraw = 0 // use this value to increment when cards are earned, and decrement when they are drawn
   // treasureCards: TreasureCard[] = [] // imagine for now
 
   connectedTradePosts: Hex[] = []
@@ -236,6 +236,11 @@ export class Player {
   }
 
   checkForUserDecision() {
+    if (this.treasureCardsToDraw > 0) {
+      this.enterDrawTreasureMode()
+      return
+    }
+
     //If there is only one village candidate, auto place the village, then check for user decision again
     if (this.regionForVillage?.villageCandidates.length === 1) {
       this.enterVillageMode()
@@ -299,7 +304,7 @@ export class Player {
 
   enterExploringMode() {
     if (this.freeExploreQuantity > 0 || this.freeExploreQuantity === -1) {
-      this.enterFreeExploringMode(this.freeExploreQuantity)
+      this.enterFreeExploringMode()
     }
 
     this.mode = 'exploring'
@@ -318,7 +323,7 @@ export class Player {
     }
   }
 
-  enterFreeExploringMode(quantity: number = 1) {
+  enterFreeExploringMode() {
     this.mode = 'free-exploring'
     this.message = 'Explore anywhere!'
     this.gameState.emitStateChange()
@@ -455,16 +460,30 @@ export class MoveHistory {
         this.player.checkForUserDecision()
         break
       case 'draw-treasure':
-        const bonus = this.gameState.currentExplorerCard.bonus(this.player)
-        const multiplier = bonus?.type === 'coin' ? bonus.multiplier : 1
-        //TODO repeat for each treasure card to draw
+        //Applies the bonus from cirtain investigate cards
+        if (this.player.treasureCardsToDraw === 0) {
+          const bonus = this.gameState.currentExplorerCard.bonus(this.player)
+          const multiplier = bonus?.type === 'treasure' ? bonus.multiplier : 1
 
-        this.player.treasureCardHex = undefined
+          this.player.treasureCardsToDraw = multiplier
+        }
+
+        //TODO draw a treasure card here. But for now, we assume that all treasure cards are blocks
+
+        this.player.treasureCardsToDraw--
         //Completely blocks the ability to undo anything prior to drawing a treasure card
         this.saveState()
-        //TODO for now, we assume that all treasure cards are blocks
+
+        if (this.player.treasureCardsToDraw === 0) {
+          this.player.treasureCardHex = undefined
+        }
+
+        //if (treasure card is block place) {
         this.player.enterFreeExploringMode()
-        //this.player.checkForUserDecision()
+        //}
+        //else {
+        //  this.player.checkForUserDecision()
+        //}
         break
       case 'choose-investigate-card':
         this.player.investigateCards.push(move.chosenCard)
