@@ -24,11 +24,14 @@ export const ObjectiveCards = ({ className = '', ...props }: ObjectiveCardsProps
         card ? (
           <div key={i} className="relative w-full max-w-1/4">
             <img src={card.imageUrl.href} className="w-full rounded-2xl" />
-            {card.firstPlayers.some((p) => p === gameState.activePlayer) && (
+            {card.firstPlayers.concat(card.secondPlayers).some((p) => p === gameState.activePlayer) && (
               <img
                 src={blockImage.href}
                 alt="explorer block"
-                className="absolute left-1/4 top-1/2 h-6 -translate-y-1/2"
+                className={clsx(
+                  'absolute top-1/2 h-1/6 -translate-y-1/2 hue-rotate-[120deg] saturate-200',
+                  card.firstPlayers.includes(gameState.activePlayer) ? 'left-1/4 ' : 'right-1/4',
+                )}
               />
             )}
           </div>

@@ -111,16 +111,27 @@ export class Objective {
     if (this.firstPlayers.includes(p) || this.secondPlayers.includes(p)) return
 
     let matchingHexes: Hex[] | null = null
+
     if (this.simpleAlgorithm) {
       matchingHexes = this.checkWithSimpleAlgorithm(p)
+    }
 
-      if (this.complexAlgorithm) {
-        matchingHexes = this.checkWithComplexAlgorithm(p)
-      }
-      if (matchingHexes) {
-        return (p.coins += this.isPlayerFirst() ? this.firstPlaceReward : this.secondPlaceReward)
+    if (this.complexAlgorithm) {
+      matchingHexes = this.checkWithComplexAlgorithm(p)
+    }
+
+    if (matchingHexes) {
+      if (this.isPlayerFirst()) {
+        p.coins += this.firstPlaceReward
+        this.firstPlayers.push(p)
+      } else {
+        p.coins += this.secondPlaceReward
+        this.secondPlayers.push(p)
       }
     }
+
+    // emit event for UI display instead?
+    return matchingHexes
   }
 
   checkWithSimpleAlgorithm(p: Player) {
