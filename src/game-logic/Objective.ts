@@ -213,6 +213,7 @@ export class Objective {
   isHexCondition(h: Hex, condition: SimpleAlgorithm['exploredSpace']) {
     switch (condition.type) {
       case 'coin':
+        if (!h.isExplored) return false
         if (condition.size) return this.compareSize(h.coins, condition.size)
         return false
       case 'crystal':
@@ -256,7 +257,7 @@ export class Objective {
       case 'mountain':
         return h.terrain === 'mountain'
       case 'ruin':
-        if (h.isCovered && h.isRuin) return false
+        if (!h.isCovered || !h.isRuin) return false
 
         if (condition.values) {
           return condition.values.includes(h.ruinSymbol)
