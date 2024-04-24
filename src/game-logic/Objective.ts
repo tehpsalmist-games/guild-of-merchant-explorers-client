@@ -168,10 +168,10 @@ export class Objective {
 
         return exploredHexes?.length ? exploredHexes : null
       case 'ruin-c-northeast-tower':
-        const ruinC = p.board.getHex(0, 0)
-        const northeastTower = p.board.getHex(0, 0)
+        const ruinC = p.board.getHex(1, 6)
+        const northeastTower = p.board.getHex(2, 16)
 
-        if (ruinC?.isExplored && northeastTower?.isExplored) return [ruinC, northeastTower]
+        if (ruinC?.isCovered && northeastTower?.isCovered) return [ruinC, northeastTower]
 
         return null
       case 'ruins-near-all-terrains':
