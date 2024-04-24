@@ -1,3 +1,5 @@
+import { BoardName } from '../../game-logic/GameState'
+import { ObjectiveData } from '../../game-logic/Objective'
 import {
   aghonObjective1,
   aghonObjective2,
@@ -37,102 +39,271 @@ import {
   northProyliaObjective6,
 } from '../../images'
 
-const stuff = `
-3 towers
-2 towers
-6 ruin spaces
-2 crystals
-5 villages
-
-space with min 3 coins
-
-village adjacent to tower
-2 villages adjacent to ice
-2 villages adjacent to trading posts
-2 villages adjacent to crystals
-village along northern border
-village adjacent to ruin
-
-villages on 3 different lands
-villages on 5 different lands
-villages on 3 different terrains
-village on region 5 or bigger
-2 villages on mountains
-2 villages on same land
-3 villages on same region type
-villages in 3 different regions 3 spaces or smaller
-
-2 trading posts on cities 3 or greater
-trading post on city 5 or greater
-trading posts on 3 different terrains
-
-trade route involving ice
-
-trade route worth at least 12
-trade route worth at least 16
-
-ruins adjacent to 3 different terrains
-3 ruins along border
-
-2 ruins on ice
-3 ruins of the same type
-ruins on each unique type
-ruins A and J
-ruins B and D
-
-2 cities and 2 ruins in unbroken chain
-
-northeastern tower and ruin C
-
-1 space on westmost land
-`
-export const objectives = {
+export const objectives: Record<BoardName | 'xawskil' | 'northProylia', ObjectiveData[]> = {
   aghon: [
-    { imageUrl: aghonObjective1 },
-    { imageUrl: aghonObjective2 },
-    { imageUrl: aghonObjective3 },
-    { imageUrl: aghonObjective4 },
-    { imageUrl: aghonObjective5 },
-    { imageUrl: aghonObjective6 },
+    {
+      imageUrl: aghonObjective1,
+      type: 'simple',
+      quantity: 3,
+      exploredSpace: {
+        type: 'village',
+      },
+      position: 'on',
+      relativeTo: {
+        type: 'different-terrain',
+      },
+    },
+    {
+      imageUrl: aghonObjective2,
+      type: 'simple',
+      quantity: 3,
+      exploredSpace: { type: 'trading-post' },
+      position: 'on',
+      relativeTo: {
+        type: 'different-terrain',
+      },
+    },
+    { imageUrl: aghonObjective3, type: 'complex', spec: 'ruins-near-all-terrains' },
+    {
+      imageUrl: aghonObjective4,
+      type: 'simple',
+      quantity: 1,
+      exploredSpace: { type: 'village' },
+      position: 'adjacent',
+      relativeTo: { type: 'tower' },
+    },
+    { imageUrl: aghonObjective5, type: 'complex', spec: 'trade-route-value', value: 12 },
+    {
+      imageUrl: aghonObjective6,
+      type: 'simple',
+      quantity: 2,
+      exploredSpace: { type: 'village' },
+      position: 'on',
+      relativeTo: { type: 'mountain' },
+    },
   ],
   avenia: [
-    { imageUrl: aveniaObjective1 },
-    { imageUrl: aveniaObjective2 },
-    { imageUrl: aveniaObjective3 },
-    { imageUrl: aveniaObjective4 },
-    { imageUrl: aveniaObjective5 },
-    { imageUrl: aveniaObjective6 },
+    {
+      imageUrl: aveniaObjective1,
+      type: 'simple',
+      quantity: 3,
+      exploredSpace: { type: 'village' },
+      position: 'on',
+      relativeTo: { type: 'different-land' },
+    },
+    {
+      imageUrl: aveniaObjective2,
+      type: 'simple',
+      quantity: 2,
+      exploredSpace: { type: 'tower' },
+    },
+    {
+      imageUrl: aveniaObjective3,
+      type: 'simple',
+      quantity: 3,
+      exploredSpace: { type: 'ruin' },
+      position: 'adjacent',
+      relativeTo: { type: 'border' },
+    },
+    {
+      imageUrl: aveniaObjective4,
+      type: 'simple',
+      quantity: 1,
+      exploredSpace: { type: 'village' },
+      position: 'on',
+      relativeTo: { type: 'any-terrain', size: ['gte', 5] },
+    },
+    {
+      imageUrl: aveniaObjective5,
+      type: 'simple',
+      quantity: 2,
+      exploredSpace: { type: 'trading-post' },
+      position: 'on',
+      relativeTo: { type: 'trading-post', size: ['gte', 3] },
+    },
+    {
+      imageUrl: aveniaObjective6,
+      type: 'simple',
+      quantity: 5,
+      exploredSpace: { type: 'village' },
+    },
   ],
   kazan: [
-    { imageUrl: kazanObjective1 },
-    { imageUrl: kazanObjective2 },
-    { imageUrl: kazanObjective3 },
-    { imageUrl: kazanObjective4 },
-    { imageUrl: kazanObjective5 },
-    { imageUrl: kazanObjective6 },
+    {
+      imageUrl: kazanObjective1,
+      type: 'complex',
+      spec: 'ruin-aj',
+    },
+    {
+      imageUrl: kazanObjective2,
+      type: 'complex',
+      spec: 'ruin-c-northeast-tower',
+    },
+    {
+      imageUrl: kazanObjective3,
+      type: 'simple',
+      quantity: 1,
+      exploredSpace: { type: 'village' },
+      position: 'adjacent',
+      relativeTo: { type: 'ruin' },
+    },
+    {
+      imageUrl: kazanObjective4,
+      type: 'complex',
+      spec: '2-cities-2-ruins',
+    },
+    {
+      imageUrl: kazanObjective5,
+      type: 'simple',
+      quantity: 1,
+      exploredSpace: { type: 'coin', size: ['gte', 3] },
+    },
+    {
+      imageUrl: kazanObjective6,
+      type: 'complex',
+      spec: 'ruin-bd',
+    },
   ],
   cnidaria: [
-    { imageUrl: cnidariaObjective1 },
-    { imageUrl: cnidariaObjective2 },
-    { imageUrl: cnidariaObjective3 },
-    { imageUrl: cnidariaObjective4 },
-    { imageUrl: cnidariaObjective5 },
-    { imageUrl: cnidariaObjective6 },
+    {
+      imageUrl: cnidariaObjective1,
+      type: 'simple',
+      quantity: 2,
+      exploredSpace: { type: 'village' },
+      position: 'adjacent',
+      relativeTo: { type: 'crystal' },
+    },
+    {
+      imageUrl: cnidariaObjective2,
+      type: 'simple',
+      quantity: 3,
+      exploredSpace: { type: 'ruin' },
+      position: 'on',
+      relativeTo: { type: 'same-ruin-type' },
+    },
+    {
+      imageUrl: cnidariaObjective3,
+      type: 'simple',
+      quantity: 3,
+      exploredSpace: { type: 'village' },
+      position: 'on',
+      relativeTo: { type: 'same-terrain' },
+    },
+    {
+      imageUrl: cnidariaObjective4,
+      type: 'simple',
+      quantity: 3,
+      exploredSpace: { type: 'ruin' },
+      position: 'on',
+      relativeTo: { type: 'different-ruin-type' },
+    },
+    {
+      imageUrl: cnidariaObjective5,
+      type: 'simple',
+      quantity: 2,
+      exploredSpace: { type: 'crystal' },
+    },
+    {
+      imageUrl: cnidariaObjective6,
+      type: 'complex',
+      spec: 'trade-route-value',
+      value: 16,
+    },
   ],
   xawskil: [
-    { imageUrl: xawskilObjective1 },
-    { imageUrl: xawskilObjective2 },
-    { imageUrl: xawskilObjective3 },
-    { imageUrl: xawskilObjective4 },
-    { imageUrl: xawskilObjective5 },
-    { imageUrl: xawskilObjective6 },
+    {
+      imageUrl: xawskilObjective1,
+      type: 'simple',
+      quantity: 5,
+      exploredSpace: { type: 'village' },
+      position: 'on',
+      relativeTo: { type: 'different-land' },
+      first: 12,
+      second: 6,
+    },
+    {
+      imageUrl: xawskilObjective2,
+      type: 'complex',
+      spec: 'westernmost-land',
+      first: 12,
+      second: 6,
+    },
+    {
+      imageUrl: xawskilObjective3,
+      type: 'simple',
+      quantity: 3,
+      exploredSpace: { type: 'tower' },
+      first: 14,
+      second: 7,
+    },
+    {
+      imageUrl: xawskilObjective4,
+      type: 'simple',
+      quantity: 2,
+      exploredSpace: { type: 'village' },
+      position: 'on',
+      relativeTo: { type: 'same-land' },
+    },
+    {
+      imageUrl: xawskilObjective5,
+      type: 'simple',
+      quantity: 1,
+      exploredSpace: { type: 'trading-post' },
+      position: 'on',
+      relativeTo: { type: 'trading-post', size: ['gte', 5] },
+    },
+    {
+      imageUrl: xawskilObjective6,
+      type: 'simple',
+      quantity: 6,
+      exploredSpace: { type: 'ruin' },
+    },
   ],
   northProylia: [
-    { imageUrl: northProyliaObjective1 },
-    { imageUrl: northProyliaObjective2 },
-    { imageUrl: northProyliaObjective3 },
-    { imageUrl: northProyliaObjective4 },
-    { imageUrl: northProyliaObjective5 },
-    { imageUrl: northProyliaObjective6 },
+    {
+      imageUrl: northProyliaObjective1,
+      type: 'simple',
+      quantity: 2,
+      exploredSpace: { type: 'village' },
+      position: 'adjacent',
+      relativeTo: { type: 'ice' },
+    },
+    {
+      imageUrl: northProyliaObjective2,
+      type: 'simple',
+      quantity: 2,
+      exploredSpace: { type: 'ruin' },
+      position: 'on',
+      relativeTo: { type: 'ice' },
+    },
+    {
+      imageUrl: northProyliaObjective3,
+      type: 'simple',
+      quantity: 2,
+      exploredSpace: { type: 'village' },
+      position: 'adjacent',
+      relativeTo: { type: 'trading-post' },
+    },
+    {
+      imageUrl: northProyliaObjective4,
+      type: 'complex',
+      spec: 'trade-route-ice',
+    },
+    {
+      imageUrl: northProyliaObjective5,
+      type: 'simple',
+      quantity: 1,
+      exploredSpace: { type: 'village' },
+      position: 'adjacent',
+      relativeTo: { type: 'north-border' },
+    },
+    {
+      imageUrl: northProyliaObjective6,
+      type: 'simple',
+      quantity: 3,
+      exploredSpace: { type: 'village' },
+      position: 'on',
+      relativeTo: { type: 'any-terrain', size: ['lte', 3] },
+    },
   ],
 }
