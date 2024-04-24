@@ -10,7 +10,7 @@ import {
   twoCoins,
 } from '../../images'
 
-export const cardList: TreasureCard[] = [
+export const treasureCards: TreasureCard[] = [
   {
     id: 'sandVillageBonus',
     imageUrl: sandVillageBonus,

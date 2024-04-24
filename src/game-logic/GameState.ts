@@ -72,6 +72,7 @@ export class GameState extends EventTarget {
     this.era++
     if (this.era > 3) {
       // game is over, TODO: total points from treasure cards and display all results
+      this.treasureDeck.addEndgameCoins(this.activePlayer)
 
       this.era-- // reset to a valid era
       this.activePlayer.mode = 'game-over'
@@ -474,6 +475,14 @@ export class MoveHistory {
         //Draws a treasure card and saves it's id to history
         const [treasureCard] = this.gameState.treasureDeck.drawCards()
         move.drawnTreasureID = treasureCard.id
+        this.player.treasureCards.push(treasureCard)
+
+        if (treasureCard.discard){
+          this.gameState.treasureDeck.useCard(treasureCard.id)
+        }
+        else {
+          this.gameState.treasureDeck.removeCard(treasureCard.id)
+        }
 
         this.player.treasureCardsToDraw--
         //Completely blocks the ability to undo anything prior to drawing a treasure card
@@ -491,11 +500,6 @@ export class MoveHistory {
         }
         else if (treasureCard.id === 'twoCoins') {
           this.player.coins += 2
-        }
-
-        //Adds the treasure card to the player's hand
-        if (!treasureCard.discard) {
-          this.player.treasureCards.push(treasureCard)
         }
 
         this.player.checkForUserDecision()

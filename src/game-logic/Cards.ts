@@ -1,6 +1,6 @@
 import { getInitialExplorerList, getLaterExplorerList } from '../data/cards/explorer-cards'
 import { investigateCards } from '../data/cards/investigate-cards'
-import { cardList } from '../data/cards/treasure-cards'
+import { treasureCards } from '../data/cards/treasure-cards'
 import { Terrain } from './Board'
 import { Player } from './GameState'
 
@@ -58,6 +58,7 @@ export class Deck<CardType extends { id: string }> {
   }
 }
 
+//Is this being used anywhere?
 export class Hand<CardType extends { id: string }> {
   player: Player
   cards: CardType[] = []
@@ -130,6 +131,7 @@ export interface GlobalExplorerCard {
 
 export interface TreasureCard {
   id: string
+  type?: string
   imageUrl: URL
   count: number
   //We can assume that if it needs to be discarded, it will be played immediately.
@@ -166,15 +168,64 @@ export class InvestigateDeck extends Deck<ExplorerCard> {
 
 export class TreasureDeck extends Deck<TreasureCard> {
   constructor() {
-
     //Adds coppies of the cards to the deck according to the count property.
-    const deck: TreasureCard[] = []
-    for (const card of cardList) {
-      deck.push(...Array(card.count).fill(card))
+    const deck: TreasureCard[] = [];
+    for (const card of treasureCards) {
+      for (let i = 0; i < card.count; i++) {
+        const uniqueCard = { ...card };
+        uniqueCard.type = card.id;
+        uniqueCard.id = `${card.id}-${i}`;
+        deck.push(uniqueCard);
+      }
     }
 
     super([...deck])
   }
 
-  
+  addEndgameCoins(player: Player) {
+    const villagesAndTowers = player.board.getFlatHexes().filter(hex => hex.isVillage || hex.isTower);
+
+    const grassVillages = villagesAndTowers.filter(hex => hex.terrain === 'grass').length;
+    const sandVillages = villagesAndTowers.filter(hex => hex.terrain === 'sand').length;
+    const mountainVillages = villagesAndTowers.filter(hex => hex.terrain === 'mountain').length;
+    const towers = villagesAndTowers.filter(hex => hex.isTower).length;
+
+    let jarMultiplier = 0;
+
+    for (const card of this.cards) {
+      switch (card.type) {
+        case 'grassVillageBonus':
+          player.coins += grassVillages;
+          break;
+        case 'sandVillageBonus':
+          player.coins += sandVillages;
+          break;
+        case 'mountainVillageBonus':
+          player.coins += mountainVillages;
+          break;
+        case 'landVillageHalfBonus':
+          player.coins += Math.floor((grassVillages + sandVillages + mountainVillages) / 2);
+          player.coins += grassVillages + sandVillages + mountainVillages;
+          break;
+        case 'towerBonus':
+          player.coins += towers;
+          break;
+        case 'jarMultiplier':
+          //pattern is:
+          //starting value = 1 (x1)
+          //1+3 = 4 (x2)
+          //4+5 = 9 (x3)
+          //9+7 = 16 (x4)
+          //restart after 4 jars
+          // pattern of adding is 1, 3, 5, 7
+          // equasion: 2i + 1
+          //And now you know how the math here works!
+          player.coins += 2 * jarMultiplier + 1;
+          jarMultiplier++;
+          if (jarMultiplier >= 4){
+            jarMultiplier = 0;
+          }
+      }
+    }
+  }
 }
