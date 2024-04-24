@@ -39,7 +39,7 @@ export class GameState extends EventTarget {
   investigateDeck: InvestigateDeck
 
   treasureDeck: TreasureDeck
-  
+
   constructor(boardName: BoardName) {
     super()
 
@@ -88,6 +88,12 @@ export class GameState extends EventTarget {
   }
 
   flipExplorerCard() {
+    // first things first: check objectives from last move now that all players have confirmed and are ready to advance
+    for (const objective of this.objectives) {
+      // in multiplayer we will obviously loop over all the players
+      objective.checkAndScoreForPlayer(this.activePlayer)
+    }
+
     this.activePlayer.moveHistory.saveState()
     this.activePlayer.cardPhase = 0
 
@@ -496,8 +502,7 @@ export class MoveHistory {
         if (treasureCard.id === 'placeBlock') {
           this.player.enterFreeExploringMode()
           break
-        }
-        else if (treasureCard.id === 'twoCoins') {
+        } else if (treasureCard.id === 'twoCoins') {
           this.player.coins += 2
         }
 

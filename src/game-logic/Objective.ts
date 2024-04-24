@@ -105,8 +105,6 @@ export class Objective {
     }
   }
 
-  checkMultiplePlayers() {}
-
   checkAndScoreForPlayer(p: Player) {
     this.clearMatchingState()
 

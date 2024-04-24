@@ -24,16 +24,16 @@ export const EraCards = ({ className = '', ...props }: EraCardsProps) => {
       className={clsx(
         className,
         `absolute left-0 top-0 z-10 flex h-full cursor-pointer flex-col justify-evenly pb-12 transition-all duration-200`,
-        inView ? 'translate-x-2' : '-translate-x-[80%]',
+        inView ? 'translate-x-2 opacity-100' : '-translate-x-[80%] opacity-70',
       )}
       onClick={() => setInView((v) => !v)}
       {...props}
     >
-      {slots.map((card) =>
+      {slots.map((card, i) =>
         card ? (
-          <img src={card.imageUrl.href} className="h-full max-h-1/4 rounded-2xl" />
+          <img key={i} src={card.imageUrl.href} className="h-full max-h-1/4 rounded-2xl" />
         ) : (
-          <div className="h-full max-h-1/4" />
+          <div key={i} className="h-full max-h-1/4" />
         ),
       )}
     </div>

@@ -23,6 +23,7 @@ export const ExplorerCardMat = ({ className = '', ...props }: ExplorerCardMatPro
         (id) =>
           mapping[id] && (
             <img
+              key={id}
               src={mapping[id].imageUrl.href}
               className={clsx(
                 'rounded border-2 duration-500',
