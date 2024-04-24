@@ -4,7 +4,7 @@ import { aveniaData } from '../data/boards/avenia'
 import { cnidariaData } from '../data/boards/cnidaria'
 import { Board, BoardData, Hex, Region } from './Board'
 import { randomSelection, sleep } from '../utils'
-import { ExplorerCard, ExplorerDeck, GlobalExplorerCard, InvestigateDeck } from './Cards'
+import { ExplorerCard, ExplorerDeck, GlobalExplorerCard, InvestigateDeck, TreasureCard, TreasureDeck } from './Cards'
 import { objectives } from '../data/objectives'
 
 export type BoardName = 'aghon' | 'avenia' | 'kazan' | 'cnidaria'
@@ -41,6 +41,8 @@ export class GameState extends EventTarget {
 
   investigateDeck: InvestigateDeck
 
+  treasureDeck: TreasureDeck
+  
   constructor(boardName: BoardName) {
     super()
 
@@ -53,10 +55,10 @@ export class GameState extends EventTarget {
     this.turnHistory = new TurnHistory(this)
 
     this.investigateDeck = new InvestigateDeck()
-    this.investigateDeck.shuffle()
 
     this.explorerDeck = new ExplorerDeck()
-    this.explorerDeck.shuffle()
+
+    this.treasureDeck = new TreasureDeck()
 
     // start game!
     this.flipExplorerCard()
@@ -193,7 +195,7 @@ export class Player {
 
   treasureCardHex?: Hex
   treasureCardsToDraw = 0 // use this value to increment when cards are earned, and decrement when they are drawn
-  // treasureCards: TreasureCard[] = [] // imagine for now
+  treasureCards: TreasureCard[] = []
 
   connectedTradePosts: Hex[] = []
   chosenRoute: Hex[] = []
@@ -361,6 +363,7 @@ type Move =
   | {
       action: 'draw-treasure'
       hex: Hex
+      drawnTreasureID?: string
     }
   | {
       action: 'choose-investigate-card'
@@ -468,22 +471,34 @@ export class MoveHistory {
           this.player.treasureCardsToDraw = multiplier
         }
 
-        //TODO draw a treasure card here. But for now, we assume that all treasure cards are blocks
+        //Draws a treasure card and saves it's id to history
+        const [treasureCard] = this.gameState.treasureDeck.drawCards()
+        move.drawnTreasureID = treasureCard.id
 
         this.player.treasureCardsToDraw--
         //Completely blocks the ability to undo anything prior to drawing a treasure card
         this.saveState()
 
+        //Unassigns the treasure card hex when all treasure cards have been drawn
         if (this.player.treasureCardsToDraw === 0) {
           this.player.treasureCardHex = undefined
         }
 
-        //if (treasure card is block place) {
-        this.player.enterFreeExploringMode()
-        //}
-        //else {
-        //  this.player.checkForUserDecision()
-        //}
+        //Performs immediate actions based on the treasure card drawn
+        if (treasureCard.id === 'placeBlock') {
+          this.player.enterFreeExploringMode()
+          break
+        }
+        else if (treasureCard.id === 'twoCoins') {
+          this.player.coins += 2
+        }
+
+        //Adds the treasure card to the player's hand
+        if (!treasureCard.discard) {
+          this.player.treasureCards.push(treasureCard)
+        }
+
+        this.player.checkForUserDecision()
         break
       case 'choose-investigate-card':
         this.player.investigateCards.push(move.chosenCard)

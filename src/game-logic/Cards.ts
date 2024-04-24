@@ -1,5 +1,6 @@
 import { getInitialExplorerList, getLaterExplorerList } from '../data/cards/explorer-cards'
 import { investigateCards } from '../data/cards/investigate-cards'
+import { cardList } from '../data/cards/treasure-cards'
 import { Terrain } from './Board'
 import { Player } from './GameState'
 
@@ -9,6 +10,7 @@ export class Deck<CardType extends { id: string }> {
 
   constructor(cardData: CardType[]) {
     this.cards = cardData
+    this.shuffle()
   }
 
   drawCards({ quantity = 1, recycle = false } = {}) {
@@ -126,6 +128,15 @@ export interface GlobalExplorerCard {
   getInvestigateCard?(p: Player): ExplorerCard | null
 }
 
+export interface TreasureCard {
+  id: string
+  imageUrl: URL
+  count: number
+  //We can assume that if it needs to be discarded, it will be played immediately.
+  //We can also assume that if it doesn't need to be discarded, it doesn't need to be played immediately.
+  discard?: boolean
+}
+
 export class ExplorerDeck extends Deck<GlobalExplorerCard> {
   laterCards = getLaterExplorerList()
 
@@ -151,4 +162,19 @@ export class InvestigateDeck extends Deck<ExplorerCard> {
   constructor() {
     super([...investigateCards])
   }
+}
+
+export class TreasureDeck extends Deck<TreasureCard> {
+  constructor() {
+
+    //Adds coppies of the cards to the deck according to the count property.
+    const deck: TreasureCard[] = []
+    for (const card of cardList) {
+      deck.push(...Array(card.count).fill(card))
+    }
+
+    super([...deck])
+  }
+
+  
 }
