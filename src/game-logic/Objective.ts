@@ -179,7 +179,7 @@ export class Objective {
         const terrains = new Set<Terrain>()
 
         for (const hex of p.board.getFlatHexes()) {
-          if (hex.isRuin) {
+          if (hex.isRuin && hex.isCovered) {
             for (const adjHex of p.board.hexContactIterator(hex)) {
               // checking for region is shortcut for narrowing to 'sand' | 'grass' | 'mountain'
               if (adjHex.region) {
