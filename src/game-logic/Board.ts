@@ -125,6 +125,7 @@ export class Hex {
   coins: number
   tradingPostValue: number
   crystalValue: number
+  ruinSymbol: string
   isCity = false
   isRuin = false
   isTower = false
@@ -148,6 +149,7 @@ export class Hex {
     isTower = false,
     isIce = false,
     crystalValue = 0,
+    ruinSymbol = '',
     row,
     column,
     board,
@@ -159,6 +161,7 @@ export class Hex {
     this.coins = coins
     this.isExplored = this.isCity = isCity
     this.isRuin = isRuin
+    this.ruinSymbol = ruinSymbol
     this.isTower = isTower
     this.isIce = isIce
     this.crystalValue = crystalValue
