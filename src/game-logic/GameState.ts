@@ -69,7 +69,7 @@ export class GameState extends EventTarget {
     this.era++
     if (this.era > 3) {
       // game is over, TODO: total points from treasure cards and display all results
-      this.treasureDeck.addEndgameCoins(this.activePlayer)
+      this.activePlayer.addEndgameCoins()
 
       this.era-- // reset to a valid era
       this.activePlayer.mode = 'game-over'
@@ -221,6 +221,53 @@ export class Player {
     this.gameState = gameState
     this.board = new Board(boardData, this, gameState)
     this.moveHistory = new MoveHistory(this, gameState)
+  }
+
+  addEndgameCoins() {
+    const villagesAndTowers = this.board.getFlatHexes().filter(hex => hex.isVillage || hex.isTower);
+
+    const grassVillages = villagesAndTowers.filter(hex => hex.terrain === 'grass').length;
+    const sandVillages = villagesAndTowers.filter(hex => hex.terrain === 'sand').length;
+    const mountainVillages = villagesAndTowers.filter(hex => hex.terrain === 'mountain').length;
+    const towers = villagesAndTowers.filter(hex => hex.isTower).length;
+
+    let jarMultiplier = 0;
+
+    for (const card of this.treasureCards) {
+      switch (card.type) {
+        case 'grassVillageBonus':
+          this.coins += grassVillages;
+          break;
+        case 'sandVillageBonus':
+          this.coins += sandVillages;
+          break;
+        case 'mountainVillageBonus':
+          this.coins += mountainVillages;
+          break;
+        case 'landVillageHalfBonus':
+          this.coins += Math.floor((grassVillages + sandVillages + mountainVillages) / 2);
+          this.coins += grassVillages + sandVillages + mountainVillages;
+          break;
+        case 'towerBonus':
+          this.coins += towers;
+          break;
+        case 'jarMultiplier':
+          //pattern is:
+          //starting value = 1 (x1)
+          //1+3 = 4 (x2)
+          //4+5 = 9 (x3)
+          //9+7 = 16 (x4)
+          //restart after 4 jars
+          // pattern of adding is 1, 3, 5, 7
+          // equasion: 2i + 1
+          //And now you know how the math here works!
+          this.coins += 2 * jarMultiplier + 1;
+          jarMultiplier++;
+          if (jarMultiplier >= 4){
+            jarMultiplier = 0;
+          }
+      }
+    }
   }
 
   chooseInvestigateCard(chosenCard: ExplorerCard) {
