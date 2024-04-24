@@ -224,7 +224,7 @@ export class Player {
   }
 
   addEndgameCoins() {
-    const villagesAndTowers = this.board.getFlatHexes().filter(hex => hex.isVillage || hex.isTower);
+    const villagesAndTowers = this.board.getFlatHexes().filter(hex => hex.isVillage || (hex.isTower && hex.isCovered));
 
     const grassVillages = villagesAndTowers.filter(hex => hex.terrain === 'grass').length;
     const sandVillages = villagesAndTowers.filter(hex => hex.terrain === 'sand').length;
@@ -232,24 +232,28 @@ export class Player {
     const towers = villagesAndTowers.filter(hex => hex.isTower).length;
 
     let jarMultiplier = 0;
-
+//TODO remove console logs once display is implemented
     for (const card of this.treasureCards) {
       switch (card.type) {
         case 'grassVillageBonus':
           this.coins += grassVillages;
+          console.log('grassVillages', grassVillages, this.coins)
           break;
         case 'sandVillageBonus':
           this.coins += sandVillages;
+          console.log('sandVillages', sandVillages, this.coins)
           break;
         case 'mountainVillageBonus':
           this.coins += mountainVillages;
+          console.log('mountainVillages', mountainVillages, this.coins)
           break;
         case 'landVillageHalfBonus':
           this.coins += Math.floor((grassVillages + sandVillages + mountainVillages) / 2);
-          this.coins += grassVillages + sandVillages + mountainVillages;
+          console.log('landVillageHalfBonus', Math.floor((grassVillages + sandVillages + mountainVillages) / 2), this.coins)
           break;
         case 'towerBonus':
           this.coins += towers;
+          console.log('towers', towers, this.coins)
           break;
         case 'jarMultiplier':
           //pattern is:
@@ -262,10 +266,12 @@ export class Player {
           // equasion: 2i + 1
           //And now you know how the math here works!
           this.coins += 2 * jarMultiplier + 1;
+          console.log('jarMultiplier', 2 * jarMultiplier + 1, this.coins)
           jarMultiplier++;
           if (jarMultiplier >= 4){
             jarMultiplier = 0;
           }
+          break;
       }
     }
   }
@@ -529,6 +535,9 @@ export class MoveHistory {
         move.drawnTreasureID = treasureCard.id
         this.player.treasureCards.push(treasureCard)
 
+        //TODO remove once display is implemented... or don't, idk
+        console.log(treasureCard)
+
         if (treasureCard.discard){
           this.gameState.treasureDeck.useCard(treasureCard.id)
         }
@@ -546,10 +555,11 @@ export class MoveHistory {
         }
 
         //Performs immediate actions based on the treasure card drawn
-        if (treasureCard.id === 'placeBlock') {
+        if (treasureCard.type === 'placeBlock') {
           this.player.enterFreeExploringMode()
           break
-        } else if (treasureCard.id === 'twoCoins') {
+        }
+        else if (treasureCard.type === 'twoCoins') {
           this.player.coins += 2
         }
 
