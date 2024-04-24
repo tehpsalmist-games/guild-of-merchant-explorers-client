@@ -197,7 +197,7 @@ export class Player {
 
   connectedTradePosts: Hex[] = []
   chosenRoute: Hex[] = []
-  finalizedTradingRoutes: Hex[][]
+  finalizedTradingRoutes: Hex[][] = []
 
   regionForVillage?: Region
 
