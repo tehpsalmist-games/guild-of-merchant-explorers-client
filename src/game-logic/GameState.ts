@@ -6,6 +6,7 @@ import { Board, BoardData, Hex, Region } from './Board'
 import { randomSelection, sleep } from '../utils'
 import { ExplorerCard, ExplorerDeck, GlobalExplorerCard, InvestigateDeck, TreasureCard, TreasureDeck } from './Cards'
 import { objectives } from '../data/objectives'
+import { Objective } from './Objective'
 
 export type BoardName = 'aghon' | 'avenia' | 'kazan' | 'cnidaria'
 
@@ -20,10 +21,6 @@ const getBoardData = (boardName: BoardName) => {
     case 'cnidaria':
       return { boardData: cnidariaData, objectives: randomSelection(objectives.cnidaria, 3) }
   }
-}
-
-interface Objective {
-  imageUrl: URL
 }
 
 export class GameState extends EventTarget {
@@ -49,7 +46,7 @@ export class GameState extends EventTarget {
     this.boardName = boardName
     const setupData = getBoardData(boardName)
 
-    this.objectives = setupData.objectives
+    this.objectives = setupData.objectives.map((algorithm) => new Objective(algorithm, this))
 
     this.activePlayer = new Player(setupData.boardData, this)
     this.turnHistory = new TurnHistory(this)
@@ -200,6 +197,7 @@ export class Player {
 
   connectedTradePosts: Hex[] = []
   chosenRoute: Hex[] = []
+  finalizedTradingRoutes: Hex[][]
 
   regionForVillage?: Region
 
@@ -442,6 +440,7 @@ export class MoveHistory {
         this.player.coins += coins
 
         //clears the chosen route
+        this.player.finalizedTradingRoutes.push(this.player.chosenRoute)
         this.player.chosenRoute = []
 
         //removes the hex that was just covered
@@ -566,6 +565,7 @@ export class MoveHistory {
             this.player.coins -= undoing.tradingHex.tradingPostValue * undoing.hex.tradingPostValue
             this.player.connectedTradePosts = undoing.hex.getConnectedTradingPosts()
             this.player.chosenRoute = [undoing.hex, undoing.tradingHex]
+            this.player.finalizedTradingRoutes.pop()
             if (this.player.connectedTradePosts.length > 2) this.player.enterTradingMode()
             else this.player.checkForUserDecision()
           }
