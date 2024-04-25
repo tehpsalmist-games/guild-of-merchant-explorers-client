@@ -218,6 +218,37 @@ export class Objective {
       case 'trade-route-ice':
         return p.finalizedTradingRoutes.find(([h1]) => h1.getConnectedHexes().some((h) => h.isIce)) ?? null
       case '2-cities-2-ruins':
+        let connectedHexes: Hex[] = []
+        if (
+          p.board.getFlatHexes().some((h) => {
+            if ((!h.tradingPostValue && !h.isRuin) || !h.isExplored) {
+              return false
+            }
+
+            let ruins = 0
+            let cities = 0
+
+            connectedHexes = h.getConnectedHexes()
+            for (const hex of connectedHexes) {
+              if (hex.isRuin && hex.isExplored) {
+                ruins++
+              }
+
+              if (hex.tradingPostValue && hex.isExplored) {
+                cities++
+              }
+
+              if (ruins >= 2 && cities >= 2) {
+                return true
+              }
+            }
+
+            return false
+          })
+        ) {
+          return connectedHexes
+        }
+
         return null
     }
   }

@@ -20,7 +20,6 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
 
   const { gameState, resetGame } = useGameState()
 
-  const rules = gameState.currentCardRules
   const investigateCard = gameState.currentExplorerCard?.isEraCard
     ? gameState.currentExplorerCard.getInvestigateCard?.(gameState.activePlayer)
     : null
