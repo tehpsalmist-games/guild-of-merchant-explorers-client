@@ -80,7 +80,9 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
         id={id}
         d={`M${x},${y} h50 l25,43.3 l-25,43.3 h-50 l-25,-43.3 z`}
         className={clsx(className, 'fill-transparent', {
-          'cursor-pointer hover:fill-red-500/15': (gameState.activePlayer.mode === 'exploring' || gameState.activePlayer.mode === 'free-exploring') && hex.isExplorable(),
+          'cursor-pointer hover:fill-red-500/15':
+            (gameState.activePlayer.mode === 'exploring' || gameState.activePlayer.mode === 'free-exploring') &&
+            hex.isExplorable(),
           'cursor-pointer !fill-blue-500/15 hover:!fill-blue-500/25': isVillageCandidate || isTradeCandidate,
           'cursor-pointer !fill-yellow-500/15 hover:!fill-yellow-500/25': isTradeRouteCandidate,
           'cursor-pointer !fill-green-500/15 hover:!fill-green-500/25': isSelectedTradeRoute,
@@ -95,7 +97,7 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
               return gameState.activePlayer.moveHistory.doMove({ action: 'explore', hex })
             case 'free-exploring':
               if (!hex.isExplorable()) return
-  
+
               return gameState.activePlayer.moveHistory.doMove({ action: 'freely-explore', hex })
             case 'choosing-village':
               if (!isVillageCandidate) return

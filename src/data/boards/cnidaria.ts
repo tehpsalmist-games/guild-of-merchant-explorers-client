@@ -47,7 +47,7 @@ export const cnidariaData: BoardData = {
       { terrain: 'sand', coins: 2 },
       { terrain: 'mountain' },
       { terrain: 'grass' },
-      { terrain: 'water', isRuin: true, ruinSymbol: 'box' },
+      { terrain: 'water', isRuin: true, ruinSymbol: 'square' },
       { terrain: 'sand' },
       { terrain: 'mountain', coins: 1 },
       { terrain: 'mountain' },

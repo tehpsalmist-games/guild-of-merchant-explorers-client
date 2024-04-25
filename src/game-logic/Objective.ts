@@ -151,6 +151,18 @@ export class Objective {
 
     switch (this.simpleAlgorithm.position) {
       case 'on': {
+        // for checking same-something, need to populate state first to check against it for each item
+        exploredHexes.forEach((h) => {
+          switch (this.simpleAlgorithm.relativeTo?.type) {
+            case 'same-ruin-type':
+              return h.isCovered && h.ruinSymbol && this.matchingState.ruinTypes.push(h.ruinSymbol)
+            case 'same-terrain':
+              return this.matchingState.regions.push(h.terrain)
+            case 'same-land':
+              return h.land && this.matchingState.lands.push(h.land)
+          }
+        })
+
         const matchingHexes = exploredHexes.filter((h) => this.isHexOn(h))
         return matchingHexes.length >= this.simpleAlgorithm.quantity ? matchingHexes : null
       }
@@ -290,6 +302,14 @@ export class Objective {
         this.matchingState.lands.push(h.land)
 
         return true
+      case 'same-ruin-type':
+        if (!h.isCovered || !h.ruinSymbol) return false
+
+        return this.matchingState.ruinTypes.filter((t) => t === h.ruinSymbol).length >= this.simpleAlgorithm.quantity
+      case 'same-terrain':
+        return this.matchingState.regions.filter((t) => t === h.terrain).length >= this.simpleAlgorithm.quantity
+      case 'same-land':
+        return h.land && this.matchingState.lands.filter((t) => t === h.land).length >= this.simpleAlgorithm.quantity
       default:
         return false
     }
