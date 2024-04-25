@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import React, { ComponentProps, useState } from 'react'
 import { useGameState } from '../hooks/useGameState'
+import { useEventListener } from '@8thday/react'
 
 export interface EraCardsProps extends ComponentProps<'div'> {}
 
@@ -8,6 +9,12 @@ export const EraCards = ({ className = '', ...props }: EraCardsProps) => {
   const [inView, setInView] = useState(false)
 
   const { gameState } = useGameState()
+
+  useEventListener('keydown', (e) => {
+    if (e.key === 'a') {
+      setInView((v) => !v)
+    }
+  })
 
   const slots = [
     gameState.activePlayer.investigateCards[0],

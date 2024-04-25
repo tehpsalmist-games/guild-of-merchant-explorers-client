@@ -18,7 +18,7 @@ export const ExplorerCardMat = ({ className = '', ...props }: ExplorerCardMatPro
   )
 
   return (
-    <div className={`${className} flex h-16 justify-between gap-2 py-0.5`} {...props}>
+    <div className={`${className} flex h-16 justify-center gap-5 py-0.5`} {...props}>
       {explorerIds.map(
         (id) =>
           mapping[id] && (

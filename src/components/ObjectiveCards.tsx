@@ -2,6 +2,7 @@ import clsx from 'clsx'
 import React, { ComponentProps, useState } from 'react'
 import { useGameState } from '../hooks/useGameState'
 import { blockImage } from '../images'
+import { useEventListener } from '@8thday/react'
 
 export interface ObjectiveCardsProps extends ComponentProps<'div'> {}
 
@@ -10,12 +11,18 @@ export const ObjectiveCards = ({ className = '', ...props }: ObjectiveCardsProps
 
   const { gameState } = useGameState()
 
+  useEventListener('keydown', (e) => {
+    if (e.key === 'w') {
+      setInView((v) => !v)
+    }
+  })
+  
   return (
     <div
       className={clsx(
         className,
-        `absolute bottom-0 left-0 z-10 flex w-full cursor-pointer justify-evenly pl-[10%] transition-all duration-200`,
-        inView ? '-translate-y-2 opacity-100' : 'translate-y-[80%] opacity-50',
+        `absolute top-16 left-0 z-10 flex w-full cursor-pointer justify-evenly transition-all duration-200`,
+        inView ? 'translate-y-2 opacity-100' : '-translate-y-[80%] opacity-50',
       )}
       onClick={() => setInView((v) => !v)}
       {...props}

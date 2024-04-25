@@ -3,7 +3,6 @@ import { HexPath } from './HexPath'
 import { useGameState } from '../hooks/useGameState'
 import { useResizeObserver } from '@8thday/react'
 import { EraCards } from './EraCards'
-import { ObjectiveCards } from './ObjectiveCards'
 
 const MAGIC_OFFSET_VALUE_X = 25
 const MAGIC_OFFSET_VALUE_Y = 43.3
@@ -72,7 +71,6 @@ export const ExplorerMap = ({ className = '', ...props }: ExplorerMapProps) => {
           )}
         </svg>
         <EraCards />
-        <ObjectiveCards />
       </div>
     </div>
   )

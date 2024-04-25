@@ -6,9 +6,10 @@ import ChevronRightIcon from '@heroicons/react/24/solid/ChevronRightIcon'
 import ChevronLeftIcon from '@heroicons/react/24/solid/ChevronLeftIcon'
 import UTurnIcon from '@heroicons/react/24/solid/ArrowUturnLeftIcon'
 import clsx from 'clsx'
-import { coinImage, placeBlock, romanNumeral } from '../images'
+import { coinImage, placeBlock, romanNumeral, treasureChestImage } from '../images'
 import { EraLabel } from './EraLabel'
 import { ExplorerCardMat } from './ExplorerCardMat'
+import { ObjectiveCards } from './ObjectiveCards'
 
 export interface GameBoardProps extends ComponentProps<'main'> {}
 
@@ -28,6 +29,9 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
   useEventListener('keydown', (e) => {
     if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
       gameState.activePlayer.moveHistory.undoMove()
+    }
+    if (e.key === 'd'){
+      setSideBarOpen((o) => !o)
     }
   })
 
@@ -53,6 +57,9 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
 
   return (
     <>
+      <div className="fixed top-0 z-30 h-16 w-full bg-white px-4">
+        <ObjectiveCards />
+      </div>
       <div className="fixed top-0 z-40 h-16 w-full bg-white px-4">
         <div className="grid h-full grid-cols-[1fr,auto,1fr] grid-rows-1">
           <div className="flex h-16 items-center py-0.5">
@@ -139,16 +146,20 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
               </Button>
             )}
           </div>
-          <ExplorerCardMat className="mx-auto" />
+          <ExplorerCardMat />
           <div className="flex justify-end gap-2">
             <img className="max-h-16" src={coinImage.href} alt="coin" />
             <span className="text-6xl font-bold leading-[1em] text-primary-500 [text-shadow:_0_0_6px_rgba(255_255_255)]">
               {gameState.activePlayer.coins}
             </span>
+            <img className="max-h-16" src={treasureChestImage.href} alt="treasure" />
+            <span className="text-6xl font-bold leading-[1em] text-primary-500 [text-shadow:_0_0_6px_rgba(255_255_255)]">
+              {gameState.activePlayer.treasureCards.filter((c) => !c.discard).length}
+            </span>
           </div>
         </div>
       </div>
-      <div className="fixed left-1/2 top-16 z-50 mt-2 w-max max-w-[95vw] -translate-x-1/2 rounded bg-slate-900/50 p-2 text-lg font-bold text-white">
+      <div className="fixed left-1/2 bottom-24 z-50 mt-2 w-max max-w-[95vw] -translate-x-1/2 rounded bg-slate-900/50 p-2 text-lg font-bold text-white">
         {gameState.activePlayer.message}
       </div>
       <main className={`${className} game-board-grid relative min-h-screen w-full`} {...props}>
