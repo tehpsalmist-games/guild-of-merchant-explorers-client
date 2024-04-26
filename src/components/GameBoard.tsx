@@ -29,7 +29,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
     if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
       gameState.activePlayer.moveHistory.undoMove()
     }
-    if (e.key === 'd'){
+    if (e.key === 'd') {
       setSideBarOpen((o) => !o)
     }
   })
@@ -67,15 +67,18 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
               <button className="mx-4 flex h-full" onClick={() => setSideBarOpen((o) => !o)}>
                 {!investigateCard && (
                   <img
-                    className="max-h-full rounded border-2 border-transparent"
+                    className="max-h-full max-w-12 rounded border-2 border-transparent"
                     src={gameState.currentExplorerCard.imageUrl.href}
                   />
                 )}
                 {investigateCard && (
-                  <img className="max-h-full rounded border-2 border-primary-400" src={investigateCard.imageUrl.href} />
+                  <img
+                    className="max-h-full max-w-12 rounded border-2 border-primary-400"
+                    src={investigateCard.imageUrl.href}
+                  />
                 )}
                 {gameState.activePlayer.mode === 'free-exploring' && (
-                  <img className="max-h-full rounded border-2 border-primary-400" src={placeBlock.href} />
+                  <img className="max-h-full max-w-12 rounded border-2 border-primary-400" src={placeBlock.href} />
                 )}
               </button>
             )}
@@ -91,7 +94,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                 )?.map((candidate) => (
                   <img
                     key={candidate.id}
-                    className="-z-10 max-h-full"
+                    className="-z-10 max-h-full max-w-12"
                     src={candidate.imageUrl.href}
                     alt="Investigate Card"
                   />
@@ -102,7 +105,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
               (!gameState.currentExplorerCard ||
                 (gameState.currentCardRules?.length ?? 1) - 1 === gameState.activePlayer.cardPhase) && (
                 <Button
-                  className="mr-4"
+                  className="mr-4 whitespace-nowrap"
                   variant={
                     gameState.activePlayer.moveHistory.getPlacedHexes()[gameState.activePlayer.cardPhase]?.length ===
                     gameState.currentCardRules[gameState.activePlayer.cardPhase]?.limit
@@ -117,7 +120,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
             {gameState.currentCardRules &&
               (gameState.currentCardRules?.length ?? 1) - 1 !== gameState.activePlayer.cardPhase && (
                 <Button
-                  className="mr-4"
+                  className="mr-4 whitespace-nowrap"
                   variant={
                     gameState.activePlayer.moveHistory.getPlacedHexes()[gameState.activePlayer.cardPhase]?.length ===
                     gameState.currentCardRules[gameState.activePlayer.cardPhase]?.limit
@@ -147,18 +150,18 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
           </div>
           <ExplorerCardMat />
           <div className="flex justify-end gap-2">
-            <img className="max-h-16" src={coinImage.href} alt="coin" />
+            <img className="max-h-16 max-w-32" src={coinImage.href} alt="coin" />
             <span className="text-6xl font-bold leading-[1em] text-primary-500 [text-shadow:_0_0_6px_rgba(255_255_255)]">
               {gameState.activePlayer.coins}
             </span>
-            <img className="max-h-16" src={treasureChestImage.href} alt="treasure" />
+            <img className="max-h-16 max-w-32" src={treasureChestImage.href} alt="treasure" />
             <span className="text-6xl font-bold leading-[1em] text-primary-500 [text-shadow:_0_0_6px_rgba(255_255_255)]">
               {gameState.activePlayer.treasureCards.filter((c) => !c.discard).length}
             </span>
           </div>
         </div>
       </div>
-      <div className="fixed left-1/2 bottom-24 z-50 mt-2 w-max max-w-[95vw] -translate-x-1/2 rounded bg-slate-900/50 p-2 text-lg font-bold text-white">
+      <div className="fixed bottom-24 left-1/2 z-50 mt-2 w-max max-w-[95vw] -translate-x-1/2 rounded bg-slate-900/50 p-2 text-lg font-bold text-white">
         {gameState.activePlayer.message}
       </div>
       <main className={`${className} game-board-grid relative min-h-screen w-full`} {...props}>

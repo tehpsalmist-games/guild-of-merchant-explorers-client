@@ -10,12 +10,18 @@ export const EraLabel = ({ className = '', ...props }: EraLabelProps) => {
 
   return (
     <div className={`${className} flex items-center gap-2`} {...props}>
-      <img className="h-14" src={romanNumeral.href} />
+      <img className="h-14 max-w-4" src={romanNumeral.href} />
       {gameState.era > 0 && (
-        <img className={clsx('h-14', gameState.era === 3 && 'translate-x-1 -rotate-12')} src={romanNumeral.href} />
+        <img
+          className={clsx('h-14 max-w-4', gameState.era === 3 && 'translate-x-1 -rotate-12')}
+          src={romanNumeral.href}
+        />
       )}
       {gameState.era > 1 && (
-        <img className={clsx('h-14', gameState.era === 3 && '-translate-x-1 rotate-12')} src={romanNumeral.href} />
+        <img
+          className={clsx('h-14 max-w-4', gameState.era === 3 && '-translate-x-1 rotate-12')}
+          src={romanNumeral.href}
+        />
       )}
     </div>
   )
