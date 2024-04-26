@@ -30,7 +30,7 @@ export const EraCards = ({ className = '', ...props }: EraCardsProps) => {
     <div
       className={clsx(
         className,
-        `absolute left-0 top-0 z-10 flex h-full cursor-pointer flex-col justify-evenly pb-12 transition-all duration-200`,
+        `absolute left-0 top-0 z-10 flex h-full w-[14%] cursor-pointer flex-col justify-evenly pb-12 transition-all duration-200`,
         inView ? 'translate-x-2 items-start opacity-100' : '-translate-x-[80%] opacity-70',
       )}
       onClick={() => setInView((v) => !v)}
