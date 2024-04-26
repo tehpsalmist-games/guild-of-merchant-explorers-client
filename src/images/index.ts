@@ -8,6 +8,12 @@ export const coinImage = new URL('/src/images/pieces/coin.png', import.meta.url)
 export const tradePostCoverImage = new URL('/src/images/pieces/crystal.png', import.meta.url)
 export const romanNumeral = new URL('/src/images/pieces/I.png', import.meta.url)
 
+// planks
+export const plankPannel = new URL('/src/images/pieces/Plank-Pannel.png', import.meta.url)
+export const plankRow = new URL('/src/images/pieces/Plank-Row.png', import.meta.url)
+export const singlePlank1 = new URL('/src/images/pieces/Single-Plank-1.png', import.meta.url)
+export const singlePlank2 = new URL('/src/images/pieces/Single-Plank-2.png', import.meta.url)
+
 // boards
 export const aghonBoard = new URL('/src/images/boards/aghon.png', import.meta.url)
 export const aveniaBoard = new URL('/src/images/boards/avenia.png', import.meta.url)
