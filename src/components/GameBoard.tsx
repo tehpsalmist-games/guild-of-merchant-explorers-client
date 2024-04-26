@@ -6,7 +6,7 @@ import ChevronRightIcon from '@heroicons/react/24/solid/ChevronRightIcon'
 import ChevronLeftIcon from '@heroicons/react/24/solid/ChevronLeftIcon'
 import UTurnIcon from '@heroicons/react/24/solid/ArrowUturnLeftIcon'
 import clsx from 'clsx'
-import { coinImage, placeBlock, romanNumeral, treasureChestImage } from '../images'
+import { coinImage, placeBlock, plankPanel, singlePlank2, treasureChestImage } from '../images'
 import { EraLabel } from './EraLabel'
 import { ExplorerCardMat } from './ExplorerCardMat'
 import { ObjectiveCards } from './ObjectiveCards'
@@ -59,7 +59,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
       <div className="fixed top-0 z-30 h-16 w-full bg-white px-4">
         <ObjectiveCards />
       </div>
-      <div className="fixed top-0 z-40 h-16 w-full bg-white px-4">
+      <div className="fixed top-0 z-40 h-16 w-full px-4" style={{ backgroundImage: `url(${singlePlank2.href})` }}>
         <div className="grid h-full grid-cols-[1fr,auto,1fr] grid-rows-1">
           <div className="flex h-16 items-center py-0.5">
             <EraLabel className="mr-4" />
@@ -78,7 +78,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                   />
                 )}
                 {gameState.activePlayer.mode === 'free-exploring' && (
-                  <img className="max-h-full max-w-12 rounded border-2 border-primary-400" src={placeBlock.href} />
+                  <img className="max-h-full max-w-32 rounded border-2 border-primary-400" src={placeBlock.href} />
                 )}
               </button>
             )}
@@ -101,7 +101,8 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                 ))}
               </button>
             )}
-            {gameState.currentCardRules &&
+            {gameState.activePlayer.mode === 'exploring' &&
+              gameState.currentCardRules &&
               (!gameState.currentExplorerCard ||
                 (gameState.currentCardRules?.length ?? 1) - 1 === gameState.activePlayer.cardPhase) && (
                 <Button
@@ -117,7 +118,8 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                   Next Card
                 </Button>
               )}
-            {gameState.currentCardRules &&
+            {gameState.activePlayer.mode === 'exploring' &&
+              gameState.currentCardRules &&
               (gameState.currentCardRules?.length ?? 1) - 1 !== gameState.activePlayer.cardPhase && (
                 <Button
                   className="mr-4 whitespace-nowrap"
@@ -133,7 +135,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                 </Button>
               )}
             {!userPromptOpen && gameState.activePlayer.mode === 'user-prompting' && (
-              <Button variant="primary" onClick={() => setUserPromptOpen(true)}>
+              <Button className="mr-2" variant="primary" onClick={() => setUserPromptOpen(true)}>
                 View Choices
               </Button>
             )}
@@ -168,33 +170,40 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
         <ExplorerMap className="row-start-2" />
         <div
           className={clsx(
-            'fixed right-0 top-0 z-50 h-screen w-sm bg-gray-700/60 transition-all duration-300',
+            'fixed right-0 top-0 z-30 h-screen w-sm bg-gray-700/60 pt-16 transition-all duration-300',
             sideBarOpen ? 'translate-x-0' : 'translate-x-sm',
           )}
+          style={{ backgroundImage: `url(${plankPanel.href})` }}
         >
-          <div className="flex-center relative h-full flex-wrap items-start gap-2 p-2">
-            <div className="absolute left-0 top-0 flex w-full p-2">
+          <div className="relative flex h-full flex-col items-center gap-2 overflow-y-auto p-2 text-white">
+            <div className="flex-center sticky top-0 min-h-12 w-full gap-2 py-2">
               {gameState.activePlayer.moveHistory.size > 1 && (
                 <Button onClick={() => gameState.activePlayer.moveHistory.undoAllMoves()}>Reset Moves</Button>
               )}
               {gameState.activePlayer.moveHistory.size > 0 && (
-                <Button className="ml-auto" onClick={() => gameState.activePlayer.moveHistory.undoMove()}>
-                  Undo Move
-                </Button>
+                <Button onClick={() => gameState.activePlayer.moveHistory.undoMove()}>Undo Move</Button>
               )}
             </div>
-            <Button variant="destructive" className="!absolute bottom-2 left-1/2 -translate-x-1/2" onClick={resetGame}>
-              Quit Game
-            </Button>
             <div className="flex-center w-full flex-col gap-y-2">
+              <h3 className="mb-2">Current Explorer Card</h3>
               {gameState.currentExplorerCard && (
                 <img
-                  className={clsx(gameState.currentExplorerCard.isEraCard ? 'mb-2 w-1/3 rounded-lg' : 'rounded-3xl')}
+                  className={clsx(
+                    gameState.currentExplorerCard.isEraCard ? 'mb-2 w-1/3 rounded-lg' : 'w-4/5 rounded-3xl',
+                  )}
                   src={gameState.currentExplorerCard.imageUrl.href}
                 />
               )}
-              {investigateCard && <img className="ml-2 w-full rounded-3xl" src={investigateCard.imageUrl.href} />}
+              {investigateCard && <img className="ml-2 w-4/5 rounded-3xl" src={investigateCard.imageUrl.href} />}
+              <h3 className="mb-2 mt-4">Acquired Treasure Cards</h3>
+              {gameState.activePlayer.treasureCards.length === 0 && <em>(None)</em>}
+              {gameState.activePlayer.treasureCards.map((tc) => (
+                <img className="mb-2 w-4/5 rounded-2xl" src={tc.imageUrl.href} />
+              ))}
             </div>
+            <Button className="mt-8" variant="destructive" onClick={resetGame}>
+              Quit Game
+            </Button>
           </div>
         </div>
         <div
@@ -211,21 +220,43 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
       </main>
       {gameState.activePlayer.mode === 'user-prompting' && userPromptOpen && (
         <Modal onClose={() => setUserPromptOpen(false)}>
-          <p>Pick which action you want to handle next.</p>
-          {gameState.activePlayer.treasureCardHex && (
-            <Button onClick={() => gameState.activePlayer.enterDrawTreasureMode()}>Draw Treasure (No Undo)</Button>
-          )}
-          {gameState.activePlayer.connectedTradePosts.length > 1 && (
-            <Button onClick={() => gameState.activePlayer.enterPickingTradeRouteMode()}>Trade</Button>
-          )}
-          {gameState.activePlayer.regionForVillage && (
-            <Button onClick={() => gameState.activePlayer.enterVillageMode()}>Place Village</Button>
-          )}
-          {gameState.activePlayer.moveHistory.currentMoves.length > 0 && (
-            <Button variant="destructive" onClick={() => gameState.activePlayer.moveHistory.undoMove()}>
-              Undo
-            </Button>
-          )}
+          <div className="flex-center flex-col gap-4">
+            <p>How would you like to proceed?</p>
+            {gameState.activePlayer.treasureCardHex && (
+              <div className="flex-center flex-col">
+                <Button
+                  variant="primary"
+                  onClick={() =>
+                    gameState.activePlayer.moveHistory.doMove({
+                      action: 'draw-treasure',
+                      hex: gameState.activePlayer.treasureCardHex!,
+                    })
+                  }
+                >
+                  Draw Treasure
+                </Button>
+                <p>Drawing a treasure card cannot be undone!</p>
+              </div>
+            )}
+            {gameState.activePlayer.connectedTradePosts.length > 1 && (
+              <Button variant="primary" onClick={() => gameState.activePlayer.enterPickingTradeRouteMode()}>
+                Trade
+              </Button>
+            )}
+            {gameState.activePlayer.regionForVillage && (
+              <Button variant="primary" onClick={() => gameState.activePlayer.enterVillageMode()}>
+                Place Village
+              </Button>
+            )}
+            {gameState.activePlayer.moveHistory.currentMoves.length > 0 && (
+              <Button
+                variant={gameState.activePlayer.treasureCardHex ? 'destructive' : 'dismissive'}
+                onClick={() => gameState.activePlayer.moveHistory.undoMove()}
+              >
+                Undo
+              </Button>
+            )}
+          </div>
         </Modal>
       )}
       {(gameState.activePlayer.mode === 'choosing-investigate-card' ||

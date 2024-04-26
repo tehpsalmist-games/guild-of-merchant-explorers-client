@@ -183,7 +183,6 @@ export type PlayerMode =
   | 'choosing-investigate-card-reuse'
   | 'choosing-trade-route'
   | 'trading'
-  | 'drawing-treasure'
   | 'clearing-history'
   | 'game-over'
 
@@ -224,37 +223,41 @@ export class Player {
   }
 
   addEndgameCoins() {
-    const villagesAndTowers = this.board.getFlatHexes().filter(hex => hex.isVillage || (hex.isTower && hex.isCovered));
+    const villagesAndTowers = this.board.getFlatHexes().filter((hex) => hex.isVillage || (hex.isTower && hex.isCovered))
 
-    const grassVillages = villagesAndTowers.filter(hex => hex.terrain === 'grass').length;
-    const sandVillages = villagesAndTowers.filter(hex => hex.terrain === 'sand').length;
-    const mountainVillages = villagesAndTowers.filter(hex => hex.terrain === 'mountain').length;
-    const towers = villagesAndTowers.filter(hex => hex.isTower).length;
+    const grassVillages = villagesAndTowers.filter((hex) => hex.terrain === 'grass').length
+    const sandVillages = villagesAndTowers.filter((hex) => hex.terrain === 'sand').length
+    const mountainVillages = villagesAndTowers.filter((hex) => hex.terrain === 'mountain').length
+    const towers = villagesAndTowers.filter((hex) => hex.isTower).length
 
-    let jarMultiplier = 0;
-//TODO remove console logs once display is implemented
+    let jarMultiplier = 0
+    //TODO remove console logs once display is implemented
     for (const card of this.treasureCards) {
       switch (card.type) {
         case 'grassVillageBonus':
-          this.coins += grassVillages;
+          this.coins += grassVillages
           console.log('grassVillages', grassVillages, this.coins)
-          break;
+          break
         case 'sandVillageBonus':
-          this.coins += sandVillages;
+          this.coins += sandVillages
           console.log('sandVillages', sandVillages, this.coins)
-          break;
+          break
         case 'mountainVillageBonus':
-          this.coins += mountainVillages;
+          this.coins += mountainVillages
           console.log('mountainVillages', mountainVillages, this.coins)
-          break;
+          break
         case 'landVillageHalfBonus':
-          this.coins += Math.floor((grassVillages + sandVillages + mountainVillages) / 2);
-          console.log('landVillageHalfBonus', Math.floor((grassVillages + sandVillages + mountainVillages) / 2), this.coins)
-          break;
+          this.coins += Math.floor((grassVillages + sandVillages + mountainVillages) / 2)
+          console.log(
+            'landVillageHalfBonus',
+            Math.floor((grassVillages + sandVillages + mountainVillages) / 2),
+            this.coins,
+          )
+          break
         case 'towerBonus':
-          this.coins += towers;
+          this.coins += towers
           console.log('towers', towers, this.coins)
-          break;
+          break
         case 'jarMultiplier':
           //pattern is:
           //starting value = 1 (x1)
@@ -265,13 +268,13 @@ export class Player {
           // pattern of adding is 1, 3, 5, 7
           // equasion: 2i + 1
           //And now you know how the math here works!
-          this.coins += 2 * jarMultiplier + 1;
-          console.log('jarMultiplier', 2 * jarMultiplier + 1, this.coins)
-          jarMultiplier++;
-          if (jarMultiplier >= 4){
-            jarMultiplier = 0;
+          this.coins += 2 * jarMultiplier + 1
+
+          jarMultiplier++
+          if (jarMultiplier >= 4) {
+            jarMultiplier = 0
           }
-          break;
+          break
       }
     }
   }
@@ -374,10 +377,8 @@ export class Player {
 
   enterDrawTreasureMode() {
     if (this.treasureCardHex) {
-      this.mode = 'drawing-treasure'
+      this.mode = 'user-prompting'
       this.message = 'Draw a treasure card!'
-
-      this.moveHistory.doMove({ action: 'draw-treasure', hex: this.treasureCardHex })
     } else {
       this.checkForUserDecision()
     }
@@ -538,10 +539,9 @@ export class MoveHistory {
         //TODO remove once display is implemented... or don't, idk
         console.log(treasureCard)
 
-        if (treasureCard.discard){
+        if (treasureCard.discard) {
           this.gameState.treasureDeck.useCard(treasureCard.id)
-        }
-        else {
+        } else {
           this.gameState.treasureDeck.removeCard(treasureCard.id)
         }
 
@@ -558,8 +558,7 @@ export class MoveHistory {
         if (treasureCard.type === 'placeBlock') {
           this.player.enterFreeExploringMode()
           break
-        }
-        else if (treasureCard.type === 'twoCoins') {
+        } else if (treasureCard.type === 'twoCoins') {
           this.player.coins += 2
         }
 

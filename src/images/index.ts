@@ -9,7 +9,7 @@ export const tradePostCoverImage = new URL('/src/images/pieces/crystal.png', imp
 export const romanNumeral = new URL('/src/images/pieces/I.png', import.meta.url)
 
 // planks
-export const plankPannel = new URL('/src/images/pieces/Plank-Pannel.png', import.meta.url)
+export const plankPanel = new URL('/src/images/pieces/Plank-Pannel.png', import.meta.url)
 export const plankRow = new URL('/src/images/pieces/Plank-Row.png', import.meta.url)
 export const singlePlank1 = new URL('/src/images/pieces/Single-Plank-1.png', import.meta.url)
 export const singlePlank2 = new URL('/src/images/pieces/Single-Plank-2.png', import.meta.url)
