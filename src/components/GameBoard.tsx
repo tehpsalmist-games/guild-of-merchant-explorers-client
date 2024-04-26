@@ -6,10 +6,11 @@ import ChevronRightIcon from '@heroicons/react/24/solid/ChevronRightIcon'
 import ChevronLeftIcon from '@heroicons/react/24/solid/ChevronLeftIcon'
 import UTurnIcon from '@heroicons/react/24/solid/ArrowUturnLeftIcon'
 import clsx from 'clsx'
-import { coinImage, placeBlock, plankPanel, singlePlank2, treasureChestImage } from '../images'
+import { coinImage, placeBlock, plankPanelHorizontal, plankPanelVertical, treasureChestImage } from '../images'
 import { EraLabel } from './EraLabel'
 import { ExplorerCardMat } from './ExplorerCardMat'
 import { ObjectiveCards } from './ObjectiveCards'
+import { TreasureCard } from '../game-logic/Cards'
 
 export interface GameBoardProps extends ComponentProps<'main'> {}
 
@@ -20,6 +21,8 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
   const updateState = useState(0)[1]
 
   const { gameState, resetGame } = useGameState()
+
+  const treasureCards: TreasureCard[] = gameState.activePlayer.treasureCards.filter((c) => !c.discard)
 
   const investigateCard = gameState.currentExplorerCard?.isEraCard
     ? gameState.currentExplorerCard.getInvestigateCard?.(gameState.activePlayer)
@@ -56,10 +59,10 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
 
   return (
     <>
-      <div className="fixed top-0 z-30 h-16 w-full bg-white px-4">
+      <div className="fixed top-0 z-30 h-16 w-full">
         <ObjectiveCards />
       </div>
-      <div className="fixed top-0 z-40 h-16 w-full px-4" style={{ backgroundImage: `url(${singlePlank2.href})` }}>
+      <div className="fixed top-0 z-40 h-16 w-full px-4" style={{ backgroundImage: `url(${plankPanelHorizontal.href})` }}>
         <div className="grid h-full grid-cols-[1fr,auto,1fr] grid-rows-1">
           <div className="flex h-16 items-center py-0.5">
             <EraLabel className="mr-4" />
@@ -158,7 +161,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
             </span>
             <img className="max-h-16 max-w-32" src={treasureChestImage.href} alt="treasure" />
             <span className="text-6xl font-bold leading-[1em] text-primary-500 [text-shadow:_0_0_6px_rgba(255_255_255)]">
-              {gameState.activePlayer.treasureCards.filter((c) => !c.discard).length}
+              {treasureCards.length}
             </span>
           </div>
         </div>
@@ -173,7 +176,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
             'fixed right-0 top-0 z-30 h-screen w-sm bg-gray-700/60 pt-16 transition-all duration-300',
             sideBarOpen ? 'translate-x-0' : 'translate-x-sm',
           )}
-          style={{ backgroundImage: `url(${plankPanel.href})` }}
+          style={{ backgroundImage: `url(${plankPanelVertical.href})` }}
         >
           <div className="relative flex h-full flex-col items-center gap-2 overflow-y-auto p-2 text-white">
             <div className="flex-center sticky top-0 min-h-12 w-full gap-2 py-2">
@@ -196,8 +199,8 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
               )}
               {investigateCard && <img className="ml-2 w-4/5 rounded-3xl" src={investigateCard.imageUrl.href} />}
               <h3 className="mb-2 mt-4">Acquired Treasure Cards</h3>
-              {gameState.activePlayer.treasureCards.length === 0 && <em>(None)</em>}
-              {gameState.activePlayer.treasureCards.map((tc) => (
+              {treasureCards.length === 0 && <em>(None)</em>}
+              {treasureCards.map((tc) => (
                 <img className="mb-2 w-4/5 rounded-2xl" src={tc.imageUrl.href} />
               ))}
             </div>
@@ -220,7 +223,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
       </main>
       {gameState.activePlayer.mode === 'user-prompting' && userPromptOpen && (
         <Modal onClose={() => setUserPromptOpen(false)}>
-          <div className="flex-center flex-col gap-4">
+          <div className="flex-center flex-col gap-4 p-2 text-white" style={{ backgroundImage: `url(${plankPanelHorizontal.href})` }}>
             <p>How would you like to proceed?</p>
             {gameState.activePlayer.treasureCardHex && (
               <div className="flex-center flex-col">
