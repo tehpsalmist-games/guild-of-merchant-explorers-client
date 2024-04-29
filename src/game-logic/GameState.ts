@@ -186,7 +186,7 @@ export type PlayerMode =
   | 'clearing-history'
   | 'game-over'
 
-export class Player {
+export class Player extends EventTarget {
   gameState: GameState
   board: Board
   moveHistory: MoveHistory
@@ -217,6 +217,8 @@ export class Player {
   freeExploreQuantity = 0 //-1 means infinite
 
   constructor(boardData: BoardData, gameState: GameState) {
+    super()
+
     this.gameState = gameState
     this.board = new Board(boardData, this, gameState)
     this.moveHistory = new MoveHistory(this, gameState)
@@ -536,8 +538,7 @@ export class MoveHistory {
         move.drawnTreasureID = treasureCard.id
         this.player.treasureCards.push(treasureCard)
 
-        //TODO remove once display is implemented... or don't, idk
-        console.log(treasureCard)
+        this.player.dispatchEvent(new CustomEvent('treasure-gained'))
 
         if (treasureCard.discard) {
           this.gameState.treasureDeck.useCard(treasureCard.id)

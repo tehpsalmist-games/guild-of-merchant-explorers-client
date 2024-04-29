@@ -128,6 +128,8 @@ export class Objective {
         p.coins += this.secondPlaceReward
         this.secondPlayers.push(p)
       }
+
+      p.dispatchEvent(new CustomEvent('objective-achieved'))
     }
 
     // emit event for UI display instead?

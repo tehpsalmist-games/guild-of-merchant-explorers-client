@@ -17,6 +17,7 @@ export interface GameBoardProps extends ComponentProps<'main'> {}
 export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
   const [sideBarOpen, setSideBarOpen] = useState(false)
   const [investigateModalOpen, setInvestigateModalOpen] = useState(false)
+  const [newTreasureCard, setNewTreasureCard] = useState(0)
   const [userPromptOpen, setUserPromptOpen] = useState(false)
   const updateState = useState(0)[1]
 
@@ -45,6 +46,13 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
   }, [gameState])
 
   useEffect(() => {
+    const treasureListener = () => setNewTreasureCard((nt) => nt + 1)
+    gameState.activePlayer.addEventListener('treasure-gained', treasureListener)
+
+    return () => gameState.activePlayer.removeEventListener('treasure-gained', treasureListener)
+  }, [gameState.activePlayer])
+
+  useEffect(() => {
     if (
       gameState.activePlayer.mode === 'choosing-investigate-card' ||
       gameState.activePlayer.mode === 'choosing-investigate-card-reuse'
@@ -62,7 +70,10 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
       <div className="fixed top-0 z-30 h-16 w-full">
         <ObjectiveCards />
       </div>
-      <div className="fixed top-0 z-40 h-16 w-full px-4" style={{ backgroundImage: `url(${plankPanelHorizontal.href})` }}>
+      <div
+        className="fixed top-0 z-40 h-16 w-full px-4"
+        style={{ backgroundImage: `url(${plankPanelHorizontal.href})` }}
+      >
         <div className="grid h-full grid-cols-[1fr,auto,1fr] grid-rows-1">
           <div className="flex h-16 items-center py-0.5">
             <EraLabel className="mr-4" />
@@ -223,7 +234,10 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
       </main>
       {gameState.activePlayer.mode === 'user-prompting' && userPromptOpen && (
         <Modal onClose={() => setUserPromptOpen(false)}>
-          <div className="flex-center flex-col gap-4 p-2 text-white" style={{ backgroundImage: `url(${plankPanelHorizontal.href})` }}>
+          <div
+            className="flex-center flex-col gap-4 p-2 text-white"
+            style={{ backgroundImage: `url(${plankPanelHorizontal.href})` }}
+          >
             <p>How would you like to proceed?</p>
             {gameState.activePlayer.treasureCardHex && (
               <div className="flex-center flex-col">
@@ -262,36 +276,48 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
           </div>
         </Modal>
       )}
-      {(gameState.activePlayer.mode === 'choosing-investigate-card' ||
-        gameState.activePlayer.mode === 'choosing-investigate-card-reuse') &&
+      {['choosing-investigate-card', 'choosing-investigate-card-reuse', ''].includes(gameState.activePlayer.mode) &&
         investigateModalOpen && (
           <Modal onClose={() => setInvestigateModalOpen(false)}>
             <p className="mb-4 text-center">
               Choose an Investigate Card for Era {gameState.era > 2 ? 'IV' : 'I'.repeat(gameState.era + 1)}.
             </p>
-            {
-              <div className="flex-center gap-4">
-                {(gameState.era < 3
-                  ? gameState.activePlayer.investigateCardCandidates
-                  : gameState.activePlayer.investigateCards
-                )?.map((candidate, index) => (
-                  <button
-                    key={candidate.id}
-                    onClick={() => {
-                      if (gameState.era < 3) {
-                        gameState.activePlayer.chooseInvestigateCard(candidate)
-                      } else {
-                        gameState.activePlayer.chooseInvestigateCardForReuse(index)
-                      }
-                    }}
-                  >
-                    <img src={candidate.imageUrl.href} alt="Investigate Card" />
-                  </button>
-                ))}
-              </div>
-            }
+            <div className="flex-center gap-4">
+              {(gameState.era < 3
+                ? gameState.activePlayer.investigateCardCandidates
+                : gameState.activePlayer.investigateCards
+              )?.map((candidate, index) => (
+                <button
+                  key={candidate.id}
+                  onClick={() => {
+                    if (gameState.era < 3) {
+                      gameState.activePlayer.chooseInvestigateCard(candidate)
+                    } else {
+                      gameState.activePlayer.chooseInvestigateCardForReuse(index)
+                    }
+                  }}
+                >
+                  <img src={candidate.imageUrl.href} alt="Investigate Card" />
+                </button>
+              ))}
+            </div>
           </Modal>
         )}
+      {newTreasureCard > 0 && (
+        <Modal onClose={() => setNewTreasureCard((t) => t - 1)}>
+          <p className="mb-4 text-center">You drew a treasure card:</p>
+          <img
+            className="block max-w-md rounded-2xl"
+            src={
+              gameState.activePlayer.treasureCards[gameState.activePlayer.treasureCards.length - newTreasureCard]
+                ?.imageUrl.href
+            }
+          />
+          <Button variant="primary" onClick={() => setNewTreasureCard((t) => t - 1)}>
+            OK
+          </Button>
+        </Modal>
+      )}
     </>
   )
 }
