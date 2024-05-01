@@ -60,7 +60,10 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
       setInvestigateModalOpen(true)
     }
 
-    if (gameState.activePlayer.mode === 'user-prompting') {
+    if (
+      gameState.activePlayer.mode === 'user-prompting' || 
+      gameState.activePlayer.mode === 'game-over'
+    ) {
       setUserPromptOpen(true)
     }
   }, [gameState.activePlayer.mode])
@@ -146,6 +149,15 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                   onClick={() => gameState.activePlayer.enterNextCardPhaseMode()}
                 >
                   Next Phase
+                </Button>
+              )}
+              {gameState.activePlayer.mode === 'game-over' && (
+                <Button
+                  className="mr-4 whitespace-nowrap"
+                  variant='primary'
+                  onClick={() => setUserPromptOpen(true)}
+                >
+                  Score Board
                 </Button>
               )}
             {!userPromptOpen && gameState.activePlayer.mode === 'user-prompting' && (
@@ -316,6 +328,42 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
           <Button variant="primary" onClick={() => setNewTreasureCard((t) => t - 1)}>
             OK
           </Button>
+        </Modal>
+      )}
+      {gameState.activePlayer.mode === 'game-over' && userPromptOpen && gameState.scoreBoard && (
+        <Modal onClose={() => setUserPromptOpen(false)}>
+          <div
+            className="flex-center flex-col gap-4 p-2 text-white"
+            style={{ backgroundImage: `url(${plankPanelHorizontal.href})` }}
+          >
+            <h1>All Eras Complete!</h1>
+
+            {gameState.scoreBoard.stats.map((stat) => (
+              <div>
+                <div className="flex-center gap-4">
+                  {stat.image && <img className="max-h-8 max-w-8" src={stat.image.href} />}
+                  {stat.name && (<p>{stat.name}</p>)}
+                </div>
+                <div className="flex-center gap-4">
+                  <p>
+                    {(stat.visibleScore > -1 ? stat.visibleScore : '-')}{stat.visibleScore > -1 && stat.maxScore ? ` / ${stat.maxScore}` : ''}
+                  </p>
+                </div>
+              </div>
+            ))}
+
+            {gameState.scoreBoard.doneRevealing && (
+              <Button className="mt-8" variant="destructive" onClick={resetGame}>
+                Quit Game
+              </Button>
+            )}
+            {!gameState.scoreBoard.doneRevealing && (
+              <Button className="mt-8">
+                Quit Game
+              </Button>
+            )}
+
+          </div>
         </Modal>
       )}
     </>

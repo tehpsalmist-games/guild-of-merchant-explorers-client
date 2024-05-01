@@ -7,6 +7,7 @@ import { randomSelection, sleep } from '../utils'
 import { ExplorerCard, ExplorerDeck, GlobalExplorerCard, InvestigateDeck, TreasureCard, TreasureDeck } from './Cards'
 import { objectives } from '../data/objectives'
 import { Objective } from './Objective'
+import { ScoreBoard } from './ScoreBoard'
 
 export type BoardName = 'aghon' | 'avenia' | 'kazan' | 'cnidaria'
 
@@ -40,6 +41,8 @@ export class GameState extends EventTarget {
 
   treasureDeck: TreasureDeck
 
+  scoreBoard?: ScoreBoard
+
   constructor(boardName: BoardName) {
     super()
 
@@ -70,10 +73,12 @@ export class GameState extends EventTarget {
     if (this.era > 3) {
       // game is over, TODO: total points from treasure cards and display all results
       this.activePlayer.addEndgameCoins()
-
+      
       this.era-- // reset to a valid era
       this.activePlayer.mode = 'game-over'
       this.activePlayer.message = 'Game Over!'
+
+      this.scoreBoard = new ScoreBoard(this)
     } else {
       // only wipe the board if we're going to a new era, otherwise leave it up for satisfactory reviewing
       this.currentTurn = 0
@@ -233,32 +238,23 @@ export class Player extends EventTarget {
     const towers = villagesAndTowers.filter((hex) => hex.isTower).length
 
     let jarMultiplier = 0
-    //TODO remove console logs once display is implemented
+
     for (const card of this.treasureCards) {
       switch (card.type) {
         case 'grassVillageBonus':
           this.coins += grassVillages
-          console.log('grassVillages', grassVillages, this.coins)
           break
         case 'sandVillageBonus':
           this.coins += sandVillages
-          console.log('sandVillages', sandVillages, this.coins)
           break
         case 'mountainVillageBonus':
           this.coins += mountainVillages
-          console.log('mountainVillages', mountainVillages, this.coins)
           break
         case 'landVillageHalfBonus':
           this.coins += Math.floor((grassVillages + sandVillages + mountainVillages) / 2)
-          console.log(
-            'landVillageHalfBonus',
-            Math.floor((grassVillages + sandVillages + mountainVillages) / 2),
-            this.coins,
-          )
           break
         case 'towerBonus':
           this.coins += towers
-          console.log('towers', towers, this.coins)
           break
         case 'jarMultiplier':
           //pattern is:
