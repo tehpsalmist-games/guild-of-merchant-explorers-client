@@ -6,7 +6,7 @@ import ChevronRightIcon from '@heroicons/react/24/solid/ChevronRightIcon'
 import ChevronLeftIcon from '@heroicons/react/24/solid/ChevronLeftIcon'
 import UTurnIcon from '@heroicons/react/24/solid/ArrowUturnLeftIcon'
 import clsx from 'clsx'
-import { coinImage, placeBlock, plankPanelHorizontal, plankPanelVertical, treasureChestImage } from '../images'
+import { coinImage, jarMultiplier, placeBlock, plankPanelHorizontal, plankPanelVertical, treasureChestImage } from '../images'
 import { EraLabel } from './EraLabel'
 import { ExplorerCardMat } from './ExplorerCardMat'
 import { ObjectiveCards } from './ObjectiveCards'
@@ -23,7 +23,8 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
 
   const { gameState, resetGame } = useGameState()
 
-  const treasureCards: TreasureCard[] = gameState.activePlayer.treasureCards.filter((c) => !c.discard)
+  const treasureCards: TreasureCard[] = gameState.activePlayer.treasureCards.filter((c) => !c.discard && c.type !== 'jarMultiplier')
+  const treasureJars: TreasureCard[] = gameState.activePlayer.treasureCards.filter((c) => c.type === 'jarMultiplier')
 
   const investigateCard = gameState.currentExplorerCard?.isEraCard
     ? gameState.currentExplorerCard.getInvestigateCard?.(gameState.activePlayer)
@@ -184,7 +185,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
             </span>
             <img className="max-h-16 max-w-32" src={treasureChestImage.href} alt="treasure" />
             <span className="text-6xl font-bold leading-[1em] text-primary-500 [text-shadow:_0_0_6px_rgba(255_255_255)]">
-              {treasureCards.length}
+              {treasureCards.length + treasureJars.length}
             </span>
           </div>
         </div>
@@ -222,7 +223,13 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
               )}
               {investigateCard && <img className="ml-2 w-4/5 rounded-3xl" src={investigateCard.imageUrl.href} />}
               <h3 className="mb-2 mt-4">Acquired Treasure Cards</h3>
-              {treasureCards.length === 0 && <em>(None)</em>}
+              {treasureCards.length === 0 && treasureJars.length === 0 && <em>(None)</em>}
+              {treasureJars.length > 0 && (
+                <div className='flex-center flex-col'>
+                  <h2>x{treasureJars.length}</h2>
+                  <img className="mb-2 w-4/5 rounded-2xl" src={treasureJars[0].imageUrl.href} />
+                </div>
+              )}
               {treasureCards.map((tc) => (
                 <img className="mb-2 w-4/5 rounded-2xl" src={tc.imageUrl.href} />
               ))}

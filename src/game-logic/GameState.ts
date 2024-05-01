@@ -58,7 +58,7 @@ export class GameState extends EventTarget {
 
     this.explorerDeck = new ExplorerDeck()
 
-    this.treasureDeck = new TreasureDeck()
+    this.treasureDeck = new TreasureDeck(this.activePlayer.board)
 
     // start game!
     this.flipExplorerCard()
@@ -230,49 +230,28 @@ export class Player extends EventTarget {
   }
 
   addEndgameCoins() {
-    const villagesAndTowers = this.board.getFlatHexes().filter((hex) => hex.isVillage || (hex.isTower && hex.isCovered))
-
-    const grassVillages = villagesAndTowers.filter((hex) => hex.terrain === 'grass').length
-    const sandVillages = villagesAndTowers.filter((hex) => hex.terrain === 'sand').length
-    const mountainVillages = villagesAndTowers.filter((hex) => hex.terrain === 'mountain').length
-    const towers = villagesAndTowers.filter((hex) => hex.isTower).length
-
     let jarMultiplier = 0
 
-    for (const card of this.treasureCards) {
-      switch (card.type) {
-        case 'grassVillageBonus':
-          this.coins += grassVillages
-          break
-        case 'sandVillageBonus':
-          this.coins += sandVillages
-          break
-        case 'mountainVillageBonus':
-          this.coins += mountainVillages
-          break
-        case 'landVillageHalfBonus':
-          this.coins += Math.floor((grassVillages + sandVillages + mountainVillages) / 2)
-          break
-        case 'towerBonus':
-          this.coins += towers
-          break
-        case 'jarMultiplier':
-          //pattern is:
-          //starting value = 1 (x1)
-          //1+3 = 4 (x2)
-          //4+5 = 9 (x3)
-          //9+7 = 16 (x4)
-          //restart after 4 jars
-          // pattern of adding is 1, 3, 5, 7
-          // equasion: 2i + 1
-          //And now you know how the math here works!
-          this.coins += 2 * jarMultiplier + 1
+    for (const card of this.treasureCards.filter((card) => !card.discard)) {
+      this.coins += card.value(this.board)
+      
+      //for jars, pattern is:
+      //starting value = 1 (x1)
+      //1+3 = 4 (x2)
+      //4+5 = 9 (x3)
+      //9+7 = 16 (x4)
+      //restart after 4 jars
+      //pattern for adding to the previous answer is 1, 3, 5, 7
+      //equasion: 2i + 1
+      //And now you know how the math here works!
+      if (card.type === 'jarMultiplier') {
 
-          jarMultiplier++
-          if (jarMultiplier >= 4) {
-            jarMultiplier = 0
-          }
-          break
+        this.coins += 2 * jarMultiplier + 1
+
+        jarMultiplier++
+        if (jarMultiplier >= 4) {
+          jarMultiplier = 0
+        }
       }
     }
   }
@@ -537,6 +516,7 @@ export class MoveHistory {
         this.player.dispatchEvent(new CustomEvent('treasure-gained'))
 
         if (treasureCard.discard) {
+          this.player.coins += treasureCard.value(this.player.board)
           this.gameState.treasureDeck.useCard(treasureCard.id)
         } else {
           this.gameState.treasureDeck.removeCard(treasureCard.id)
@@ -555,8 +535,6 @@ export class MoveHistory {
         if (treasureCard.type === 'placeBlock') {
           this.player.enterFreeExploringMode()
           break
-        } else if (treasureCard.type === 'twoCoins') {
-          this.player.coins += 2
         }
 
         this.player.checkForUserDecision()

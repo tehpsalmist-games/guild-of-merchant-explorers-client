@@ -17,7 +17,7 @@ export const aghonData: BoardData = {
       null,
       { terrain: 'mountain', coins: 3 },
       { terrain: 'mountain', coins: 2 },
-      { terrain: 'water', isRuin: true },
+      { terrain: 'water' },
       { terrain: 'grass', coins: 2 },
       { terrain: 'water', isRuin: true },
       { terrain: 'mountain', coins: 3 },

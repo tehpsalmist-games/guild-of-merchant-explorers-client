@@ -51,13 +51,13 @@ export class ScoreBoard {
             
             this.stats[i].visibleScore = 0
 
+            this.gameState.emitStateChange()
+
             while (this.stats[i].visibleScore < this.stats[i].score) {
+                await sleep(this.stats[i].visibleScore > 15 ? this.stats[i].visibleScore > 30 ? 10 : 50 : 100)
                 this.stats[i].visibleScore++
                 this.gameState.emitStateChange()
-                await sleep(100)
             }
-            
-            this.gameState.emitStateChange()
         }
 
         this.doneRevealing = true
