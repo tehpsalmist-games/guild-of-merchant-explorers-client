@@ -7,7 +7,7 @@ import { useEventListener } from '@8thday/react'
 export interface ObjectiveCardsProps extends ComponentProps<'div'> {}
 
 export const ObjectiveCards = ({ className = '', ...props }: ObjectiveCardsProps) => {
-  const [inView, setInView] = useState(false)
+  const [inView, setInView] = useState(true)
 
   const { gameState } = useGameState()
 
