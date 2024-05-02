@@ -6,7 +6,7 @@ import ChevronRightIcon from '@heroicons/react/24/solid/ChevronRightIcon'
 import ChevronLeftIcon from '@heroicons/react/24/solid/ChevronLeftIcon'
 import UTurnIcon from '@heroicons/react/24/solid/ArrowUturnLeftIcon'
 import clsx from 'clsx'
-import { coinImage, jarMultiplier, placeBlock, plankPanelHorizontal, plankPanelVertical, treasureChestImage } from '../images'
+import { coinImage, placeBlock, plankPanelHorizontal, plankPanelVertical, treasureChestImage } from '../images'
 import { EraLabel } from './EraLabel'
 import { ExplorerCardMat } from './ExplorerCardMat'
 import { ObjectiveCards } from './ObjectiveCards'
@@ -23,7 +23,9 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
 
   const { gameState, resetGame } = useGameState()
 
-  const treasureCards: TreasureCard[] = gameState.activePlayer.treasureCards.filter((c) => !c.discard && c.type !== 'jarMultiplier')
+  const treasureCards: TreasureCard[] = gameState.activePlayer.treasureCards.filter(
+    (c) => !c.discard && c.type !== 'jarMultiplier',
+  )
   const treasureJars: TreasureCard[] = gameState.activePlayer.treasureCards.filter((c) => c.type === 'jarMultiplier')
 
   const investigateCard = gameState.currentExplorerCard?.isEraCard
@@ -61,10 +63,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
       setInvestigateModalOpen(true)
     }
 
-    if (
-      gameState.activePlayer.mode === 'user-prompting' || 
-      gameState.activePlayer.mode === 'game-over'
-    ) {
+    if (gameState.activePlayer.mode === 'user-prompting' || gameState.activePlayer.mode === 'game-over') {
       setUserPromptOpen(true)
     }
   }, [gameState.activePlayer.mode])
@@ -152,15 +151,11 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                   Next Phase
                 </Button>
               )}
-              {gameState.activePlayer.mode === 'game-over' && (
-                <Button
-                  className="mr-4 whitespace-nowrap"
-                  variant='primary'
-                  onClick={() => setUserPromptOpen(true)}
-                >
-                  Score Board
-                </Button>
-              )}
+            {gameState.activePlayer.mode === 'game-over' && (
+              <Button className="mr-4 whitespace-nowrap" variant="primary" onClick={() => setUserPromptOpen(true)}>
+                Score Board
+              </Button>
+            )}
             {!userPromptOpen && gameState.activePlayer.mode === 'user-prompting' && (
               <Button className="mr-2" variant="primary" onClick={() => setUserPromptOpen(true)}>
                 View Choices
@@ -225,7 +220,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
               <h3 className="mb-2 mt-4">Acquired Treasure Cards</h3>
               {treasureCards.length === 0 && treasureJars.length === 0 && <em>(None)</em>}
               {treasureJars.length > 0 && (
-                <div className='flex-center flex-col'>
+                <div className="flex-center flex-col">
                   <h2>x{treasureJars.length}</h2>
                   <img className="mb-2 w-4/5 rounded-2xl" src={treasureJars[0].imageUrl.href} />
                 </div>
@@ -349,11 +344,12 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
               <div>
                 <div className="flex-center gap-4">
                   {stat.image && <img className="max-h-8 max-w-8" src={stat.image.href} />}
-                  {stat.name && (<p>{stat.name}</p>)}
+                  {stat.name && <p>{stat.name}</p>}
                 </div>
                 <div className="flex-center gap-4">
                   <p>
-                    {(stat.visibleScore > -1 ? stat.visibleScore : '-')}{stat.visibleScore > -1 && stat.maxScore ? ` / ${stat.maxScore}` : ''}
+                    {stat.visibleScore >= 0 ? stat.visibleScore : '-'}
+                    {stat.visibleScore >= 0 && stat.maxScore ? ` / ${stat.maxScore}` : ''}
                   </p>
                 </div>
               </div>
@@ -364,12 +360,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                 Quit Game
               </Button>
             )}
-            {!gameState.scoreBoard.doneRevealing && (
-              <Button className="mt-8">
-                Quit Game
-              </Button>
-            )}
-
+            {!gameState.scoreBoard.doneRevealing && <Button className="mt-8">Quit Game</Button>}
           </div>
         </Modal>
       )}
