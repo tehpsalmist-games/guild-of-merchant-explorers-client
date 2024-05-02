@@ -1,7 +1,7 @@
 import clsx from 'clsx'
 import React, { ComponentProps, useEffect, useState } from 'react'
 import { useGameState } from '../hooks/useGameState'
-import { blockImage } from '../images'
+import { blockImage, era2Blocker, era3Blocker, eraAnyBlocker, treasureChestImage } from '../images'
 import { useEventListener } from '@8thday/react'
 
 export interface ObjectiveCardsProps extends ComponentProps<'div'> {}
@@ -38,6 +38,41 @@ export const ObjectiveCards = ({ className = '', ...props }: ObjectiveCardsProps
         card ? (
           <div key={i} className="relative w-full max-w-1/4">
             <img src={card.imageUrl.href} className="w-full rounded-2xl" />
+            {card.isFirstBlocked && i === 0 && (
+              <img
+                src={era2Blocker.href}
+                alt="era 2 objective blocker"
+                className={clsx('left-1/5 absolute top-1/2 h-1/3')}
+              />
+            )}
+            {card.isSecondBlocked && i === 0 && (
+              <img
+                src={era3Blocker.href}
+                alt="era 3 objective blocker"
+                className={clsx('right-1/5 absolute top-1/2 h-1/3')}
+              />
+            )}
+            {card.isFirstBlocked && i === 1 && (
+              <img
+                src={era3Blocker.href}
+                alt="era 3 objective blocker"
+                className={clsx('left-1/5 absolute top-1/2 h-1/3')}
+              />
+            )}
+            {card.isSecondBlocked && i === 1 && (
+              <img
+                src={eraAnyBlocker.href}
+                alt="era any objective blocker"
+                className={clsx('right-1/5 absolute top-1/2 h-1/3')}
+              />
+            )}
+            {card.isFirstBlocked && i === 2 && (
+              <img
+                src={eraAnyBlocker.href}
+                alt="era any objective blocker"
+                className={clsx('left-1/5 absolute top-1/2 h-1/3')}
+              />
+            )}
             {card.firstPlayers.concat(card.secondPlayers).some((p) => p === gameState.activePlayer) && (
               <img
                 src={blockImage.href}

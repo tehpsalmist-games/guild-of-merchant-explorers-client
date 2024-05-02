@@ -32,6 +32,10 @@ module.exports = {
         ...theme('spacing'),
       }),
       spacing: {
+        '1/5': '20%',
+        '2/5': '40%',
+        '3/5': '60%',
+        '4/5': '80%',
         36: '9rem',
         xs: '20rem',
         sm: '24rem',

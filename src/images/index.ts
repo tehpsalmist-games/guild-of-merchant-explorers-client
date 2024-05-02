@@ -7,6 +7,9 @@ export const towerImage = new URL('/src/images/pieces/tower.png', import.meta.ur
 export const coinImage = new URL('/src/images/pieces/coin.png', import.meta.url)
 export const tradePostCoverImage = new URL('/src/images/pieces/crystal.png', import.meta.url)
 export const romanNumeral = new URL('/src/images/pieces/I.png', import.meta.url)
+export const eraAnyBlocker = new URL('/src/images/pieces/era-any-blocker.png', import.meta.url)
+export const era2Blocker = new URL('/src/images/pieces/era-2-blocker.png', import.meta.url)
+export const era3Blocker = new URL('/src/images/pieces/era-3-blocker.png', import.meta.url)
 
 // planks
 export const plankPanelVertical = new URL('/src/images/pieces/Plank-Panel-Vertical.png', import.meta.url)

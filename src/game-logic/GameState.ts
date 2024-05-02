@@ -120,8 +120,19 @@ export class GameState extends EventTarget {
         this.dealInvestigateCards(this.activePlayer)
       }
 
+      if (this.currentExplorerCard.id === 'era-2') {
+        this.objectives[0].isFirstBlocked = true
+      }
+
+      if (this.currentExplorerCard.id === 'era-3') {
+        this.objectives[0].isSecondBlocked = true
+        this.objectives[1].isFirstBlocked = true
+      }
+
       if (this.currentExplorerCard.id === 'era-any') {
         this.activePlayer.mode = 'choosing-investigate-card-reuse'
+        this.objectives[1].isSecondBlocked = true
+        this.objectives[2].isFirstBlocked = true
       }
 
       this.activePlayer.message =

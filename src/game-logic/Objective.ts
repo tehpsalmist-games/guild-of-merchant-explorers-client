@@ -78,6 +78,9 @@ export class Objective {
 
   turnAndEraOfFirstAward: [number, number]
 
+  isFirstBlocked = false
+  isSecondBlocked = false
+
   constructor(data: ObjectiveData, gameState: GameState) {
     this.gameState = gameState
 
@@ -91,9 +94,10 @@ export class Objective {
 
   isPlayerFirst() {
     return (
-      !this.turnAndEraOfFirstAward ||
-      (this.gameState.era === this.turnAndEraOfFirstAward[0] &&
-        this.gameState.currentTurn === this.turnAndEraOfFirstAward[1])
+      !this.isFirstBlocked &&
+      (!this.turnAndEraOfFirstAward ||
+        (this.gameState.era === this.turnAndEraOfFirstAward[0] &&
+          this.gameState.currentTurn === this.turnAndEraOfFirstAward[1]))
     )
   }
 
@@ -106,6 +110,8 @@ export class Objective {
   }
 
   checkAndScoreForPlayer(p: Player) {
+    if (this.isFirstBlocked && this.isSecondBlocked) return
+
     this.clearMatchingState()
 
     if (this.firstPlayers.includes(p) || this.secondPlayers.includes(p)) return
@@ -123,9 +129,11 @@ export class Objective {
     if (matchingHexes) {
       if (this.isPlayerFirst()) {
         p.coins += this.firstPlaceReward
+
         this.firstPlayers.push(p)
       } else {
         p.coins += this.secondPlaceReward
+
         this.secondPlayers.push(p)
       }
 
