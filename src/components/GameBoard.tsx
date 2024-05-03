@@ -195,7 +195,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
             'fixed right-0 top-0 z-30 h-screen w-sm bg-gray-700/60 pt-16 transition-all duration-300',
             sideBarOpen ? 'translate-x-0' : 'translate-x-sm',
           )}
-          style={{ backgroundImage: `url(${plankPanelVertical.href})` }}
+          style={{ backgroundImage: `url(${plankPanelHorizontal.href})` }}
         >
           <div className="relative flex h-full flex-col items-center gap-2 overflow-y-auto p-2 text-white">
             <div className="flex-center sticky top-0 min-h-12 w-full gap-2 py-2">
@@ -221,12 +221,23 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
               {treasureCards.length === 0 && treasureJars.length === 0 && <em>(None)</em>}
               {treasureJars.length > 0 && (
                 <div className="flex-center flex-col">
-                  <h2>x{treasureJars.length}</h2>
                   <img className="mb-2 w-4/5 rounded-2xl" src={treasureJars[0].imageUrl.href} />
+                  <div className="flex-center flex-row">
+                    <h2>x{treasureJars.length}≈</h2>
+                    <img className="w-8" src={coinImage.href} />
+                    <p>{gameState.activePlayer.getTreasureJarValue()}</p>
+                  </div>
                 </div>
               )}
               {treasureCards.map((tc) => (
-                <img className="mb-2 w-4/5 rounded-2xl" src={tc.imageUrl.href} />
+                <div className="flex-center flex-col">
+                  <img className="mb-2 w-4/5 rounded-2xl" src={tc.imageUrl.href} />
+                  <div className="flex-center flex-row">
+                    <h2>≈</h2>
+                    <img className="w-8" src={coinImage.href} />
+                    <p>{tc.value(gameState.activePlayer.board)}</p>
+                  </div>
+                </div>
               ))}
             </div>
             <Button className="mt-8" variant="destructive" onClick={resetGame}>

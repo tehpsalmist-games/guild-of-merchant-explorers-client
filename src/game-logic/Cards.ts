@@ -139,6 +139,8 @@ export interface TreasureCard {
   discard?: boolean
 
   value(board: Board): number
+
+  jarValue?(index: number): { index: number; value: number }
 }
 
 export class ExplorerDeck extends Deck<GlobalExplorerCard> {

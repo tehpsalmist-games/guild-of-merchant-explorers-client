@@ -86,6 +86,27 @@ export const treasureCards: TreasureCard[] = [
     value() : number {
       //Jar value is calculated elsewhere due to the need to know the total number of jars.
       return 0 
+    },
+
+    jarValue(index: number) : { index: number; value: number } {
+      //for jars, pattern is:
+      //starting value = 1 (x1)
+      //1+3 = 4 (x2)
+      //4+5 = 9 (x3)
+      //9+7 = 16 (x4)
+      //restart after 4 jars
+      //pattern for adding to the previous answer is 1, 3, 5, 7
+      //equasion: 2i + 1
+      //And now you know how the math here works!
+
+      let value = 2 * index + 1
+
+      index++
+      if (index >= 4) {
+        index = 0
+      }
+
+      return {index, value}
     }
   },
 ]

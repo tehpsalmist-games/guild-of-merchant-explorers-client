@@ -241,30 +241,32 @@ export class Player extends EventTarget {
   }
 
   addEndgameCoins() {
-    let jarMultiplier = 0
+    let jarIndex = 0
 
     for (const card of this.treasureCards.filter((card) => !card.discard)) {
       this.coins += card.value(this.board)
       
-      //for jars, pattern is:
-      //starting value = 1 (x1)
-      //1+3 = 4 (x2)
-      //4+5 = 9 (x3)
-      //9+7 = 16 (x4)
-      //restart after 4 jars
-      //pattern for adding to the previous answer is 1, 3, 5, 7
-      //equasion: 2i + 1
-      //And now you know how the math here works!
-      if (card.type === 'jarMultiplier') {
-
-        this.coins += 2 * jarMultiplier + 1
-
-        jarMultiplier++
-        if (jarMultiplier >= 4) {
-          jarMultiplier = 0
-        }
+      if (card.jarValue) {
+        const data = card.jarValue(jarIndex)
+        jarIndex = data.index
+        this.coins += data.value
       }
     }
+  }
+
+  getTreasureJarValue() : number {
+    let value = 0
+    let index = 0
+    
+    for (const card of this.treasureCards.filter((c) => c.type === 'jarMultiplier')) {
+      if (card.jarValue) {
+        const data = card.jarValue(index)
+        index = data.index
+        value += data.value
+      }
+    }
+
+    return value
   }
 
   chooseInvestigateCard(chosenCard: ExplorerCard) {
