@@ -3,7 +3,7 @@ import { BoardName } from '../game-logic/GameState'
 import { GameStateProvider } from '../hooks/useGameState'
 import { GameBoard } from './GameBoard'
 import { useRememberedState } from '@8thday/react'
-import { aghonBoard, aveniaBoard, cnidariaBoard, kazanBoard } from '../images'
+import { aghonBoard, aveniaBoard, cnidariaBoard, kazanBoard, northProyliaBoard, xawskilBaseBoard } from '../images'
 
 export interface AppProps extends ComponentProps<'main'> {}
 
@@ -12,7 +12,7 @@ export const App = ({ className = '', ...props }: AppProps) => {
 
   if (!boardName)
     return (
-      <main className={`${className} grid-cols-auto-2 grid gap-4 p-4`} {...props}>
+      <main className={`${className} grid grid-cols-auto-2 gap-4 p-4`} {...props}>
         <h2 className="col-span-full text-center">Choose A Board To Play</h2>
         <button
           className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
@@ -37,6 +37,18 @@ export const App = ({ className = '', ...props }: AppProps) => {
           onClick={() => setBoardName('cnidaria')}
         >
           <img className="h-full w-full" src={cnidariaBoard.href} />
+        </button>
+        <button
+          className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
+          onClick={() => setBoardName('northProylia')}
+        >
+          <img className="h-full w-full" src={northProyliaBoard.href} />
+        </button>
+        <button
+          className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
+          onClick={() => setBoardName('xawskil')}
+        >
+          <img className="h-full w-full" src={xawskilBaseBoard.href} />
         </button>
       </main>
     )

@@ -24,6 +24,9 @@ export const aghonBoard = new URL('/src/images/boards/aghon.png', import.meta.ur
 export const aveniaBoard = new URL('/src/images/boards/avenia.png', import.meta.url)
 export const kazanBoard = new URL('/src/images/boards/kazan.png', import.meta.url)
 export const cnidariaBoard = new URL('/src/images/boards/cnidaria.png', import.meta.url)
+export const xawskilBoard = new URL('/src/images/boards/xawskil.png', import.meta.url)
+export const xawskilBaseBoard = new URL('/src/images/boards/xawskil-base.png', import.meta.url)
+export const northProyliaBoard = new URL('/src/images/boards/north-proylia.png', import.meta.url)
 
 // explorer cards
 export const exploreSand = new URL('/src/images/explorer-cards/sand.png', import.meta.url)

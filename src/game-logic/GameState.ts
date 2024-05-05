@@ -8,8 +8,10 @@ import { ExplorerCard, ExplorerDeck, GlobalExplorerCard, InvestigateDeck, Treasu
 import { objectives } from '../data/objectives'
 import { Objective } from './Objective'
 import { ScoreBoard } from './ScoreBoard'
+import { northProyliaData } from '../data/boards/north-proylia'
+import { xawskilData } from '../data/boards/xawskil'
 
-export type BoardName = 'aghon' | 'avenia' | 'kazan' | 'cnidaria'
+export type BoardName = 'aghon' | 'avenia' | 'kazan' | 'cnidaria' | 'northProylia' | 'xawskil'
 
 const getBoardData = (boardName: BoardName) => {
   switch (boardName) {
@@ -21,6 +23,10 @@ const getBoardData = (boardName: BoardName) => {
       return { boardData: kazanData, objectives: randomSelection(objectives.kazan, 3) }
     case 'cnidaria':
       return { boardData: cnidariaData, objectives: randomSelection(objectives.cnidaria, 3) }
+    case 'northProylia':
+      return { boardData: northProyliaData, objectives: randomSelection(objectives.northProylia, 3) }
+    case 'xawskil':
+      return { boardData: xawskilData, objectives: randomSelection(objectives.xawskil, 3) }
   }
 }
 
@@ -73,7 +79,7 @@ export class GameState extends EventTarget {
     if (this.era > 3) {
       // game is over, TODO: total points from treasure cards and display all results
       this.activePlayer.addEndgameCoins()
-      
+
       this.era-- // reset to a valid era
       this.activePlayer.mode = 'game-over'
       this.activePlayer.message = 'Game Over!'
@@ -245,7 +251,7 @@ export class Player extends EventTarget {
 
     for (const card of this.treasureCards.filter((card) => !card.discard)) {
       this.coins += card.value(this.board)
-      
+
       if (card.jarValue) {
         const data = card.jarValue(jarIndex)
         jarIndex = data.index
@@ -254,10 +260,10 @@ export class Player extends EventTarget {
     }
   }
 
-  getTreasureJarValue() : number {
+  getTreasureJarValue(): number {
     let value = 0
     let index = 0
-    
+
     for (const card of this.treasureCards.filter((c) => c.type === 'jarMultiplier')) {
       if (card.jarValue) {
         const data = card.jarValue(index)

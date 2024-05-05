@@ -39,7 +39,7 @@ import {
   northProyliaObjective6,
 } from '../../images'
 
-export const objectives: Record<BoardName | 'xawskil' | 'northProylia', ObjectiveData[]> = {
+export const objectives: Record<BoardName, ObjectiveData[]> = {
   aghon: [
     {
       imageUrl: aghonObjective1,
