@@ -38,12 +38,12 @@ export const App = ({ className = '', ...props }: AppProps) => {
         >
           <img className="h-full w-full" src={cnidariaBoard.href} />
         </button>
-        <button
+        {/* <button
           className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
           onClick={() => setBoardName('northProylia')}
         >
           <img className="h-full w-full" src={northProyliaBoard.href} />
-        </button>
+        </button> */}
         <button
           className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
           onClick={() => setBoardName('xawskil')}
