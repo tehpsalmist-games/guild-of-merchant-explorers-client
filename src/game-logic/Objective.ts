@@ -383,7 +383,8 @@ export class Objective {
           return ah === null
         case 'north-border':
           // no interior empties on this map either (north proylia 5)
-          return [1, 2, 3].includes(index) && ah === null
+          // index 2 is the top hex
+          return index === 2 && ah === null
         default:
           return false
       }
