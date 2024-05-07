@@ -453,10 +453,14 @@ export class MoveHistory {
       case 'explore':
         move.hex.explore()
 
+        const ruleIsWild = this.gameState.currentCardRules?.[this.player.cardPhase].terrains.some(
+          (t) => t.terrain === 'wild',
+        )
+
         if (
           this.gameState.currentCardRules?.[this.player.cardPhase + 1] &&
           this.gameState.currentCardRules?.[this.player.cardPhase].limit ===
-            this.getPlacedHexes()[this.player.cardPhase].length
+            this.getPlacedHexes()[this.player.cardPhase].size
         ) {
           this.doMove({ action: 'advance-card-phase' })
         } else {
@@ -584,7 +588,7 @@ export class MoveHistory {
 
           if (
             this.gameState.currentCardRules?.[this.player.cardPhase].limit ===
-            this.getPlacedHexes()[this.player.cardPhase].length
+            this.getPlacedHexes()[this.player.cardPhase].size
           )
             this.undoMove()
           break
@@ -704,7 +708,16 @@ export class MoveHistory {
       }
     }
 
-    return placedHexes
+    return placedHexes.map((hexes, i) => {
+      const iceCount = hexes.filter((h) => h.isIce).length
+
+      const totalSize = hexes.length
+      const iceSize = hexes.length + iceCount
+
+      const ruleIsWild = this.gameState.currentCardRules?.[i].terrains.some((t) => t.terrain === 'wild')
+
+      return { hexes, size: ruleIsWild ? totalSize : iceSize, affectedByIce: !ruleIsWild }
+    })
   }
 
   get size() {

@@ -324,13 +324,8 @@ export class Hex {
       return false
     }
 
-    const ruleIsWild = rule.terrains.some((t) => t.terrain === 'wild')
-
-    const iceCount = ruleIsWild ? 0 : placedHexes[phase].filter((h) => h.isIce).length
-    const hexPlacementCount = placedHexes[phase].length + iceCount
-
     // already run out of hexes to place
-    if (rule.limit <= hexPlacementCount) {
+    if (rule.limit <= placedHexes[phase].size) {
       return false
     }
 
@@ -352,7 +347,10 @@ export class Hex {
       }
 
       // matches the terrain type directly and not all of this type have been placed
-      if (t.terrain === this.terrain && t.count > placedHexes[phase].filter((h) => h.terrain === t.terrain).length) {
+      if (
+        t.terrain === this.terrain &&
+        t.count > placedHexes[phase].hexes.filter((h) => h.terrain === t.terrain).length
+      ) {
         return true
       }
 
@@ -364,17 +362,17 @@ export class Hex {
       return false
     }
 
-    if (this.isIce && !ruleIsWild && rule.limit - hexPlacementCount < 2) {
+    if (this.isIce && placedHexes[phase].affectedByIce && rule.limit - placedHexes[phase].size < 2) {
       return false
     }
 
-    const flattenedPlacements = placedHexes.flat()
+    const flattenedPlacementHexess = placedHexes.flatMap((p) => p.hexes)
 
     // just has to connect to anything placed during this turn
     if (
       rule.connectionRequired &&
-      flattenedPlacements.length &&
-      !flattenedPlacements.some((h) => touchingHexes.includes(h))
+      flattenedPlacementHexess.length &&
+      !flattenedPlacementHexess.some((h) => touchingHexes.includes(h))
     ) {
       return false
     }
@@ -382,22 +380,22 @@ export class Hex {
     // must be consecutive (connected to the last hex placed)
     if (
       rule.consecutive &&
-      flattenedPlacements.length &&
-      !touchingHexes.includes(flattenedPlacements[flattenedPlacements.length - 1])
+      flattenedPlacementHexess.length &&
+      !touchingHexes.includes(flattenedPlacementHexess[flattenedPlacementHexess.length - 1])
     ) {
       return false
     }
 
     // must be in a straight line in either direction
-    if (rule.straight && flattenedPlacements.length > 1) {
-      const firstHexContacts = this.board.hexContactIterator(flattenedPlacements[0], true)
-      const secondHexContacts = this.board.hexContactIterator(flattenedPlacements[1], true)
+    if (rule.straight && flattenedPlacementHexess.length > 1) {
+      const firstHexContacts = this.board.hexContactIterator(flattenedPlacementHexess[0], true)
+      const secondHexContacts = this.board.hexContactIterator(flattenedPlacementHexess[1], true)
 
-      const firstIndex = secondHexContacts.findIndex((h) => h === flattenedPlacements[0])
-      const secondIndex = firstHexContacts.findIndex((h) => h === flattenedPlacements[1])
+      const firstIndex = secondHexContacts.findIndex((h) => h === flattenedPlacementHexess[0])
+      const secondIndex = firstHexContacts.findIndex((h) => h === flattenedPlacementHexess[1])
 
       if (
-        flattenedPlacements.every((h) => {
+        flattenedPlacementHexess.every((h) => {
           const contacts = this.board.hexContactIterator(h, true)
           return contacts[firstIndex] !== this && contacts[secondIndex] !== this
         })
@@ -416,22 +414,22 @@ export class Hex {
     if (
       rule.connectionToPreviousRequired &&
       placedHexes.length > 1 &&
-      placedHexes[phase - 1].every((h) => !touchingHexes.includes(h))
+      placedHexes[phase - 1].hexes.every((h) => !touchingHexes.includes(h))
     ) {
       return false
     }
 
     if (rule.is2VillageSpecial) {
       // if nothing placed yet, then just check that we're adjacent to a village
-      if (!flattenedPlacements.length) {
+      if (!flattenedPlacementHexess.length) {
         return touchingHexes.some((h) => h?.isVillage)
       }
 
-      const firstHex = flattenedPlacements[0]
+      const firstHex = flattenedPlacementHexess[0]
       const firstHexContacts = this.board.hexContactIterator(firstHex, true)
       const firstVillageCandidates = firstHexContacts.filter((h): h is Hex => !!h?.isVillage)
 
-      if (flattenedPlacements.length === 1) {
+      if (flattenedPlacementHexess.length === 1) {
         const straightIndex = touchingHexes.findIndex((h) => h === firstHex)
 
         if (straightIndex !== -1 && firstHexContacts[straightIndex]?.isVillage) {
@@ -452,7 +450,7 @@ export class Hex {
         const others: Hex[] = []
 
         // append this hex to the list and then validate if it works or not
-        for (const placed of flattenedPlacements.slice(1).concat([this])) {
+        for (const placed of flattenedPlacementHexess.slice(1).concat([this])) {
           if (firstLine.length === 3) {
             others.push(placed)
             continue

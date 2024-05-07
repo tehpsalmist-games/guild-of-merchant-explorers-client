@@ -125,7 +125,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                 <Button
                   className="mr-4 whitespace-nowrap"
                   variant={
-                    gameState.activePlayer.moveHistory.getPlacedHexes()[gameState.activePlayer.cardPhase]?.length ===
+                    gameState.activePlayer.moveHistory.getPlacedHexes()[gameState.activePlayer.cardPhase]?.size ===
                     gameState.currentCardRules[gameState.activePlayer.cardPhase]?.limit
                       ? 'primary'
                       : 'dismissive'
@@ -141,7 +141,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                 <Button
                   className="mr-4 whitespace-nowrap"
                   variant={
-                    gameState.activePlayer.moveHistory.getPlacedHexes()[gameState.activePlayer.cardPhase]?.length ===
+                    gameState.activePlayer.moveHistory.getPlacedHexes()[gameState.activePlayer.cardPhase]?.size ===
                     gameState.currentCardRules[gameState.activePlayer.cardPhase]?.limit
                       ? 'primary'
                       : 'dismissive'
