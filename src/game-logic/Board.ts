@@ -112,7 +112,6 @@ export interface HexData {
   isRuin?: boolean
   isTower?: boolean
   isCity?: boolean
-  // these values are for the more complex maps we'll implement later
   isIce?: boolean
   crystalValue?: number
   ruinSymbol?: string
@@ -325,8 +324,13 @@ export class Hex {
       return false
     }
 
+    const ruleIsWild = rule.terrains.some((t) => t.terrain === 'wild')
+
+    const iceCount = ruleIsWild ? 0 : placedHexes[phase].filter((h) => h.isIce).length
+    const hexPlacementCount = placedHexes[phase].length + iceCount
+
     // already run out of hexes to place
-    if (rule.limit <= placedHexes[phase].length) {
+    if (rule.limit <= hexPlacementCount) {
       return false
     }
 
@@ -357,6 +361,10 @@ export class Hex {
 
     // rule out hex that is an invalid terrain type
     if (!fitsAPermissibleTerrain) {
+      return false
+    }
+
+    if (this.isIce && !ruleIsWild && rule.limit - hexPlacementCount < 2) {
       return false
     }
 
