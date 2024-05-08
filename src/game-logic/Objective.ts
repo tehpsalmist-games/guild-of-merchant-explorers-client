@@ -332,6 +332,10 @@ export class Objective {
 
         return true
       case 'different-terrain':
+        if (condition.size && h.region && !this.compareSize(h.region.size, condition.size)) {
+          return false
+        }
+
         if (this.matchingState.regions.includes(h.terrain)) return false
 
         this.matchingState.regions.push(h.terrain)
@@ -384,7 +388,7 @@ export class Objective {
         case 'north-border':
           // no interior empties on this map either (north proylia 5)
           // index 2 is the top hex
-          return index === 2 && ah === null
+          return index === 2 && ah == null
         default:
           return false
       }
