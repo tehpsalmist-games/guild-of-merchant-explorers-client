@@ -636,6 +636,11 @@ export class MoveHistory {
           break
         case 'explore':
           undoing.hex.unexplore()
+
+          if (this.player.treasureCardHex) {
+            this.player.treasureCardHex = undefined
+          }
+
           this.player.checkForUserDecision()
           break
         case 'freely-explore':
