@@ -113,10 +113,9 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
         ref={refs.setReference}
         id={id}
         d={`M${x},${y} h50 l25,43.3 l-25,43.3 h-50 l-25,-43.3 z`}
-        className={clsx(className, {
+        className={clsx(className, 'fill-transparent', {
           'cursor-pointer hover:fill-red-500/15': isExplorable,
-          'fill-red-500/15': isExplorable && hovered,
-          'fill-transparent': !isExplorable || !hovered,
+          'cursor-pointer !fill-red-500/15': isExplorable && hovered,
           'cursor-pointer !fill-blue-500/15 hover:!fill-blue-500/25': isVillageCandidate || isTradeCandidate,
           'cursor-pointer !fill-yellow-500/15 hover:!fill-yellow-500/25': isTradeRouteCandidate,
           'cursor-pointer !fill-green-500/15 hover:!fill-green-500/25': isSelectedTradeRoute,
@@ -129,11 +128,11 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
         createPortal(
           <div
             ref={refs.setFloating}
-            className={clsx(isExplorable && 'cursor-pointer')}
+            className={clsx(isExplorable || (isVillageCandidate && 'cursor-pointer'))}
             style={floatingStyles}
             onClick={handleClick}
-            onMouseEnter={isExplorable ? () => setHovered(true) : undefined}
-            onMouseLeave={isExplorable ? () => setHovered(false) : undefined}
+            onMouseEnter={isExplorable || isVillageCandidate ? () => setHovered(true) : undefined}
+            onMouseLeave={isExplorable || isVillageCandidate ? () => setHovered(false) : undefined}
           >
             <div className="relative h-full w-full">
               {hex.isCovered && !!hex.crystalValue && (
