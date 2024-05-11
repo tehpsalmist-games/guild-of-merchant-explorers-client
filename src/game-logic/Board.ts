@@ -324,6 +324,11 @@ export class Hex {
       return false
     }
 
+    // check for special infinite straight line cards that can't go on ice
+    if (this.isIce && rule.limit === Infinity && rule.straight) {
+      return false
+    }
+
     // already run out of hexes to place
     if (rule.limit <= placedHexes[phase].size) {
       return false
