@@ -244,7 +244,6 @@ export class Hex {
       if (this.isRuin) {
         //TODO multiply by investigate card value
         this.board.player.treasureCardHex = this
-        this.isCovered = true
       }
 
       if (this.crystalValue) {
@@ -300,7 +299,6 @@ export class Hex {
       if (this.isRuin) {
         //TODO multiply by investigate card value
         this.board.player.treasureCardHex = undefined
-        this.isCovered = false
       }
 
       if (this.crystalValue) {

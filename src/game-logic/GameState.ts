@@ -547,7 +547,8 @@ export class MoveHistory {
         this.saveState()
 
         //Unassigns the treasure card hex when all treasure cards have been drawn
-        if (this.player.treasureCardsToDraw === 0) {
+        if (this.player.treasureCardsToDraw === 0 && this.player.treasureCardHex) {
+          this.player.treasureCardHex.isCovered = true
           this.player.treasureCardHex = undefined
         }
 

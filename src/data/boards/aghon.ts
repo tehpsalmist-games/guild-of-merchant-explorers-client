@@ -179,7 +179,7 @@ export const aghonData: BoardData = {
       { terrain: 'water' },
       { terrain: 'mountain', coins: 3 },
       { terrain: 'water' },
-      { terrain: 'sand' },
+      { terrain: 'sand', coins: 1 },
       null,
     ],
     [
