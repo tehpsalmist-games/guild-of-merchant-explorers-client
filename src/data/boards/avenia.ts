@@ -2,6 +2,7 @@ import { BoardData } from '../../game-logic/Board'
 import { aveniaBoard } from '../../images'
 
 export const aveniaData: BoardData = {
+  name: 'avenia',
   imageURL: aveniaBoard,
   dimensions: {
     height: 978,

@@ -371,7 +371,6 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                 Quit Game
               </Button>
             )}
-            {!gameState.scoreBoard.doneRevealing && <Button className="mt-8">Quit Game</Button>}
           </div>
         </Modal>
       )}

@@ -77,7 +77,6 @@ export class GameState extends EventTarget {
   startNextAge() {
     this.era++
     if (this.era > 3) {
-      // game is over, TODO: total points from treasure cards and display all results
       this.activePlayer.addEndgameCoins()
 
       this.era-- // reset to a valid era
@@ -258,6 +257,8 @@ export class Player extends EventTarget {
         this.coins += data.value
       }
     }
+
+    this.coins += this.board.getXawskilCoins()
   }
 
   getTreasureJarValue(): number {
@@ -452,10 +453,6 @@ export class MoveHistory {
         break
       case 'explore':
         move.hex.explore()
-
-        const ruleIsWild = this.gameState.currentCardRules?.[this.player.cardPhase].terrains.some(
-          (t) => t.terrain === 'wild',
-        )
 
         if (
           this.gameState.currentCardRules?.[this.player.cardPhase + 1] &&

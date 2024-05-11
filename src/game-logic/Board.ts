@@ -1,9 +1,10 @@
 import { CSSProperties } from 'react'
-import { GameState, Player } from './GameState'
+import { BoardName, GameState, Player } from './GameState'
 
 export type Terrain = 'mountain' | 'sand' | 'grass' | 'water' | 'wild'
 
 export interface BoardData {
+  name: BoardName
   imageURL: URL
   dimensions: {
     height: number
@@ -17,6 +18,8 @@ export interface BoardData {
 }
 
 export class Board {
+  name: BoardName
+
   // display properties
   imageURL: URL
   svgStyle: CSSProperties
@@ -31,6 +34,8 @@ export class Board {
   player: Player
 
   constructor(boardData: BoardData, player: Player, gameState: GameState) {
+    this.name = boardData.name
+
     this.player = player
     this.gameState = gameState
 
@@ -102,6 +107,30 @@ export class Board {
         hex.isExplored = false
       }
     })
+  }
+
+  getXawskilCoins() {
+    if (this.name === 'xawskil') {
+      const numberReached = this.lands.filter((l) => l.hasBeenReached).length
+
+      const coinsForLands =
+        {
+          6: 3,
+          7: 6,
+          8: 10,
+          9: 14,
+          10: 18,
+          11: 24,
+          12: 32,
+          13: 40,
+          14: 40,
+          15: 40,
+        }[numberReached] ?? 0
+
+      return coinsForLands
+    }
+
+    return 0
   }
 }
 

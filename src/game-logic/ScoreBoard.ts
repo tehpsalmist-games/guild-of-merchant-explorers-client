@@ -8,6 +8,7 @@ import {
   crystalImage,
   tradingPostGrass,
   eraAnyBlocker,
+  blockImage,
 } from '../images'
 
 interface ScoreBoardStat {
@@ -65,6 +66,16 @@ export class ScoreBoard {
         name: 'Crystals Discovered',
         score: crystals.filter((h) => h.isCovered).length,
         maxScore: crystals.length,
+        visibleScore: -1,
+      })
+    }
+
+    if (this.gameState.activePlayer.board.name === 'xawskil') {
+      this.stats.push({
+        image: blockImage,
+        name: 'Coins From Discovered Lands',
+        score: this.gameState.activePlayer.board.getXawskilCoins(),
+        maxScore: 40,
         visibleScore: -1,
       })
     }

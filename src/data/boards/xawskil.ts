@@ -2,6 +2,7 @@ import { BoardData } from '../../game-logic/Board'
 import { xawskilBoard } from '../../images'
 
 export const xawskilData: BoardData = {
+  name: 'xawskil',
   imageURL: xawskilBoard,
   dimensions: {
     height: 989,

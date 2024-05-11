@@ -2,6 +2,7 @@ import { BoardData } from '../../game-logic/Board'
 import { northProyliaBoard } from '../../images'
 
 export const northProyliaData: BoardData = {
+  name: 'northProylia',
   imageURL: northProyliaBoard,
   dimensions: {
     height: 990,

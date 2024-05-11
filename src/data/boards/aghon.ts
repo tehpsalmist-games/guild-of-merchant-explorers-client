@@ -2,6 +2,7 @@ import { BoardData } from '../../game-logic/Board'
 import { aghonBoard } from '../../images'
 
 export const aghonData: BoardData = {
+  name: 'aghon',
   imageURL: aghonBoard,
   dimensions: {
     height: 978,

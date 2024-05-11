@@ -2,6 +2,7 @@ import { BoardData } from '../../game-logic/Board'
 import { cnidariaBoard } from '../../images'
 
 export const cnidariaData: BoardData = {
+  name: 'cnidaria',
   imageURL: cnidariaBoard,
   dimensions: {
     height: 978,
