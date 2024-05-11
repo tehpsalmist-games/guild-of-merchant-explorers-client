@@ -173,13 +173,13 @@ export class InvestigateDeck extends Deck<ExplorerCard> {
 export class TreasureDeck extends Deck<TreasureCard> {
   constructor(board: Board) {
     //Adds coppies of the cards to the deck according to the count property.
-    const deck: TreasureCard[] = [];
+    const deck: TreasureCard[] = []
     for (const card of treasureCards) {
       for (let i = 0; i < card.count; i++) {
-        const uniqueCard = { ...card };
-        uniqueCard.type = card.id;
-        uniqueCard.id = `${card.id}-${i}`;
-        deck.push(uniqueCard);
+        const uniqueCard = { ...card }
+        uniqueCard.type = card.id
+        uniqueCard.id = `${card.id}-${i}`
+        deck.push(uniqueCard)
       }
     }
 
