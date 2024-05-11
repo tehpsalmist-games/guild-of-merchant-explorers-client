@@ -253,7 +253,7 @@ export class Hex {
       this.board.player.coins -= this.coins * multiplier
     }
 
-    if (this.isCovered && this.isRuin) {
+    if (this.isRuin) {
       this.board.player.treasureCardHex = undefined
     }
 
