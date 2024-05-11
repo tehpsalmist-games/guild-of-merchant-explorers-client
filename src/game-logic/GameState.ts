@@ -49,6 +49,9 @@ export class GameState extends EventTarget {
 
   scoreBoard?: ScoreBoard
 
+  serializationTimeout = 0
+  lastEmittedSerializedState = ''
+
   constructor(boardName: BoardName) {
     super()
 
@@ -83,7 +86,7 @@ export class GameState extends EventTarget {
       this.activePlayer.mode = 'game-over'
       this.activePlayer.message = 'Game Over!'
 
-      this.scoreBoard = new ScoreBoard(this)
+      this.scoreBoard = new ScoreBoard(this.activePlayer)
     } else {
       // only wipe the board if we're going to a new era, otherwise leave it up for satisfactory reviewing
       this.currentTurn = 0
@@ -104,7 +107,7 @@ export class GameState extends EventTarget {
       objective.checkAndScoreForPlayer(this.activePlayer)
     }
 
-    this.activePlayer.moveHistory.saveState()
+    this.activePlayer.moveHistory.lockInMoveState()
     this.activePlayer.cardPhase = 0
 
     // increment turn if we already have a card, otherwise, set to zero because it is start of an era
@@ -160,7 +163,47 @@ export class GameState extends EventTarget {
   }
 
   emitStateChange() {
-    this.dispatchEvent(new CustomEvent('statechange'))
+    this.dispatchEvent(new CustomEvent('onstatechange'))
+    this.enqueueSerialization()
+  }
+
+  emitSerializationUpdate(serializedData: string) {
+    this.dispatchEvent(new CustomEvent('onserialize', { detail: { serializedData } }))
+  }
+
+  /**
+   * JSON.stringify will use this method if available
+   */
+  toJSON() {
+    return {
+      boardName: this.boardName,
+      activePlayer: this.activePlayer,
+      turnHistory: this.turnHistory,
+
+      objectives: this.objectives,
+
+      investigateDeck: this.investigateDeck,
+
+      treasureDeck: this.treasureDeck,
+    }
+  }
+
+  enqueueSerialization() {
+    clearTimeout(this.serializationTimeout)
+
+    this.serializationTimeout = setTimeout(
+      () => {
+        const savedState = JSON.stringify(this)
+
+        if (savedState !== this.lastEmittedSerializedState) {
+          this.lastEmittedSerializedState = savedState
+          this.emitSerializationUpdate(savedState)
+        }
+      },
+      // wait, but not too long, really just want to let the stack clear to avoid unnecessary serializations.
+      // to be honest, 0 could do the trick too, because of how the event loop works.
+      16,
+    )
   }
 }
 
@@ -191,6 +234,15 @@ export class TurnHistory {
         return this.era3.push(id)
       case 3:
         return this.era4.push(id)
+    }
+  }
+
+  toJSON() {
+    return {
+      era1: this.era1,
+      era2: this.era2,
+      era3: this.era3,
+      era4: this.era4,
     }
   }
 }
@@ -385,6 +437,19 @@ export class Player extends EventTarget {
     this.mode = 'free-exploring'
     this.message = 'Explore anywhere!'
     this.gameState.emitStateChange()
+  }
+
+  toJSON() {
+    return {
+      moveHistory: this.moveHistory,
+      treasureCards: this.treasureCards,
+
+      investigateCardCandidates: this.investigateCardCandidates,
+
+      investigateCards: this.investigateCards,
+      discardedInvestigateCards: this.discardedInvestigateCards,
+      era4SelectedInvestigateCard: this.era4SelectedInvestigateCard,
+    }
   }
 }
 
@@ -588,7 +653,7 @@ export class MoveHistory {
 
         this.player.treasureCardsToDraw--
         //Completely blocks the ability to undo anything prior to drawing a treasure card
-        this.saveState()
+        this.lockInMoveState()
 
         //Unassigns the treasure card hex when all treasure cards have been drawn
         if (this.player.treasureCardsToDraw === 0 && this.player.treasureCardHex) {
@@ -798,7 +863,7 @@ export class MoveHistory {
     return this.currentMoves.length
   }
 
-  saveState() {
+  lockInMoveState() {
     // get any pre-existing moves (prior to treasure card draw, for example)
     const preexistingTurnMoves = this.historicalMoves[this.gameState.era][this.gameState.currentTurn] || []
 
@@ -809,5 +874,12 @@ export class MoveHistory {
 
     // clear move state
     this.currentMoves = []
+  }
+
+  toJSON() {
+    return {
+      historicalMoves: this.historicalMoves,
+      currentMoves: this.currentMoves,
+    }
   }
 }

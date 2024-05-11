@@ -42,10 +42,18 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
   })
 
   useEffect(() => {
-    const listener = () => updateState((s) => ++s)
-    gameState.addEventListener('statechange', listener)
+    const stateListener = () => updateState((s) => ++s)
+    const serializationListener = (e: CustomEvent<{ serializedData: string }>) => {
+      console.log('serialized:', JSON.parse(e.detail.serializedData))
+    }
 
-    return () => gameState.removeEventListener('statechange', listener)
+    gameState.addEventListener('onstatechange', stateListener)
+    gameState.addEventListener('onserialize', { handleEvent: serializationListener })
+
+    return () => {
+      gameState.removeEventListener('onstatechange', stateListener)
+      gameState.removeEventListener('onserialize', { handleEvent: serializationListener })
+    }
   }, [gameState])
 
   useEffect(() => {

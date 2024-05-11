@@ -1,5 +1,5 @@
 import { sleep } from '../utils'
-import { GameState } from './GameState'
+import { Player } from './GameState'
 import {
   coinImage,
   towerImage,
@@ -22,14 +22,14 @@ interface ScoreBoardStat {
 
 export class ScoreBoard {
   stats: ScoreBoardStat[] = []
-  gameState: GameState
+  player: Player
 
   doneRevealing: boolean = false
 
-  constructor(gameState: GameState) {
-    this.gameState = gameState
+  constructor(player: Player) {
+    this.player = player
 
-    const hexes = this.gameState.activePlayer.board.getFlatHexes()
+    const hexes = this.player.board.getFlatHexes()
 
     this.stats.push({
       image: villageImage,
@@ -70,11 +70,11 @@ export class ScoreBoard {
       })
     }
 
-    if (this.gameState.activePlayer.board.name === 'xawskil') {
+    if (this.player.board.name === 'xawskil') {
       this.stats.push({
         image: blockImage,
         name: 'Coins From Discovered Lands',
-        score: this.gameState.activePlayer.board.getXawskilCoins(),
+        score: this.player.board.getXawskilCoins(),
         maxScore: 40,
         visibleScore: -1,
       })
@@ -83,22 +83,21 @@ export class ScoreBoard {
     this.stats.push({
       image: eraAnyBlocker,
       name: 'Objectives Complete',
-      score: this.gameState.objectives.filter(
-        (o) =>
-          o.firstPlayers.includes(this.gameState.activePlayer) || o.secondPlayers.includes(this.gameState.activePlayer),
+      score: this.player.gameState.objectives.filter(
+        (o) => o.firstPlayers.includes(this.player) || o.secondPlayers.includes(this.player),
       ).length,
-      maxScore: this.gameState.objectives.length,
+      maxScore: this.player.gameState.objectives.length,
       visibleScore: -1,
     })
 
     this.stats.push({
       image: treasureChestImage,
       name: 'Treasures Earned',
-      score: this.gameState.activePlayer.treasureCards.length,
+      score: this.player.treasureCards.length,
       visibleScore: -1,
     })
 
-    this.stats.push({ image: coinImage, score: this.gameState.activePlayer.coins, visibleScore: -1 })
+    this.stats.push({ image: coinImage, score: this.player.coins, visibleScore: -1 })
 
     this.revealScore()
   }
@@ -113,17 +112,17 @@ export class ScoreBoard {
 
       this.stats[i].visibleScore = 0
 
-      this.gameState.emitStateChange()
+      this.player.gameState.emitStateChange()
 
       while (this.stats[i].visibleScore < this.stats[i].score) {
         await sleep(this.stats[i].visibleScore > 15 ? (this.stats[i].visibleScore > 30 ? 10 : 50) : 100)
 
         this.stats[i].visibleScore++
-        this.gameState.emitStateChange()
+        this.player.gameState.emitStateChange()
       }
     }
 
     this.doneRevealing = true
-    this.gameState.emitStateChange()
+    this.player.gameState.emitStateChange()
   }
 }

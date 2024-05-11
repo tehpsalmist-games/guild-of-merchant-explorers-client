@@ -50,6 +50,7 @@ type ComplexAlgorithm = {
 }
 
 export interface ObjectiveData {
+  id: string
   imageUrl: URL
   first?: number
   second?: number
@@ -59,6 +60,8 @@ export interface ObjectiveData {
 
 export class Objective {
   gameState: GameState
+
+  id: string
 
   firstPlaceReward: number
   secondPlaceReward: number
@@ -82,6 +85,7 @@ export class Objective {
   isSecondBlocked = false
 
   constructor(data: ObjectiveData, gameState: GameState) {
+    this.id = data.id
     this.gameState = gameState
 
     this.firstPlaceReward = data.first ?? 10
@@ -393,5 +397,11 @@ export class Objective {
           return false
       }
     })
+  }
+
+  toJSON() {
+    return {
+      id: this.id,
+    }
   }
 }

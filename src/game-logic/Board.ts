@@ -529,6 +529,13 @@ export class Hex {
   getConnectedTradingPosts() {
     return this.getConnectedHexes().filter((h) => !h.isCovered && h.tradingPostValue > 0)
   }
+
+  toJSON() {
+    return {
+      row: this.row,
+      column: this.column,
+    }
+  }
 }
 
 export class Region {

@@ -56,6 +56,13 @@ export class Deck<CardType extends { id: string }> {
 
     this.cards = newList
   }
+
+  toJSON() {
+    return {
+      cards: this.cards.map((c) => c.id),
+      used: this.used.map((c) => c.id),
+    }
+  }
 }
 
 //Is this being used anywhere?
