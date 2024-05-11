@@ -1,4 +1,4 @@
-import React, { ComponentProps } from 'react'
+import React, { ComponentProps, useState } from 'react'
 import { Hex } from '../game-logic/Board'
 import clsx from 'clsx'
 import { useGameState } from '../hooks/useGameState'
@@ -11,29 +11,11 @@ import {
   tradingPostGrass,
   tradingPostMountain,
   tradingPostSand,
+  exploredMarker,
 } from '../images'
 import { UseFloatingOptions, autoUpdate, offset, size, useFloating } from '@floating-ui/react-dom'
 import { createPortal } from 'react-dom'
 import { useMergeRefs } from '@floating-ui/react'
-
-const floatingOptions = (sizeRatio: number): UseFloatingOptions => ({
-  whileElementsMounted: autoUpdate,
-  placement: 'bottom',
-  middleware: [
-    offset(({ rects }) => {
-      if (rects.reference.height > rects.floating.height) {
-        return { mainAxis: -(rects.floating.height + (rects.reference.height - rects.floating.height) / 2) }
-      }
-
-      return -rects.floating.height
-    }),
-    size({
-      apply({ rects, elements }) {
-        elements.floating.style.width = `${rects.reference.width * sizeRatio}px`
-      },
-    }),
-  ],
-})
 
 export interface HexProps extends ComponentProps<'path'> {
   x: number
@@ -43,6 +25,8 @@ export interface HexProps extends ComponentProps<'path'> {
 
 export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) => {
   const { gameState } = useGameState()
+
+  const [hovered, setHovered] = useState(false)
 
   // show/hide logic for game pieces
   const isVillageCandidate =
@@ -61,6 +45,8 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
     (gameState.activePlayer.mode === 'exploring' || gameState.activePlayer.mode === 'free-exploring') &&
     hex.isExplorable()
 
+  const hasReachedMark = gameState.boardName === 'xawskil' && hex.land?.hasBeenReached && hex === hex.land?.markableHex
+
   const showBlock =
     hex.isExplored &&
     !hex.isCity &&
@@ -70,17 +56,7 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
     !isTradeRouteCandidate &&
     !isSelectedTradeRoute
 
-  const coverImage = hex.crystalValue
-    ? crystalImage
-    : hex.isRuin
-      ? treasureChestImage
-      : hex.isTower
-        ? towerImage
-        : hex.terrain === 'sand'
-          ? tradingPostSand
-          : hex.terrain === 'grass'
-            ? tradingPostGrass
-            : tradingPostMountain
+  const hasPiece = hex.isCovered || hex.isVillage || showBlock || hasReachedMark
 
   const handleClick = () => {
     console.log(hex)
@@ -117,27 +93,30 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
     }
   }
 
-  // floating elements (blocks, towers, covered ruins, etc.)
-  const coverSizeRatio = hex.isTower || hex.crystalValue ? 0.5 : hex.isRuin ? 0.7 : 0.9
-
-  const floatingCoverToken = useFloating(floatingOptions(coverSizeRatio))
-  const floatingBlock = useFloating(floatingOptions(0.5))
-  const floatingVillage = useFloating(floatingOptions(0.5))
-
-  const pathRef = useMergeRefs([
-    floatingCoverToken.refs.setReference,
-    floatingBlock.refs.setReference,
-    floatingVillage.refs.setReference,
-  ])
+  const { refs, floatingStyles } = useFloating({
+    whileElementsMounted: autoUpdate,
+    placement: 'bottom',
+    middleware: [
+      offset(({ rects }) => -rects.floating.height),
+      size({
+        apply({ rects, elements }) {
+          elements.floating.style.width = `${rects.reference.width}px`
+          elements.floating.style.height = `${rects.reference.height}px`
+        },
+      }),
+    ],
+  })
 
   return (
     <>
       <path
-        ref={pathRef}
+        ref={refs.setReference}
         id={id}
         d={`M${x},${y} h50 l25,43.3 l-25,43.3 h-50 l-25,-43.3 z`}
-        className={clsx(className, 'fill-transparent', {
+        className={clsx(className, {
           'cursor-pointer hover:fill-red-500/15': isExplorable,
+          'fill-red-500/15': isExplorable && hovered,
+          'fill-transparent': !isExplorable || !hovered,
           'cursor-pointer !fill-blue-500/15 hover:!fill-blue-500/25': isVillageCandidate || isTradeCandidate,
           'cursor-pointer !fill-yellow-500/15 hover:!fill-yellow-500/25': isTradeRouteCandidate,
           'cursor-pointer !fill-green-500/15 hover:!fill-green-500/25': isSelectedTradeRoute,
@@ -145,38 +124,57 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
         onClick={handleClick}
         {...props}
       />
-      {/* Floating Elements */}
-      {hex.isCovered &&
+      {/* Floating Element for Piece Images */}
+      {hasPiece &&
         createPortal(
-          <img
-            ref={floatingCoverToken.refs.setFloating}
-            src={coverImage?.href}
-            style={floatingCoverToken.floatingStyles}
-            onClick={handleClick}
+          <div
+            ref={refs.setFloating}
             className={clsx(isExplorable && 'cursor-pointer')}
-          />,
-          document.getElementById('explorer-map')!,
-        )}
-      {showBlock &&
-        createPortal(
-          <img
-            ref={floatingBlock.refs.setFloating}
-            src={blockImage.href}
-            style={{ ...floatingBlock.floatingStyles, filter: 'hue-rotate(120deg) saturate(200%)' }}
+            style={floatingStyles}
             onClick={handleClick}
-            className={clsx('z-10', isExplorable && 'cursor-pointer')}
-          />,
-          document.getElementById('explorer-map')!,
-        )}
-      {hex.isVillage &&
-        createPortal(
-          <img
-            ref={floatingVillage.refs.setFloating}
-            src={villageImage.href}
-            style={{ ...floatingVillage.floatingStyles, filter: 'hue-rotate(120deg) saturate(200%)' }}
-            onClick={handleClick}
-            className={clsx(isExplorable && 'cursor-pointer')}
-          />,
+            onMouseEnter={isExplorable ? () => setHovered(true) : undefined}
+            onMouseLeave={isExplorable ? () => setHovered(false) : undefined}
+          >
+            <div className="relative h-full w-full">
+              {hex.isCovered && !!hex.crystalValue && (
+                <img src={crystalImage.href} className="absolute inset-x-1/4 w-1/2" />
+              )}
+              {hex.isCovered && hex.isRuin && (
+                <img src={treasureChestImage.href} className="absolute inset-x-[15%] top-[5%] w-[70%]" />
+              )}
+              {hex.isCovered && !!hex.tradingPostValue && (
+                <img
+                  src={
+                    (hex.terrain === 'sand'
+                      ? tradingPostSand
+                      : hex.terrain === 'grass'
+                        ? tradingPostGrass
+                        : tradingPostMountain
+                    ).href
+                  }
+                  className="absolute left-[3%] w-[90%]"
+                />
+              )}
+              {hasReachedMark && (
+                <img
+                  src={exploredMarker.href}
+                  className="absolute -left-[10%] top-[10%] w-[70%] rounded-full ring-2 ring-primary-400 lg:ring-4"
+                />
+              )}
+              {hex.isCovered && hex.isTower && (
+                <img src={towerImage.href} className="absolute bottom-0 left-1/4 w-1/2" />
+              )}
+              {showBlock && (
+                <img src={blockImage.href} className="absolute inset-1/4 z-10 w-1/2 hue-rotate-[120deg] saturate-200" />
+              )}
+              {hex.isVillage && (
+                <img
+                  src={villageImage.href}
+                  className="absolute inset-1/4 z-10 w-1/2 hue-rotate-[120deg] saturate-200"
+                />
+              )}
+            </div>
+          </div>,
           document.getElementById('explorer-map')!,
         )}
     </>

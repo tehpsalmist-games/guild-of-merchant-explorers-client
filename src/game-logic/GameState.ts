@@ -31,7 +31,7 @@ const getBoardData = (boardName: BoardName) => {
 }
 
 export class GameState extends EventTarget {
-  boardName: string
+  boardName: BoardName
   era = 0
   currentTurn = 0
 

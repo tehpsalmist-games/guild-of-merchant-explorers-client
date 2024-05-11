@@ -588,6 +588,7 @@ export class Land {
   hasBeenReached = false
   board: Board
   regions: Region[] = []
+  markableHex: Hex
 
   constructor(startingHex: Hex) {
     this.board = startingHex.board
@@ -597,6 +598,10 @@ export class Land {
   buildLandFromHex(hex: Hex) {
     hex.land = this
     this.hexes.push(hex)
+
+    if (!this.markableHex && hex.isVillageCandidate) {
+      this.markableHex = hex
+    }
 
     for (const nextHex of this.board.hexContactIterator(hex)) {
       if (nextHex.isInLand && !nextHex.land) {
