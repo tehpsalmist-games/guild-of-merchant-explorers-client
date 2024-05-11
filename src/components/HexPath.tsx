@@ -56,6 +56,11 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
   const isSelectedTradeRoute =
     gameState.activePlayer.mode === 'choosing-trade-route' && gameState.activePlayer.chosenRoute.includes(hex)
   const isTradeCandidate = gameState.activePlayer.mode === 'trading' && gameState.activePlayer.chosenRoute.includes(hex)
+
+  const isExplorable =
+    (gameState.activePlayer.mode === 'exploring' || gameState.activePlayer.mode === 'free-exploring') &&
+    hex.isExplorable()
+
   const showBlock =
     hex.isExplored &&
     !hex.isCity &&
@@ -64,6 +69,7 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
     !isTradeCandidate &&
     !isTradeRouteCandidate &&
     !isSelectedTradeRoute
+
   const coverImage = hex.crystalValue
     ? crystalImage
     : hex.isRuin
@@ -131,9 +137,7 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
         id={id}
         d={`M${x},${y} h50 l25,43.3 l-25,43.3 h-50 l-25,-43.3 z`}
         className={clsx(className, 'fill-transparent', {
-          'cursor-pointer hover:fill-red-500/15':
-            (gameState.activePlayer.mode === 'exploring' || gameState.activePlayer.mode === 'free-exploring') &&
-            hex.isExplorable(),
+          'cursor-pointer hover:fill-red-500/15': isExplorable,
           'cursor-pointer !fill-blue-500/15 hover:!fill-blue-500/25': isVillageCandidate || isTradeCandidate,
           'cursor-pointer !fill-yellow-500/15 hover:!fill-yellow-500/25': isTradeRouteCandidate,
           'cursor-pointer !fill-green-500/15 hover:!fill-green-500/25': isSelectedTradeRoute,
@@ -149,7 +153,7 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
             src={coverImage?.href}
             style={floatingCoverToken.floatingStyles}
             onClick={handleClick}
-            className="cursor-pointer"
+            className={clsx(isExplorable && 'cursor-pointer')}
           />,
           document.getElementById('explorer-map')!,
         )}
@@ -160,7 +164,7 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
             src={blockImage.href}
             style={{ ...floatingBlock.floatingStyles, filter: 'hue-rotate(120deg) saturate(200%)' }}
             onClick={handleClick}
-            className="cursor-pointer"
+            className={clsx(isExplorable && 'cursor-pointer')}
           />,
           document.getElementById('explorer-map')!,
         )}
@@ -171,7 +175,7 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
             src={villageImage.href}
             style={{ ...floatingVillage.floatingStyles, filter: 'hue-rotate(120deg) saturate(200%)' }}
             onClick={handleClick}
-            className="cursor-pointer"
+            className={clsx(isExplorable && 'cursor-pointer')}
           />,
           document.getElementById('explorer-map')!,
         )}
