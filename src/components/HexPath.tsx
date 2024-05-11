@@ -164,7 +164,7 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
             src={blockImage.href}
             style={{ ...floatingBlock.floatingStyles, filter: 'hue-rotate(120deg) saturate(200%)' }}
             onClick={handleClick}
-            className={clsx(isExplorable && 'cursor-pointer')}
+            className={clsx('z-10', isExplorable && 'cursor-pointer')}
           />,
           document.getElementById('explorer-map')!,
         )}

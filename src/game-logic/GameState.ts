@@ -419,7 +419,6 @@ type Move =
   | {
       action: 'draw-treasure'
       hex: Hex
-      drawnTreasureID?: string
     }
   | {
       action: 'choose-investigate-card'
@@ -430,6 +429,11 @@ type Move =
       action: 'choose-investigate-card-reuse'
       era: number
     }
+  | {
+      action: 'discover-tower'
+      hex: Hex
+    }
+  | { action: 'discover-crystal'; hex: Hex }
 
 export class MoveHistory {
   currentMoves: Move[] = []
@@ -460,16 +464,53 @@ export class MoveHistory {
             this.getPlacedHexes()[this.player.cardPhase].size
         ) {
           this.doMove({ action: 'advance-card-phase' })
-        } else {
-          this.player.checkForUserDecision()
         }
 
+        // auto-handle actions that don't require user decisions
+        if (!move.hex.isCovered) {
+          if (move.hex.isTower) {
+            this.doMove({ action: 'discover-tower', hex: move.hex })
+          }
+
+          if (move.hex.crystalValue) {
+            this.doMove({ action: 'discover-crystal', hex: move.hex })
+          }
+        }
+
+        this.player.checkForUserDecision()
+
+        break
+      case 'discover-tower':
+        move.hex.isCovered = true
+        const towers = this.player.board.getFlatHexes().filter((h) => h.isTower && h.isCovered)
+
+        if (towers.length === 1) {
+          this.player.coins += 6
+        } else if (towers.length === 2) {
+          this.player.coins += 8
+        } else if (towers.length === 3) {
+          this.player.coins += 10
+        } else if (towers.length === 4) {
+          this.player.coins += 14
+        }
+        break
+      case 'discover-crystal':
+        move.hex.isCovered = true
+
+        const crystalValueSum = this.player.board
+          .getFlatHexes()
+          .filter((h) => h.crystalValue && h.isCovered)
+          .reduce((sum, h) => sum + h.crystalValue, 0)
+
+        this.player.coins += crystalValueSum
         break
       case 'freely-explore':
         move.hex.explore()
+
         if (this.player.freeExploreQuantity > 0) {
           this.player.freeExploreQuantity--
         }
+
         this.player.checkForUserDecision()
         break
       case 'choose-trade-route':
@@ -515,9 +556,12 @@ export class MoveHistory {
         break
       case 'choose-village':
         move.hex.isVillage = true
+
         this.player.coins += this.gameState.era + 1
         this.player.regionForVillage = undefined
+
         this.player.checkForUserDecision()
+
         break
       case 'draw-treasure':
         //Applies the bonus from certain investigate cards
@@ -530,7 +574,7 @@ export class MoveHistory {
 
         //Draws a treasure card and saves it's id to history
         const [treasureCard] = this.gameState.treasureDeck.drawCards()
-        move.drawnTreasureID = treasureCard.id
+
         this.player.treasureCards.push(treasureCard)
 
         this.player.dispatchEvent(new CustomEvent('treasure-gained'))
@@ -600,6 +644,37 @@ export class MoveHistory {
             this.player.freeExploreQuantity++
           }
           this.player.enterFreeExploringMode()
+          break
+        case 'discover-tower':
+          const towers = undoing.hex.board.getFlatHexes().filter((h) => h.isTower && h.isCovered)
+
+          if (towers.length === 1) {
+            this.player.coins -= 6
+          } else if (towers.length === 2) {
+            this.player.coins -= 8
+          } else if (towers.length === 3) {
+            this.player.coins -= 10
+          } else if (towers.length === 4) {
+            this.player.coins -= 14
+          }
+
+          undoing.hex.isCovered = false
+
+          // automatically undo the explore action that caused this tower to be discovered
+          this.undoMove()
+          break
+        case 'discover-crystal':
+          const crystalValueSum = this.player.board
+            .getFlatHexes()
+            .filter((h) => h.crystalValue && h.isCovered)
+            .reduce((sum, h) => sum + h.crystalValue, 0)
+
+          this.player.board.player.coins -= crystalValueSum
+
+          undoing.hex.isCovered = false
+
+          // automatically undo the explore action that caused this tower to be discovered
+          this.undoMove()
           break
         case 'choose-trade-route':
           this.player.connectedTradePosts = undoing.hex.getConnectedTradingPosts()
