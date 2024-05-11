@@ -206,6 +206,16 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                 <Button onClick={() => gameState.activePlayer.moveHistory.undoMove()}>Undo Move</Button>
               )}
             </div>
+            <div className="p-2 text-center text-xl">
+              <a
+                className="rounded border-none p-1 text-white underline ring-primary-50 hover:text-primary-50 focus:text-primary-50 focus:outline-none focus:ring-1"
+                target="_blank"
+                rel="noopener noreferrer"
+                href="https://www.alderac.com/wp-content/uploads/2022/08/TGOME-Rulebook_web.pdf"
+              >
+                Read Game Instructions
+              </a>
+            </div>
             <div className="flex-center w-full flex-col gap-y-2">
               <h3 className="mb-2">Current Explorer Card</h3>
               {gameState.currentExplorerCard && (
