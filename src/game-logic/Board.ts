@@ -572,7 +572,7 @@ export class Region {
   }
 
   explore() {
-    if (!this.hasVillage && this.hexes.every((h) => h.isExplored)) {
+    if (!this.hasVillage && this.hexes.every((h) => h.isExplored) && this.villageCandidates.length) {
       this.board.player.regionForVillage = this
     }
   }
