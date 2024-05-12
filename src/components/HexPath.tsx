@@ -131,8 +131,8 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
             className={clsx(isExplorable || (isVillageCandidate && 'cursor-pointer'))}
             style={floatingStyles}
             onClick={handleClick}
-            onMouseEnter={isExplorable || isVillageCandidate ? () => setHovered(true) : undefined}
-            onMouseLeave={isExplorable || isVillageCandidate ? () => setHovered(false) : undefined}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
           >
             <div className="relative h-full w-full">
               {hex.isCovered && !!hex.crystalValue && (

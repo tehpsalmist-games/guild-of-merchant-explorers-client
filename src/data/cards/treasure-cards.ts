@@ -1,5 +1,5 @@
 import { Board } from '../../game-logic/Board'
-import { TreasureCard } from '../../game-logic/Cards'
+import { TreasureCardData } from '../../game-logic/Cards'
 import {
   grassVillageBonus,
   jarMultiplier,
@@ -11,84 +11,81 @@ import {
   twoCoins,
 } from '../../images'
 
-export const treasureCards: TreasureCard[] = [
+export const treasureCards: TreasureCardData[] = [
   {
-    id: 'sandVillageBonus',
+    type: 'sandVillageBonus',
     imageUrl: sandVillageBonus,
     count: 2,
-    
-    value(board: Board) : number {
+    discard: false,
+    value(board: Board): number {
       return board.getFlatHexes().filter((hex) => hex.isVillage && hex.terrain === 'sand').length
-    }
+    },
   },
   {
-    id: 'grassVillageBonus',
+    type: 'grassVillageBonus',
     imageUrl: grassVillageBonus,
     count: 2,
-
-    value(board: Board) : number {
+    discard: false,
+    value(board: Board): number {
       return board.getFlatHexes().filter((hex) => hex.isVillage && hex.terrain === 'grass').length
-    }
+    },
   },
   {
-    id: 'mountainVillageBonus',
+    type: 'mountainVillageBonus',
     imageUrl: mountainVillageBonus,
     count: 2,
-
-    value(board: Board) : number {
-      return board.getFlatHexes().filter((hex) => hex.isVillage && hex.terrain === 'mountain').length 
-    }
+    discard: false,
+    value(board: Board): number {
+      return board.getFlatHexes().filter((hex) => hex.isVillage && hex.terrain === 'mountain').length
+    },
   },
   {
-    id: 'landVillageHalfBonus',
+    type: 'landVillageHalfBonus',
     imageUrl: landVillageHalfBonus,
     count: 2,
-
-    value(board: Board) : number {
-      return Math.floor((board.getFlatHexes().filter((hex) => hex.isVillage).length) / 2)
-    }
+    discard: false,
+    value(board: Board): number {
+      return Math.floor(board.getFlatHexes().filter((hex) => hex.isVillage).length / 2)
+    },
   },
   {
-    id: 'towerBonus',
+    type: 'towerBonus',
     imageUrl: towerBonus,
     count: 6,
-
-    value(board: Board) : number {
+    discard: false,
+    value(board: Board): number {
       return board.getFlatHexes().filter((hex) => hex.isTower && hex.isCovered).length
-    }
+    },
   },
   {
-    id: 'placeBlock',
+    type: 'placeBlock',
     imageUrl: placeBlock,
     count: 8,
     discard: true,
-
-    value() : number {
+    value(): number {
       //This card has a special use case and doesn't have a value.
-      return 0 
-    }
+      return 0
+    },
   },
   {
-    id: 'twoCoins',
+    type: 'twoCoins',
     imageUrl: twoCoins,
     count: 8,
     discard: true,
-
-    value() : number {
-      return 2 
-    }
+    value(): number {
+      return 2
+    },
   },
   {
-    id: 'jarMultiplier',
+    type: 'jarMultiplier',
     imageUrl: jarMultiplier,
     count: 10,
-
-    value() : number {
+    discard: false,
+    value(): number {
       //Jar value is calculated elsewhere due to the need to know the total number of jars.
-      return 0 
+      return 0
     },
-
-    jarValue(index: number) : { index: number; value: number } {
+    jarValue(index: number): { index: number; value: number } {
       //for jars, pattern is:
       //starting value = 1 (x1)
       //1+3 = 4 (x2)
@@ -106,7 +103,7 @@ export const treasureCards: TreasureCard[] = [
         index = 0
       }
 
-      return {index, value}
-    }
+      return { index, value }
+    },
   },
 ]

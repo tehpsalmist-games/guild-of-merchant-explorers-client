@@ -4,7 +4,21 @@ import { treasureCards } from '../data/cards/treasure-cards'
 import { Board, Terrain } from './Board'
 import { Player } from './GameState'
 
-export class Deck<CardType extends { id: string }> {
+export class Card {
+  id: string
+
+  constructor({ id }: { id: string }) {
+    this.id = id
+  }
+
+  toJSON() {
+    return {
+      id: this.id,
+    }
+  }
+}
+
+export class Deck<CardType extends Card> {
   cards: CardType[]
   used: CardType[] = []
 
@@ -59,43 +73,9 @@ export class Deck<CardType extends { id: string }> {
 
   toJSON() {
     return {
-      cards: this.cards.map((c) => c.id),
-      used: this.used.map((c) => c.id),
+      cards: this.cards,
+      used: this.used,
     }
-  }
-}
-
-//Is this being used anywhere?
-export class Hand<CardType extends { id: string }> {
-  player: Player
-  cards: CardType[] = []
-  used: CardType[] = []
-  currentChoiceIndex = 0
-
-  constructor(player: Player) {
-    this.player = player
-  }
-
-  addCard(card: CardType) {
-    this.cards.push(card)
-    this.currentChoiceIndex = this.cards.length
-  }
-
-  /**
-   * Useful for replaying former moves when reconstructing history
-   */
-  hasCardAlready() {
-    return !!this.cards[this.currentChoiceIndex]
-  }
-
-  useCurrentCard() {
-    const currentCard = this.cards[this.currentChoiceIndex]
-
-    if (currentCard) {
-      this.currentChoiceIndex++
-    }
-
-    return currentCard || null
   }
 }
 
@@ -117,44 +97,54 @@ export interface Bonus {
   multiplier: number
 }
 
-export interface ExplorerCard {
+export interface ExplorerCardData {
   id: string
   imageUrl: URL
-  rules: CardPlacementRules[]
-  bonus?: {
-    type: 'treasure' | 'coin'
-    multiplier: number
+  isEraCard: boolean
+  rules(p: Player): CardPlacementRules[] | null
+  bonus?(p: Player): Bonus | null
+  getInvestigateCard?(p: Player): InvestigateCard | null
+}
+
+export class ExplorerCard extends Card {
+  imageUrl: URL
+  isEraCard: boolean
+
+  getRules: (p: Player) => CardPlacementRules[] | null
+  getBonus: (p: Player) => Bonus | null
+  getInvestigateCard: (p: Player) => InvestigateCard | null
+
+  constructor(data: ExplorerCardData) {
+    super(data)
+
+    this.imageUrl = data.imageUrl
+    this.isEraCard = data.isEraCard
+
+    this.getRules = data.rules
+    this.getBonus = data.bonus ?? (() => null)
+    this.getInvestigateCard = data.getInvestigateCard ?? (() => null)
+  }
+
+  rules(p: Player): CardPlacementRules[] | null {
+    return this.getRules(p)
+  }
+
+  bonus(p: Player): Bonus | null {
+    return this.getBonus(p)
+  }
+
+  investigateCard?(p: Player): InvestigateCard | null {
+    return this.getInvestigateCard(p)
   }
 }
 
-export interface GlobalExplorerCard {
-  id: string
-  imageUrl: URL
-  rules(p: Player): CardPlacementRules[] | null
-  bonus(p: Player): Bonus | null
-  isEraCard: boolean
-  getInvestigateCard?(p: Player): ExplorerCard | null
-}
-
-export interface TreasureCard {
-  id: string
-  type?: string
-  imageUrl: URL
-  count: number
-  //We can assume that if it needs to be discarded, it will be played immediately.
-  //We can also assume that if it doesn't need to be discarded, it doesn't need to be played immediately.
-  discard?: boolean
-
-  value(board: Board): number
-
-  jarValue?(index: number): { index: number; value: number }
-}
-
-export class ExplorerDeck extends Deck<GlobalExplorerCard> {
-  laterCards = getLaterExplorerList()
+export class ExplorerDeck extends Deck<ExplorerCard> {
+  laterCards = getLaterExplorerList().map((c) => new ExplorerCard(c))
 
   constructor() {
-    super(getInitialExplorerList())
+    const cards = getInitialExplorerList().map((c) => new ExplorerCard(c))
+
+    super(cards)
   }
 
   prepareForNextEra() {
@@ -171,25 +161,133 @@ export class ExplorerDeck extends Deck<GlobalExplorerCard> {
   }
 }
 
-export class InvestigateDeck extends Deck<ExplorerCard> {
+export interface InvestigateCardData {
+  id: string
+  imageUrl: URL
+  rules: CardPlacementRules[]
+  bonus?: Bonus
+}
+
+export class InvestigateCard extends Card {
+  imageUrl: URL
+  rules: CardPlacementRules[]
+  bonus: Bonus | null = null
+
+  constructor(data: InvestigateCardData) {
+    super(data)
+
+    this.imageUrl = data.imageUrl
+    this.rules = data.rules
+
+    if (data.bonus) {
+      this.bonus = data.bonus
+    }
+  }
+}
+
+export class InvestigateDeck extends Deck<InvestigateCard> {
   constructor() {
-    super([...investigateCards])
+    super(investigateCards.map((c) => new InvestigateCard(c)))
+  }
+}
+
+export interface TreasureCardData {
+  type: string
+  imageUrl: URL
+  count: number
+  //We can assume that if it needs to be discarded, it will be played immediately.
+  //We can also assume that if it doesn't need to be discarded, it doesn't need to be played immediately.
+  discard: boolean
+  value(board: Board): number
+  jarValue?(index: number): { index: number; value: number }
+}
+
+export class TreasureCard extends Card {
+  type: string
+  imageUrl: URL
+  //We can assume that if it needs to be discarded, it will be played immediately.
+  //We can also assume that if it doesn't need to be discarded, it doesn't need to be played immediately.
+  discard: boolean
+  calculateValue: (board: Board) => number
+  calculateJarValue?: (index: number) => { index: number; value: number }
+
+  constructor(data: TreasureCardData & { id: string }) {
+    super(data)
+
+    this.type = data.type
+    this.imageUrl = data.imageUrl
+    this.discard = data.discard
+
+    this.calculateValue = data.value
+
+    if (data.jarValue) {
+      this.calculateJarValue = data.jarValue
+    }
+  }
+
+  value(board: Board) {
+    return this.calculateValue(board)
+  }
+
+  jarValue(index: number) {
+    return this.calculateJarValue?.(index) ?? { index: -1, value: 0 }
   }
 }
 
 export class TreasureDeck extends Deck<TreasureCard> {
-  constructor(board: Board) {
-    //Adds coppies of the cards to the deck according to the count property.
-    const deck: TreasureCard[] = []
-    for (const card of treasureCards) {
-      for (let i = 0; i < card.count; i++) {
-        const uniqueCard = { ...card }
-        uniqueCard.type = card.id
-        uniqueCard.id = `${card.id}-${i}`
-        deck.push(uniqueCard)
-      }
+  constructor() {
+    super(
+      treasureCards.flatMap((c) =>
+        Array(c.count)
+          .fill(1)
+          .map((n, i) => new TreasureCard({ ...c, id: `${c.type}-${i}` })),
+      ),
+    )
+  }
+}
+
+interface CardInHand<CardType extends { id: string }> {
+  /**
+   * answers: did this card pass through the player's hand (true) or is it still in the hand (false)?
+   */
+  discarded: boolean
+  card: CardType
+}
+
+export class Hand<CardType extends { id: string }> {
+  player: Player
+  cards: CardInHand<CardType>[] = []
+  currentChoiceIndex = 0
+
+  constructor(player: Player) {
+    this.player = player
+  }
+
+  addCard(card: CardType, discarded: boolean) {
+    this.cards.push({ card, discarded })
+    this.currentChoiceIndex = this.cards.length
+  }
+
+  /**
+   * Useful for replaying former moves when reconstructing history
+   */
+  hasCardAlready() {
+    return !!this.cards[this.currentChoiceIndex]
+  }
+
+  useCurrentCard() {
+    const currentCard = this.cards[this.currentChoiceIndex]
+
+    if (currentCard) {
+      this.currentChoiceIndex++
     }
 
-    super([...deck])
+    return currentCard || null
+  }
+
+  toJSON() {
+    return {
+      cards: this.cards,
+    }
   }
 }

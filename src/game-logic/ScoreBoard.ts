@@ -73,9 +73,9 @@ export class ScoreBoard {
     if (this.player.board.name === 'xawskil') {
       this.stats.push({
         image: blockImage,
-        name: 'Coins From Discovered Lands',
-        score: this.player.board.getXawskilCoins(),
-        maxScore: 40,
+        name: 'Discovered Lands',
+        score: this.player.board.lands.filter((l) => l.hasBeenReached).length,
+        maxScore: this.player.board.lands.length,
         visibleScore: -1,
       })
     }

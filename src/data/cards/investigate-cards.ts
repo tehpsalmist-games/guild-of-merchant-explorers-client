@@ -1,4 +1,4 @@
-import { ExplorerCard, GlobalExplorerCard } from '../../game-logic/Cards'
+import { InvestigateCardData } from '../../game-logic/Cards'
 import {
   connectedlistgrasswater5,
   connectedlistmountainwater4,
@@ -30,7 +30,7 @@ import {
   water5,
 } from '../../images'
 
-export const investigateCards: ExplorerCard[] = [
+export const investigateCards: InvestigateCardData[] = [
   {
     id: 'region4',
     imageUrl: region4,

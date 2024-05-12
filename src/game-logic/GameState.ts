@@ -4,7 +4,7 @@ import { aveniaData } from '../data/boards/avenia'
 import { cnidariaData } from '../data/boards/cnidaria'
 import { Board, BoardData, Hex, Region } from './Board'
 import { randomSelection, sleep } from '../utils'
-import { ExplorerCard, ExplorerDeck, GlobalExplorerCard, InvestigateDeck, TreasureCard, TreasureDeck } from './Cards'
+import { ExplorerCard, ExplorerDeck, InvestigateCard, InvestigateDeck, TreasureCard, TreasureDeck } from './Cards'
 import { objectives } from '../data/objectives'
 import { Objective } from './Objective'
 import { ScoreBoard } from './ScoreBoard'
@@ -39,7 +39,7 @@ export class GameState extends EventTarget {
   turnHistory: TurnHistory
 
   explorerDeck: ExplorerDeck
-  currentExplorerCard: GlobalExplorerCard
+  currentExplorerCard: ExplorerCard
 
   objectives: Objective[] = []
 
@@ -67,7 +67,7 @@ export class GameState extends EventTarget {
 
     this.explorerDeck = new ExplorerDeck()
 
-    this.treasureDeck = new TreasureDeck(this.activePlayer.board)
+    this.treasureDeck = new TreasureDeck()
 
     // start game!
     this.flipExplorerCard()
@@ -279,11 +279,11 @@ export class Player extends EventTarget {
 
   regionForVillage?: Region
 
-  investigateCardCandidates: [ExplorerCard, ExplorerCard] | null = null
+  investigateCardCandidates: [InvestigateCard, InvestigateCard] | null = null
 
-  investigateCards: ExplorerCard[] = []
-  discardedInvestigateCards: ExplorerCard[] = []
-  era4SelectedInvestigateCard: ExplorerCard | null = null
+  investigateCards: InvestigateCard[] = []
+  discardedInvestigateCards: InvestigateCard[] = []
+  era4SelectedInvestigateCard: InvestigateCard | null = null
 
   cardPhase = 0 // some cards have complex logic in 2 or more phases
 
@@ -303,7 +303,7 @@ export class Player extends EventTarget {
     for (const card of this.treasureCards.filter((card) => !card.discard)) {
       this.coins += card.value(this.board)
 
-      if (card.jarValue) {
+      if (card.type === 'jarMultiplier') {
         const data = card.jarValue(jarIndex)
         jarIndex = data.index
         this.coins += data.value
@@ -328,7 +328,7 @@ export class Player extends EventTarget {
     return value
   }
 
-  chooseInvestigateCard(chosenCard: ExplorerCard) {
+  chooseInvestigateCard(chosenCard: InvestigateCard) {
     if (!this.investigateCardCandidates) return
 
     const discardedCard = this.investigateCardCandidates.find((ic) => ic !== chosenCard)
@@ -487,8 +487,8 @@ type Move =
     }
   | {
       action: 'choose-investigate-card'
-      chosenCard: ExplorerCard
-      discardedCard: ExplorerCard
+      chosenCard: InvestigateCard
+      discardedCard: InvestigateCard
     }
   | {
       action: 'choose-investigate-card-reuse'
@@ -498,7 +498,14 @@ type Move =
       action: 'discover-tower'
       hex: Hex
     }
-  | { action: 'discover-crystal'; hex: Hex }
+  | {
+      action: 'discover-crystal'
+      hex: Hex
+    }
+  | {
+      action: 'discover-land'
+      hex: Hex
+    }
 
 export class MoveHistory {
   currentMoves: Move[] = []
@@ -542,6 +549,10 @@ export class MoveHistory {
           }
         }
 
+        if (!move.hex.land?.hasBeenReached) {
+          this.doMove({ action: 'discover-land', hex: move.hex })
+        }
+
         this.player.checkForUserDecision()
 
         break
@@ -568,6 +579,12 @@ export class MoveHistory {
           .reduce((sum, h) => sum + h.crystalValue, 0)
 
         this.player.coins += crystalValueSum
+        break
+      case 'discover-land':
+        if (move.hex.land) {
+          move.hex.land.hasBeenReached = true
+        }
+
         break
       case 'freely-explore':
         move.hex.explore()
@@ -738,6 +755,14 @@ export class MoveHistory {
           this.player.board.player.coins -= crystalValueSum
 
           undoing.hex.isCovered = false
+
+          // automatically undo the explore action that caused this tower to be discovered
+          this.undoMove()
+          break
+        case 'discover-land':
+          if (undoing.hex.land) {
+            undoing.hex.land.hasBeenReached = false
+          }
 
           // automatically undo the explore action that caused this tower to be discovered
           this.undoMove()

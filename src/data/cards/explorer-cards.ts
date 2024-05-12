@@ -1,4 +1,4 @@
-import { GlobalExplorerCard } from '../../game-logic/Cards'
+import { ExplorerCardData } from '../../game-logic/Cards'
 import {
   exploreEra1,
   exploreEra2,
@@ -11,7 +11,7 @@ import {
   exploreWild,
 } from '../../images'
 
-export const getInitialExplorerList = (): GlobalExplorerCard[] => [
+export const getInitialExplorerList = (): ExplorerCardData[] => [
   {
     id: 'mountain-1',
     isEraCard: false,
@@ -128,7 +128,7 @@ export const getInitialExplorerList = (): GlobalExplorerCard[] => [
   },
 ]
 
-export const getLaterExplorerList = (): GlobalExplorerCard[] => [
+export const getLaterExplorerList = (): ExplorerCardData[] => [
   {
     id: 'era-any',
     isEraCard: true,

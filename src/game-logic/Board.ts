@@ -232,10 +232,6 @@ export class Hex {
       this.region.explore()
     }
 
-    if (this.land) {
-      this.land.explore()
-    }
-
     //Finds trading routes every time a hex is explored
     this.board.player.connectedTradePosts = this.getConnectedTradingPosts()
   }
@@ -259,10 +255,6 @@ export class Hex {
 
     if (this.region) {
       this.region.unexplore()
-    }
-
-    if (this.land) {
-      this.land.unexplore()
     }
 
     this.board.player.chosenRoute = []
@@ -624,15 +616,5 @@ export class Land {
 
   get log() {
     return this.hexes.map((h) => h.element)
-  }
-
-  explore() {
-    this.hasBeenReached = true
-  }
-
-  unexplore() {
-    if (this.hexes.every((h) => !h.isExplored)) {
-      this.hasBeenReached = false
-    }
   }
 }
