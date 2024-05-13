@@ -22,7 +22,7 @@ export const EraCards = ({ className = '', ...props }: EraCardsProps) => {
     gameState.activePlayer.investigateCards[2],
   ]
 
-  if (!gameState.activePlayer.investigateCards.length) {
+  if (!gameState.activePlayer.investigateCards.size) {
     return null
   }
 

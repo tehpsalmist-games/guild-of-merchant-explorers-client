@@ -116,14 +116,14 @@ export const getInitialExplorerList = (): ExplorerCardData[] => [
     id: 'era-1',
     isEraCard: true,
     getInvestigateCard(p) {
-      return p.investigateCards[0]
+      return p.investigateCards.chosenCards[0]
     },
     bonus(p) {
-      return p.investigateCards[0]?.bonus || null
+      return p.investigateCards.chosenCards[0]?.bonus || null
     },
     imageUrl: exploreEra1,
     rules(p) {
-      return p.investigateCards[0]?.rules || null
+      return p.investigateCards.chosenCards[0]?.rules || null
     },
   },
 ]
@@ -147,28 +147,28 @@ export const getLaterExplorerList = (): ExplorerCardData[] => [
     id: 'era-3',
     isEraCard: true,
     getInvestigateCard(p) {
-      return p.investigateCards[2]
+      return p.investigateCards.chosenCards[2]
     },
     bonus(p) {
-      return p.investigateCards[2]?.bonus || null
+      return p.investigateCards.chosenCards[2]?.bonus || null
     },
     imageUrl: exploreEra3,
     rules(p) {
-      return p.investigateCards[2]?.rules || null
+      return p.investigateCards.chosenCards[2]?.rules || null
     },
   },
   {
     id: 'era-2',
     isEraCard: true,
     getInvestigateCard(p) {
-      return p.investigateCards[1]
+      return p.investigateCards.chosenCards[1]
     },
     bonus(p) {
-      return p.investigateCards[1]?.bonus || null
+      return p.investigateCards.chosenCards[1]?.bonus || null
     },
     imageUrl: exploreEra2,
     rules(p) {
-      return p.investigateCards[1]?.rules || null
+      return p.investigateCards.chosenCards[1]?.rules || null
     },
   },
 ]

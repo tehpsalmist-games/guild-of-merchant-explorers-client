@@ -6,7 +6,7 @@ import ChevronRightIcon from '@heroicons/react/24/solid/ChevronRightIcon'
 import ChevronLeftIcon from '@heroicons/react/24/solid/ChevronLeftIcon'
 import UTurnIcon from '@heroicons/react/24/solid/ArrowUturnLeftIcon'
 import clsx from 'clsx'
-import { coinImage, placeBlock, plankPanelHorizontal, plankPanelVertical, treasureChestImage } from '../images'
+import { coinImage, placeBlock, plankPanelHorizontal, treasureChestImage } from '../images'
 import { EraLabel } from './EraLabel'
 import { ExplorerCardMat } from './ExplorerCardMat'
 import { ObjectiveCards } from './ObjectiveCards'
@@ -23,10 +23,10 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
 
   const { gameState, resetGame } = useGameState()
 
-  const treasureCards: TreasureCard[] = gameState.activePlayer.treasureCards.filter(
-    (c) => !c.discard && c.type !== 'jarMultiplier',
+  const treasureCards = gameState.activePlayer.treasureCards.cards.filter(
+    (c) => !c.discarded && c.card.type !== 'jarMultiplier',
   )
-  const treasureJars: TreasureCard[] = gameState.activePlayer.treasureCards.filter((c) => c.type === 'jarMultiplier')
+  const treasureJars = gameState.activePlayer.treasureCards.cards.filter((c) => c.card.type === 'jarMultiplier')
 
   const investigateCard = gameState.currentExplorerCard?.isEraCard
     ? gameState.currentExplorerCard.getInvestigateCard?.(gameState.activePlayer)
@@ -115,7 +115,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
               >
                 {(gameState.era < 3
                   ? gameState.activePlayer.investigateCardCandidates
-                  : gameState.activePlayer.investigateCards
+                  : gameState.activePlayer.investigateCards.cards.map((c) => c.card)
                 )?.map((candidate) => (
                   <img
                     key={candidate.id}
@@ -239,21 +239,21 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
               {treasureCards.length === 0 && treasureJars.length === 0 && <em>(None)</em>}
               {treasureJars.length > 0 && (
                 <div className="flex-center flex-col">
-                  <img className="mb-2 w-4/5 rounded-2xl" src={treasureJars[0].imageUrl.href} />
+                  <img className="mb-2 w-4/5 rounded-2xl" src={treasureJars[0].card.imageUrl.href} />
                   <div className="flex-center flex-row">
                     <h2>x{treasureJars.length}≈</h2>
                     <img className="w-8" src={coinImage.href} />
-                    <p>{gameState.activePlayer.getTreasureJarValue()}</p>
+                    <p>{gameState.activePlayer.treasureCards.getTreasureJarValue()}</p>
                   </div>
                 </div>
               )}
               {treasureCards.map((tc) => (
-                <div className="flex-center flex-col">
-                  <img className="mb-2 w-4/5 rounded-2xl" src={tc.imageUrl.href} />
+                <div key={tc.card.id} className="flex-center flex-col">
+                  <img className="mb-2 w-4/5 rounded-2xl" src={tc.card.imageUrl.href} />
                   <div className="flex-center flex-row">
                     <h2>≈</h2>
                     <img className="w-8" src={coinImage.href} />
-                    <p>{tc.value(gameState.activePlayer.board)}</p>
+                    <p>{tc.card.value(gameState.activePlayer.board)}</p>
                   </div>
                 </div>
               ))}
@@ -328,7 +328,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
             <div className="flex-center gap-4">
               {(gameState.era < 3
                 ? gameState.activePlayer.investigateCardCandidates
-                : gameState.activePlayer.investigateCards
+                : gameState.activePlayer.investigateCards.cards.map((c) => c.card)
               )?.map((candidate, index) => (
                 <button
                   key={candidate.id}
@@ -352,8 +352,8 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
           <img
             className="block max-w-md rounded-2xl"
             src={
-              gameState.activePlayer.treasureCards[gameState.activePlayer.treasureCards.length - newTreasureCard]
-                ?.imageUrl.href
+              gameState.activePlayer.treasureCards.cards[gameState.activePlayer.treasureCards.size - newTreasureCard]
+                ?.card.imageUrl.href
             }
           />
           <Button variant="primary" onClick={() => setNewTreasureCard((t) => t - 1)}>
@@ -370,7 +370,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
             <h1>All Eras Complete!</h1>
 
             {gameState.scoreBoard.stats.map((stat) => (
-              <div>
+              <div key={stat.name}>
                 <div className="flex-center gap-4">
                   {stat.image && <img className="max-h-8 max-w-8" src={stat.image.href} />}
                   {stat.name && <p>{stat.name}</p>}

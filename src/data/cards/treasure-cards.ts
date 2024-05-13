@@ -10,6 +10,7 @@ import {
   towerBonus,
   twoCoins,
 } from '../../images'
+import { range } from '../../utils'
 
 export const treasureCards: TreasureCardData[] = [
   {
@@ -107,3 +108,17 @@ export const treasureCards: TreasureCardData[] = [
     },
   },
 ]
+
+export const treasureCardDataLookup = treasureCards.reduce<Record<string, TreasureCardData & { id: string }>>(
+  (map, cardData) => ({
+    ...map,
+    ...range(cardData.count).reduce(
+      (subMap, index) => ({
+        ...subMap,
+        [`${cardData.type}-${index}`]: { ...cardData, id: `${cardData.type}-${index}` },
+      }),
+      {},
+    ),
+  }),
+  {},
+)

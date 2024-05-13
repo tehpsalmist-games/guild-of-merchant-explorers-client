@@ -49,6 +49,10 @@ type ComplexAlgorithm = {
   value?: number
 }
 
+export interface SerializedObjective {
+  id: string
+}
+
 export interface ObjectiveData {
   id: string
   imageUrl: URL
@@ -399,7 +403,7 @@ export class Objective {
     })
   }
 
-  toJSON() {
+  toJSON(): SerializedObjective {
     return {
       id: this.id,
     }

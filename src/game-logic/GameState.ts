@@ -2,11 +2,23 @@ import { aghonData } from '../data/boards/aghon'
 import { kazanData } from '../data/boards/kazan'
 import { aveniaData } from '../data/boards/avenia'
 import { cnidariaData } from '../data/boards/cnidaria'
-import { Board, BoardData, Hex, Region } from './Board'
+import { Board, BoardData, Hex, Region, SerializedHex } from './Board'
 import { randomSelection, sleep } from '../utils'
-import { ExplorerCard, ExplorerDeck, InvestigateCard, InvestigateDeck, TreasureCard, TreasureDeck } from './Cards'
+import {
+  ExplorerCard,
+  ExplorerDeck,
+  InvestigateCard,
+  InvestigateDeck,
+  InvestigateHand,
+  SerializedCard,
+  SerializedDeck,
+  SerializedHand,
+  TreasureCard,
+  TreasureDeck,
+  TreasureHand,
+} from './Cards'
 import { objectives } from '../data/objectives'
-import { Objective } from './Objective'
+import { Objective, SerializedObjective } from './Objective'
 import { ScoreBoard } from './ScoreBoard'
 import { northProyliaData } from '../data/boards/north-proylia'
 import { xawskilData } from '../data/boards/xawskil'
@@ -28,6 +40,15 @@ const getBoardData = (boardName: BoardName) => {
     case 'xawskil':
       return { boardData: xawskilData, objectives: randomSelection(objectives.xawskil, 3) }
   }
+}
+
+export interface SerializedGameState {
+  boardName: BoardName
+  activePlayer: SerializedPlayer
+  turnHistory: SerializedTurnHistory
+  objectives: SerializedObjective[]
+  investigateDeck: SerializedDeck
+  treasureDeck: SerializedDeck
 }
 
 export class GameState extends EventTarget {
@@ -64,10 +85,13 @@ export class GameState extends EventTarget {
     this.turnHistory = new TurnHistory(this)
 
     this.investigateDeck = new InvestigateDeck()
+    this.investigateDeck.shuffle()
 
     this.explorerDeck = new ExplorerDeck()
+    this.explorerDeck.shuffle()
 
     this.treasureDeck = new TreasureDeck()
+    this.treasureDeck.shuffle()
 
     // start game!
     this.flipExplorerCard()
@@ -117,7 +141,7 @@ export class GameState extends EventTarget {
     this.currentExplorerCard = nextCard ?? null
 
     if (nextCard) {
-      this.explorerDeck.useCard(nextCard.id)
+      this.explorerDeck.discard(nextCard)
       this.turnHistory.saveCardFlip(nextCard.id)
       this.activePlayer.freeExploreQuantity = 0
 
@@ -156,9 +180,6 @@ export class GameState extends EventTarget {
   dealInvestigateCards(player: Player) {
     const [candidate1, candidate2] = this.investigateDeck.drawCards({ quantity: 2, recycle: true })
 
-    this.investigateDeck.removeCard(candidate1.id)
-    this.investigateDeck.removeCard(candidate2.id)
-
     player.investigateCardCandidates = [candidate1, candidate2]
   }
 
@@ -169,23 +190,6 @@ export class GameState extends EventTarget {
 
   emitSerializationUpdate(serializedData: string) {
     this.dispatchEvent(new CustomEvent('onserialize', { detail: { serializedData } }))
-  }
-
-  /**
-   * JSON.stringify will use this method if available
-   */
-  toJSON() {
-    return {
-      boardName: this.boardName,
-      activePlayer: this.activePlayer,
-      turnHistory: this.turnHistory,
-
-      objectives: this.objectives,
-
-      investigateDeck: this.investigateDeck,
-
-      treasureDeck: this.treasureDeck,
-    }
   }
 
   enqueueSerialization() {
@@ -205,6 +209,27 @@ export class GameState extends EventTarget {
       16,
     )
   }
+
+  /**
+   * JSON.stringify will use this method if available
+   */
+  toJSON(): SerializedGameState {
+    return {
+      boardName: this.boardName,
+      activePlayer: this.activePlayer as SerializedPlayer,
+      turnHistory: this.turnHistory,
+      objectives: this.objectives,
+      investigateDeck: this.investigateDeck,
+      treasureDeck: this.treasureDeck,
+    }
+  }
+}
+
+export interface SerializedTurnHistory {
+  era1: string[]
+  era2: string[]
+  era3: string[]
+  era4: string[]
 }
 
 /**
@@ -237,7 +262,7 @@ export class TurnHistory {
     }
   }
 
-  toJSON() {
+  toJSON(): SerializedTurnHistory {
     return {
       era1: this.era1,
       era2: this.era2,
@@ -245,6 +270,14 @@ export class TurnHistory {
       era4: this.era4,
     }
   }
+}
+
+export interface SerializedPlayer {
+  moveHistory: SerializedMoveHistory
+  treasureCards: SerializedHand
+  investigateCardCandidates: [SerializedCard, SerializedCard]
+  investigateCards: SerializedHand
+  era4SelectedInvestigateCard: SerializedCard | null
 }
 
 export type PlayerMode =
@@ -271,7 +304,7 @@ export class Player extends EventTarget {
 
   treasureCardHex?: Hex
   treasureCardsToDraw = 0 // use this value to increment when cards are earned, and decrement when they are drawn
-  treasureCards: TreasureCard[] = []
+  treasureCards: TreasureHand
 
   connectedTradePosts: Hex[] = []
   chosenRoute: Hex[] = []
@@ -281,8 +314,7 @@ export class Player extends EventTarget {
 
   investigateCardCandidates: [InvestigateCard, InvestigateCard] | null = null
 
-  investigateCards: InvestigateCard[] = []
-  discardedInvestigateCards: InvestigateCard[] = []
+  investigateCards: InvestigateHand
   era4SelectedInvestigateCard: InvestigateCard | null = null
 
   cardPhase = 0 // some cards have complex logic in 2 or more phases
@@ -295,37 +327,15 @@ export class Player extends EventTarget {
     this.gameState = gameState
     this.board = new Board(boardData, this, gameState)
     this.moveHistory = new MoveHistory(this, gameState)
+
+    this.treasureCards = new TreasureHand(this)
+    this.investigateCards = new InvestigateHand(this)
   }
 
   addEndgameCoins() {
-    let jarIndex = 0
-
-    for (const card of this.treasureCards.filter((card) => !card.discard)) {
-      this.coins += card.value(this.board)
-
-      if (card.type === 'jarMultiplier') {
-        const data = card.jarValue(jarIndex)
-        jarIndex = data.index
-        this.coins += data.value
-      }
-    }
+    this.coins += this.treasureCards.getCoinTotal()
 
     this.coins += this.board.getXawskilCoins()
-  }
-
-  getTreasureJarValue(): number {
-    let value = 0
-    let index = 0
-
-    for (const card of this.treasureCards.filter((c) => c.type === 'jarMultiplier')) {
-      if (card.jarValue) {
-        const data = card.jarValue(index)
-        index = data.index
-        value += data.value
-      }
-    }
-
-    return value
   }
 
   chooseInvestigateCard(chosenCard: InvestigateCard) {
@@ -439,18 +449,24 @@ export class Player extends EventTarget {
     this.gameState.emitStateChange()
   }
 
-  toJSON() {
+  toJSON(): SerializedPlayer {
     return {
-      moveHistory: this.moveHistory,
+      moveHistory: this.moveHistory as SerializedMoveHistory,
       treasureCards: this.treasureCards,
-
-      investigateCardCandidates: this.investigateCardCandidates,
-
+      investigateCardCandidates: this.investigateCardCandidates as [SerializedCard, SerializedCard],
       investigateCards: this.investigateCards,
-      discardedInvestigateCards: this.discardedInvestigateCards,
       era4SelectedInvestigateCard: this.era4SelectedInvestigateCard,
     }
   }
+}
+
+export interface SerializedMove {
+  action: Move['action']
+  hex?: SerializedHex
+  tradingHex?: SerializedHex
+  era?: number
+  chosenCard: SerializedCard
+  discardedCard: SerializedCard
 }
 
 /**
@@ -506,6 +522,11 @@ type Move =
       action: 'discover-land'
       hex: Hex
     }
+
+export interface SerializedMoveHistory {
+  historicalMoves: SerializedMove[][][]
+  currentMoves: SerializedMove[]
+}
 
 export class MoveHistory {
   currentMoves: Move[] = []
@@ -657,15 +678,13 @@ export class MoveHistory {
         //Draws a treasure card and saves it's id to history
         const [treasureCard] = this.gameState.treasureDeck.drawCards()
 
-        this.player.treasureCards.push(treasureCard)
+        this.player.treasureCards.addCard(treasureCard, treasureCard.discard)
 
         this.player.dispatchEvent(new CustomEvent('treasure-gained'))
 
         if (treasureCard.discard) {
           this.player.coins += treasureCard.value(this.player.board)
-          this.gameState.treasureDeck.useCard(treasureCard.id)
-        } else {
-          this.gameState.treasureDeck.removeCard(treasureCard.id)
+          this.gameState.treasureDeck.discard(treasureCard)
         }
 
         this.player.treasureCardsToDraw--
@@ -687,8 +706,8 @@ export class MoveHistory {
         this.player.checkForUserDecision()
         break
       case 'choose-investigate-card':
-        this.player.investigateCards.push(move.chosenCard)
-        this.player.discardedInvestigateCards.push(move.discardedCard)
+        this.player.investigateCards.addCard(move.chosenCard, false)
+        this.player.investigateCards.addCard(move.discardedCard, true)
         this.player.investigateCardCandidates = null
         this.player.enterExploringMode()
         break
@@ -821,10 +840,7 @@ export class MoveHistory {
           this.player.enterDrawTreasureMode()
           break
         case 'choose-investigate-card':
-          this.player.investigateCardCandidates = [
-            this.player.investigateCards.pop()!,
-            this.player.discardedInvestigateCards.pop()!,
-          ]
+          this.player.investigateCardCandidates = this.player.investigateCards.undoCardSelection()
           this.player.mode = 'choosing-investigate-card'
           this.player.message = 'Choose an Investigate Card'
           break
@@ -889,6 +905,12 @@ export class MoveHistory {
   }
 
   lockInMoveState() {
+    const investigateCardChoice = this.currentMoves.find((m) => m.action === 'choose-investigate-card')
+
+    if (investigateCardChoice?.action === 'choose-investigate-card') {
+      this.gameState.investigateDeck.discard(investigateCardChoice.discardedCard)
+    }
+
     // get any pre-existing moves (prior to treasure card draw, for example)
     const preexistingTurnMoves = this.historicalMoves[this.gameState.era][this.gameState.currentTurn] || []
 
@@ -901,10 +923,10 @@ export class MoveHistory {
     this.currentMoves = []
   }
 
-  toJSON() {
+  toJSON(): SerializedMoveHistory {
     return {
-      historicalMoves: this.historicalMoves,
-      currentMoves: this.currentMoves,
+      historicalMoves: this.historicalMoves as SerializedMove[][][],
+      currentMoves: this.currentMoves as SerializedMove[],
     }
   }
 }

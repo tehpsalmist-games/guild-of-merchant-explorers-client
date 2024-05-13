@@ -1,8 +1,12 @@
 import { getInitialExplorerList, getLaterExplorerList } from '../data/cards/explorer-cards'
-import { investigateCards } from '../data/cards/investigate-cards'
-import { treasureCards } from '../data/cards/treasure-cards'
+import { investigateCardDataLookup, investigateCards } from '../data/cards/investigate-cards'
+import { treasureCardDataLookup, treasureCards } from '../data/cards/treasure-cards'
 import { Board, Terrain } from './Board'
 import { Player } from './GameState'
+
+export interface SerializedCard {
+  id: string
+}
 
 export class Card {
   id: string
@@ -11,54 +15,48 @@ export class Card {
     this.id = id
   }
 
-  toJSON() {
+  toJSON(): SerializedCard {
     return {
       id: this.id,
     }
   }
 }
 
+export interface SerializedDeck {
+  cards: SerializedCard[]
+  discarded: SerializedCard[]
+}
+
 export class Deck<CardType extends Card> {
   cards: CardType[]
-  used: CardType[] = []
+  discarded: CardType[] = []
 
   constructor(cardData: CardType[]) {
     this.cards = cardData
-    this.shuffle()
   }
 
   drawCards({ quantity = 1, recycle = false } = {}) {
-    // if deck is empty, and recycling is requested, shuffle used cards into the deck
+    // if deck is empty, and recycling is requested, shuffle discarded cards into the deck
     if (recycle && this.cards.length - quantity < 0) {
-      this.cards = this.used
-      this.used = []
+      this.resetDeck()
 
       this.shuffle()
     }
 
-    // simply give references to the callee. No need to remove from deck; the callee can be responsible
-    // for subsequently calling useCard() and removeCard() according to their own proprietary logic
-    return this.cards.slice(0, quantity)
+    return this.cards.splice(0, quantity)
   }
 
-  useCard(id: string) {
-    const card = this.cards.find((c) => c.id === id)
-
-    // really shouldn't happen, but early exit if so
-    if (!card) return
-
-    this.used.push(card)
-    this.cards = this.cards.filter((c) => c.id !== id)
-  }
-
-  removeCard(id: string) {
-    this.cards = this.cards.filter((c) => c.id !== id)
-    this.used = this.used.filter((c) => c.id !== id)
+  discard(card: CardType) {
+    this.discarded.push(card)
   }
 
   addCard(card: CardType) {
     this.cards.push(card)
-    this.shuffle()
+  }
+
+  resetDeck() {
+    this.cards = this.discarded
+    this.discarded = []
   }
 
   shuffle() {
@@ -71,10 +69,10 @@ export class Deck<CardType extends Card> {
     this.cards = newList
   }
 
-  toJSON() {
+  toJSON(): SerializedDeck {
     return {
       cards: this.cards,
-      used: this.used,
+      discarded: this.discarded,
     }
   }
 }
@@ -153,8 +151,8 @@ export class ExplorerDeck extends Deck<ExplorerCard> {
     const nextEraCard = this.laterCards.pop()
 
     if (nextEraCard) {
-      this.cards = this.used
-      this.cards.push(nextEraCard)
+      this.resetDeck()
+      this.addCard(nextEraCard)
     }
 
     this.shuffle()
@@ -246,21 +244,33 @@ export class TreasureDeck extends Deck<TreasureCard> {
   }
 }
 
-interface CardInHand<CardType extends { id: string }> {
+interface CardInHand<CardType extends Card> {
   /**
-   * answers: did this card pass through the player's hand (true) or is it still in the hand (false)?
+   * this property answers the question:
+   * did this card pass through the player's hand (true) or is it still in the hand (false)?
    */
   discarded: boolean
   card: CardType
 }
 
-export class Hand<CardType extends { id: string }> {
+export interface SerializedHand {
+  cards: {
+    discarded: boolean
+    card: SerializedCard
+  }[]
+}
+
+export class Hand<CardType extends Card> {
   player: Player
   cards: CardInHand<CardType>[] = []
   currentChoiceIndex = 0
 
   constructor(player: Player) {
     this.player = player
+  }
+
+  get size() {
+    return this.cards.length
   }
 
   addCard(card: CardType, discarded: boolean) {
@@ -285,9 +295,66 @@ export class Hand<CardType extends { id: string }> {
     return currentCard || null
   }
 
-  toJSON() {
+  toJSON(): SerializedHand {
     return {
       cards: this.cards,
     }
+  }
+}
+
+export class InvestigateHand extends Hand<InvestigateCard> {
+  undoCardSelection(): [InvestigateCard, InvestigateCard] {
+    // frankly, I don't care to assume this won't work. Not in the mood to write error handling
+    return [this.cards.pop()!.card, this.cards.pop()!.card]
+  }
+
+  get chosenCards() {
+    return this.cards.filter((c) => !c.discarded).map((c) => c.card)
+  }
+
+  fromJSON(data: SerializedHand) {
+    this.cards = data.cards.map((c) => ({
+      discarded: c.discarded,
+      card: new InvestigateCard(investigateCardDataLookup[c.card.id]),
+    }))
+
+    this.currentChoiceIndex = 0
+  }
+}
+
+export class TreasureHand extends Hand<TreasureCard> {
+  getCoinTotal() {
+    let coins = 0
+    for (const cardInHand of this.cards.filter((card) => !card.discarded && card.card.type !== 'jarMultiplier')) {
+      coins += cardInHand.card.value(this.player.board)
+    }
+
+    coins += this.getTreasureJarValue()
+
+    return coins
+  }
+
+  getTreasureJarValue(): number {
+    let value = 0
+    let index = 0
+
+    for (const cardInHand of this.cards.filter((c) => c.card.type === 'jarMultiplier')) {
+      if (cardInHand.card.jarValue) {
+        const data = cardInHand.card.jarValue(index)
+        index = data.index
+        value += data.value
+      }
+    }
+
+    return value
+  }
+
+  fromJSON(data: SerializedHand) {
+    this.cards = data.cards.map((c) => ({
+      discarded: c.discarded,
+      card: new TreasureCard(treasureCardDataLookup[c.card.id]),
+    }))
+
+    this.currentChoiceIndex = 0
   }
 }

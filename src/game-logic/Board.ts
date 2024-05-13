@@ -134,6 +134,11 @@ export class Board {
   }
 }
 
+export interface SerializedHex {
+  row: number
+  column: number
+}
+
 export interface HexData {
   terrain: Terrain
   coins?: number
@@ -522,7 +527,7 @@ export class Hex {
     return this.getConnectedHexes().filter((h) => !h.isCovered && h.tradingPostValue > 0)
   }
 
-  toJSON() {
+  toJSON(): SerializedHex {
     return {
       row: this.row,
       column: this.column,

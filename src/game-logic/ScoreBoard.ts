@@ -93,7 +93,7 @@ export class ScoreBoard {
     this.stats.push({
       image: treasureChestImage,
       name: 'Treasures Earned',
-      score: this.player.treasureCards.length,
+      score: this.player.treasureCards.size,
       visibleScore: -1,
     })
 

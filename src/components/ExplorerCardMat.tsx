@@ -11,8 +11,8 @@ export const ExplorerCardMat = ({ className = '', ...props }: ExplorerCardMatPro
 
   const mapping = gameState.explorerDeck.cards.reduce<Record<string, { id: string; imageUrl: URL; isUsed: boolean }>>(
     (map, { imageUrl, id }) => ({ ...map, [id]: { imageUrl, id, isUsed: false } }),
-    gameState.explorerDeck.used.reduce(
-      (usedMap, { imageUrl, id }) => ({ ...usedMap, [id]: { imageUrl, id, isUsed: true } }),
+    gameState.explorerDeck.discarded.reduce(
+      (discardedMap, { imageUrl, id }) => ({ ...discardedMap, [id]: { imageUrl, id, isUsed: true } }),
       {},
     ),
   )

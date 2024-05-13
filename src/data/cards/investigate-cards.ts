@@ -635,3 +635,8 @@ export const investigateCards: InvestigateCardData[] = [
     ],
   },
 ]
+
+export const investigateCardDataLookup = investigateCards.reduce<Record<string, InvestigateCardData>>(
+  (map, cardData) => ({ ...map, [cardData.id]: cardData }),
+  {},
+)
