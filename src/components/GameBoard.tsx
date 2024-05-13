@@ -115,7 +115,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
               >
                 {(gameState.era < 3
                   ? gameState.activePlayer.investigateCardCandidates
-                  : gameState.activePlayer.investigateCards.cards.map((c) => c.card)
+                  : gameState.activePlayer.investigateCards.chosenCards
                 )?.map((candidate) => (
                   <img
                     key={candidate.id}
@@ -328,7 +328,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
             <div className="flex-center gap-4">
               {(gameState.era < 3
                 ? gameState.activePlayer.investigateCardCandidates
-                : gameState.activePlayer.investigateCards.cards.map((c) => c.card)
+                : gameState.activePlayer.investigateCards.chosenCards
               )?.map((candidate, index) => (
                 <button
                   key={candidate.id}
