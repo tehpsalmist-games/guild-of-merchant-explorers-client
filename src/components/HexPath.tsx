@@ -13,9 +13,8 @@ import {
   tradingPostSand,
   exploredMarker,
 } from '../images'
-import { UseFloatingOptions, autoUpdate, offset, size, useFloating } from '@floating-ui/react-dom'
+import { autoUpdate, offset, size, useFloating } from '@floating-ui/react-dom'
 import { createPortal } from 'react-dom'
-import { useMergeRefs } from '@floating-ui/react'
 
 export interface HexProps extends ComponentProps<'path'> {
   x: number

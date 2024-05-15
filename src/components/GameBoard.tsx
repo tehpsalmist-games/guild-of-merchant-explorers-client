@@ -10,7 +10,6 @@ import { coinImage, placeBlock, plankPanelHorizontal, treasureChestImage } from 
 import { EraLabel } from './EraLabel'
 import { ExplorerCardMat } from './ExplorerCardMat'
 import { ObjectiveCards } from './ObjectiveCards'
-import { TreasureCard } from '../game-logic/Cards'
 
 export interface GameBoardProps extends ComponentProps<'main'> {}
 

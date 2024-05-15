@@ -2,7 +2,7 @@ import { aghonData } from '../data/boards/aghon'
 import { kazanData } from '../data/boards/kazan'
 import { aveniaData } from '../data/boards/avenia'
 import { cnidariaData } from '../data/boards/cnidaria'
-import { Board, BoardData, Hex, Region, SerializedHex } from './Board'
+import { Board, Hex, Region, SerializedHex } from './Board'
 import { randomSelection, sleep } from '../utils'
 import {
   ExplorerCard,
@@ -14,7 +14,6 @@ import {
   SerializedDeck,
   SerializedExplorerDeck,
   SerializedHand,
-  TreasureCard,
   TreasureDeck,
   TreasureHand,
 } from './Cards'
@@ -82,13 +81,11 @@ export class GameState extends EventTarget {
     this.boardName = boardName
 
     if (serializedData) {
-      // restore game
+      this.fromJSON(serializedData)
     } else {
       this.newGame()
     }
   }
-
-  restoreGame() {}
 
   newGame() {
     this.objectives = randomSelection(objectives[this.boardName], 3).map((algorithm) => new Objective(algorithm, this))
