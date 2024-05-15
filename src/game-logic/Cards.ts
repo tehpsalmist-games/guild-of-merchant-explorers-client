@@ -136,13 +136,33 @@ export class ExplorerCard extends Card {
   }
 }
 
+export interface SerializedExplorerDeck extends SerializedDeck {
+  laterCards: SerializedCard[]
+}
+
 export class ExplorerDeck extends Deck<ExplorerCard> {
   laterCards = getLaterExplorerList().map((c) => new ExplorerCard(c))
 
-  constructor() {
-    const cards = getInitialExplorerList().map((c) => new ExplorerCard(c))
+  constructor(serializedData?: SerializedExplorerDeck) {
+    const initialList = getInitialExplorerList()
+
+    const initialMap = initialList.reduce<Record<string, ExplorerCardData>>(
+      (cards, cardData) => ({ ...cards, [cardData.id]: cardData }),
+      {},
+    )
+
+    const cards = serializedData
+      ? serializedData.cards.map((sc) => new ExplorerCard(initialMap[sc.id]))
+      : initialList.map((c) => new ExplorerCard(c))
 
     super(cards)
+
+    if (serializedData) {
+      this.discarded = serializedData.discarded.map((sc) => new ExplorerCard(initialMap[sc.id]))
+      this.laterCards = getLaterExplorerList()
+        .filter((lcd) => serializedData.laterCards.some((sc) => sc.id === lcd.id))
+        .map((lcd) => new ExplorerCard(lcd))
+    }
   }
 
   prepareForNextEra() {
@@ -156,6 +176,13 @@ export class ExplorerDeck extends Deck<ExplorerCard> {
     }
 
     this.shuffle()
+  }
+
+  toJSON(): SerializedExplorerDeck {
+    return {
+      ...super.toJSON(),
+      laterCards: this.laterCards,
+    }
   }
 }
 
@@ -184,8 +211,13 @@ export class InvestigateCard extends Card {
 }
 
 export class InvestigateDeck extends Deck<InvestigateCard> {
-  constructor() {
-    super(investigateCards.map((c) => new InvestigateCard(c)))
+  constructor(serializedData?: SerializedDeck) {
+    if (serializedData) {
+      super(serializedData.cards.map((dc) => new InvestigateCard(investigateCardDataLookup[dc.id])))
+      this.discarded = serializedData.discarded.map((dc) => new InvestigateCard(investigateCardDataLookup[dc.id]))
+    } else {
+      super(investigateCards.map((c) => new InvestigateCard(c)))
+    }
   }
 }
 
@@ -233,18 +265,23 @@ export class TreasureCard extends Card {
 }
 
 export class TreasureDeck extends Deck<TreasureCard> {
-  constructor() {
-    super(
-      treasureCards.flatMap((c) =>
-        Array(c.count)
-          .fill(1)
-          .map((n, i) => new TreasureCard({ ...c, id: `${c.type}-${i}` })),
-      ),
-    )
+  constructor(serializedData?: SerializedDeck) {
+    if (serializedData) {
+      super(serializedData.cards.map((dc) => new TreasureCard(treasureCardDataLookup[dc.id])))
+      this.discarded = serializedData.discarded.map((dc) => new TreasureCard(treasureCardDataLookup[dc.id]))
+    } else {
+      super(
+        treasureCards.flatMap((c) =>
+          Array(c.count)
+            .fill(1)
+            .map((n, i) => new TreasureCard({ ...c, id: `${c.type}-${i}` })),
+        ),
+      )
+    }
   }
 }
 
-interface CardInHand<CardType extends Card> {
+interface DrawnCard<CardType extends Card> {
   /**
    * this property answers the question:
    * did this card pass through the player's hand (true) or is it still in the hand (false)?
@@ -262,7 +299,7 @@ export interface SerializedHand {
 
 export class Hand<CardType extends Card> {
   player: Player
-  cards: CardInHand<CardType>[] = []
+  cards: DrawnCard<CardType>[] = []
   currentChoiceIndex = 0
 
   constructor(player: Player) {
@@ -271,6 +308,10 @@ export class Hand<CardType extends Card> {
 
   get size() {
     return this.cards.length
+  }
+
+  get keptCards() {
+    return this.cards.filter((c) => !c.discarded).map((c) => c.card)
   }
 
   addCard(card: CardType, discarded: boolean) {
@@ -303,13 +344,17 @@ export class Hand<CardType extends Card> {
 }
 
 export class InvestigateHand extends Hand<InvestigateCard> {
+  constructor(p: Player, serializedData?: SerializedHand) {
+    super(p)
+
+    if (serializedData) {
+      this.fromJSON(serializedData)
+    }
+  }
+
   undoCardSelection(): [InvestigateCard, InvestigateCard] {
     // frankly, I don't care to assume this won't work. Not in the mood to write error handling
     return [this.cards.pop()!.card, this.cards.pop()!.card]
-  }
-
-  get chosenCards() {
-    return this.cards.filter((c) => !c.discarded).map((c) => c.card)
   }
 
   fromJSON(data: SerializedHand) {
@@ -323,10 +368,18 @@ export class InvestigateHand extends Hand<InvestigateCard> {
 }
 
 export class TreasureHand extends Hand<TreasureCard> {
+  constructor(p: Player, serializedData?: SerializedHand) {
+    super(p)
+
+    if (serializedData) {
+      this.fromJSON(serializedData)
+    }
+  }
+
   getCoinTotal() {
     let coins = 0
-    for (const cardInHand of this.cards.filter((card) => !card.discarded && card.card.type !== 'jarMultiplier')) {
-      coins += cardInHand.card.value(this.player.board)
+    for (const card of this.keptCards.filter((card) => card.type !== 'jarMultiplier')) {
+      coins += card.value(this.player.board)
     }
 
     coins += this.getTreasureJarValue()
@@ -338,9 +391,9 @@ export class TreasureHand extends Hand<TreasureCard> {
     let value = 0
     let index = 0
 
-    for (const cardInHand of this.cards.filter((c) => c.card.type === 'jarMultiplier')) {
-      if (cardInHand.card.jarValue) {
-        const data = cardInHand.card.jarValue(index)
+    for (const card of this.keptCards.filter((c) => c.type === 'jarMultiplier')) {
+      if (card.jarValue) {
+        const data = card.jarValue(index)
         index = data.index
         value += data.value
       }

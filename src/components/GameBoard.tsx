@@ -23,10 +23,8 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
 
   const { gameState, resetGame } = useGameState()
 
-  const treasureCards = gameState.activePlayer.treasureCards.cards.filter(
-    (c) => !c.discarded && c.card.type !== 'jarMultiplier',
-  )
-  const treasureJars = gameState.activePlayer.treasureCards.cards.filter((c) => c.card.type === 'jarMultiplier')
+  const treasureCards = gameState.activePlayer.treasureCards.keptCards.filter((c) => c.type !== 'jarMultiplier')
+  const treasureJars = gameState.activePlayer.treasureCards.keptCards.filter((c) => c.type === 'jarMultiplier')
 
   const investigateCard = gameState.currentExplorerCard?.isEraCard
     ? gameState.currentExplorerCard.getInvestigateCard?.(gameState.activePlayer)
@@ -115,7 +113,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
               >
                 {(gameState.era < 3
                   ? gameState.activePlayer.investigateCardCandidates
-                  : gameState.activePlayer.investigateCards.chosenCards
+                  : gameState.activePlayer.investigateCards.keptCards
                 )?.map((candidate) => (
                   <img
                     key={candidate.id}
@@ -134,7 +132,8 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                   className="mr-4 whitespace-nowrap"
                   variant={
                     gameState.activePlayer.moveHistory.getPlacedHexes()[gameState.activePlayer.cardPhase]?.size ===
-                    gameState.currentCardRules[gameState.activePlayer.cardPhase]?.limit
+                      gameState.currentCardRules[gameState.activePlayer.cardPhase]?.limit ||
+                    gameState.activePlayer.board.getFlatHexes().every((h) => !h.isExplorable())
                       ? 'primary'
                       : 'dismissive'
                   }
@@ -239,7 +238,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
               {treasureCards.length === 0 && treasureJars.length === 0 && <em>(None)</em>}
               {treasureJars.length > 0 && (
                 <div className="flex-center flex-col">
-                  <img className="mb-2 w-4/5 rounded-2xl" src={treasureJars[0].card.imageUrl.href} />
+                  <img className="mb-2 w-4/5 rounded-2xl" src={treasureJars[0].imageUrl.href} />
                   <div className="flex-center flex-row">
                     <h2>x{treasureJars.length}≈</h2>
                     <img className="w-8" src={coinImage.href} />
@@ -248,12 +247,12 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                 </div>
               )}
               {treasureCards.map((tc) => (
-                <div key={tc.card.id} className="flex-center flex-col">
-                  <img className="mb-2 w-4/5 rounded-2xl" src={tc.card.imageUrl.href} />
+                <div key={tc.id} className="flex-center flex-col">
+                  <img className="mb-2 w-4/5 rounded-2xl" src={tc.imageUrl.href} />
                   <div className="flex-center flex-row">
                     <h2>≈</h2>
                     <img className="w-8" src={coinImage.href} />
-                    <p>{tc.card.value(gameState.activePlayer.board)}</p>
+                    <p>{tc.value(gameState.activePlayer.board)}</p>
                   </div>
                 </div>
               ))}
@@ -328,7 +327,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
             <div className="flex-center gap-4">
               {(gameState.era < 3
                 ? gameState.activePlayer.investigateCardCandidates
-                : gameState.activePlayer.investigateCards.chosenCards
+                : gameState.activePlayer.investigateCards.keptCards
               )?.map((candidate, index) => (
                 <button
                   key={candidate.id}
@@ -362,9 +361,13 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
         </Modal>
       )}
       {gameState.activePlayer.mode === 'game-over' && userPromptOpen && gameState.scoreBoard && (
-        <Modal onClose={() => setUserPromptOpen(false)}>
+        <Modal
+          className="rounded-none !p-0 shadow-2xl"
+          bgClass="bg-transparent"
+          onClose={() => setUserPromptOpen(false)}
+        >
           <div
-            className="flex-center flex-col gap-4 p-2 text-white"
+            className="flex-center flex-col gap-4 p-6 text-white"
             style={{ backgroundImage: `url(${plankPanelHorizontal.href})` }}
           >
             <h1>All Eras Complete!</h1>
@@ -383,12 +386,14 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                 </div>
               </div>
             ))}
-
-            {gameState.scoreBoard.doneRevealing && (
-              <Button className="mt-8" variant="destructive" onClick={resetGame}>
-                Quit Game
-              </Button>
-            )}
+            <Button
+              className="mt-8"
+              disabled={!gameState.scoreBoard.doneRevealing}
+              variant={gameState.scoreBoard.doneRevealing ? 'primary' : 'dismissive'}
+              onClick={resetGame}
+            >
+              New Game
+            </Button>
           </div>
         </Modal>
       )}

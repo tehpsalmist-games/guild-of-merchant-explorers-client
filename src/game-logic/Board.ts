@@ -229,16 +229,9 @@ export class Hex {
       this.board.player.coins += this.coins * multiplier
     }
 
-    if (!this.isCovered && this.isRuin) {
-      this.board.player.treasureCardHex = this
-    }
-
     if (this.region) {
       this.region.explore()
     }
-
-    //Finds trading routes every time a hex is explored
-    this.board.player.connectedTradePosts = this.getConnectedTradingPosts()
   }
 
   /**
@@ -254,16 +247,9 @@ export class Hex {
       this.board.player.coins -= this.coins * multiplier
     }
 
-    if (this.isRuin) {
-      this.board.player.treasureCardHex = undefined
-    }
-
     if (this.region) {
       this.region.unexplore()
     }
-
-    this.board.player.chosenRoute = []
-    this.board.player.connectedTradePosts = []
   }
 
   isExplorable() {

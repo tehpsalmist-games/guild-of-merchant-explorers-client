@@ -12,6 +12,7 @@ import {
   InvestigateHand,
   SerializedCard,
   SerializedDeck,
+  SerializedExplorerDeck,
   SerializedHand,
   TreasureCard,
   TreasureDeck,
@@ -22,23 +23,24 @@ import { Objective, SerializedObjective } from './Objective'
 import { ScoreBoard } from './ScoreBoard'
 import { northProyliaData } from '../data/boards/north-proylia'
 import { xawskilData } from '../data/boards/xawskil'
+import { investigateCardDataLookup } from '../data/cards/investigate-cards'
 
 export type BoardName = 'aghon' | 'avenia' | 'kazan' | 'cnidaria' | 'northProylia' | 'xawskil'
 
 const getBoardData = (boardName: BoardName) => {
   switch (boardName) {
     case 'aghon':
-      return { boardData: aghonData, objectives: randomSelection(objectives.aghon, 3) }
+      return aghonData
     case 'avenia':
-      return { boardData: aveniaData, objectives: randomSelection(objectives.avenia, 3) }
+      return aveniaData
     case 'kazan':
-      return { boardData: kazanData, objectives: randomSelection(objectives.kazan, 3) }
+      return kazanData
     case 'cnidaria':
-      return { boardData: cnidariaData, objectives: randomSelection(objectives.cnidaria, 3) }
+      return cnidariaData
     case 'northProylia':
-      return { boardData: northProyliaData, objectives: randomSelection(objectives.northProylia, 3) }
+      return northProyliaData
     case 'xawskil':
-      return { boardData: xawskilData, objectives: randomSelection(objectives.xawskil, 3) }
+      return xawskilData
   }
 }
 
@@ -47,6 +49,7 @@ export interface SerializedGameState {
   activePlayer: SerializedPlayer
   turnHistory: SerializedTurnHistory
   objectives: SerializedObjective[]
+  explorerDeck: SerializedExplorerDeck
   investigateDeck: SerializedDeck
   treasureDeck: SerializedDeck
 }
@@ -73,15 +76,24 @@ export class GameState extends EventTarget {
   serializationTimeout = 0
   lastEmittedSerializedState = ''
 
-  constructor(boardName: BoardName) {
+  constructor(boardName: BoardName, serializedData?: SerializedGameState) {
     super()
 
     this.boardName = boardName
-    const setupData = getBoardData(boardName)
 
-    this.objectives = setupData.objectives.map((algorithm) => new Objective(algorithm, this))
+    if (serializedData) {
+      // restore game
+    } else {
+      this.newGame()
+    }
+  }
 
-    this.activePlayer = new Player(setupData.boardData, this)
+  restoreGame() {}
+
+  newGame() {
+    this.objectives = randomSelection(objectives[this.boardName], 3).map((algorithm) => new Objective(algorithm, this))
+
+    this.activePlayer = new Player(this)
     this.turnHistory = new TurnHistory(this)
 
     this.investigateDeck = new InvestigateDeck()
@@ -140,7 +152,7 @@ export class GameState extends EventTarget {
     const [nextCard] = this.explorerDeck.drawCards()
     this.currentExplorerCard = nextCard ?? null
 
-    if (nextCard) {
+    if (this.currentExplorerCard) {
       this.explorerDeck.discard(nextCard)
       this.turnHistory.saveCardFlip(nextCard.id)
       this.activePlayer.freeExploreQuantity = 0
@@ -219,9 +231,21 @@ export class GameState extends EventTarget {
       activePlayer: this.activePlayer as SerializedPlayer,
       turnHistory: this.turnHistory,
       objectives: this.objectives,
+      explorerDeck: this.explorerDeck,
       investigateDeck: this.investigateDeck,
       treasureDeck: this.treasureDeck,
     }
+  }
+
+  fromJSON(data: SerializedGameState) {
+    this.activePlayer = new Player(this, data.activePlayer)
+    this.turnHistory = new TurnHistory(this, data.turnHistory)
+    this.objectives = data.objectives.map(
+      (od) => new Objective(objectives[this.boardName].find((o) => od.id === o.id)!, this),
+    )
+    this.explorerDeck = new ExplorerDeck(data.explorerDeck)
+    this.investigateDeck = new InvestigateDeck(data.investigateDeck)
+    this.treasureDeck = new TreasureDeck(data.treasureDeck)
   }
 }
 
@@ -245,8 +269,15 @@ export class TurnHistory {
   era3: string[] = []
   era4: string[] = []
 
-  constructor(gameState: GameState) {
+  constructor(gameState: GameState, serializedData?: SerializedTurnHistory) {
     this.gameState = gameState
+
+    if (serializedData) {
+      this.era1 = serializedData.era1
+      this.era2 = serializedData.era2
+      this.era3 = serializedData.era3
+      this.era4 = serializedData.era4
+    }
   }
 
   saveCardFlip(id: string) {
@@ -275,7 +306,7 @@ export class TurnHistory {
 export interface SerializedPlayer {
   moveHistory: SerializedMoveHistory
   treasureCards: SerializedHand
-  investigateCardCandidates: [SerializedCard, SerializedCard]
+  investigateCardCandidates: [SerializedCard, SerializedCard] | null
   investigateCards: SerializedHand
   era4SelectedInvestigateCard: SerializedCard | null
 }
@@ -321,12 +352,21 @@ export class Player extends EventTarget {
 
   freeExploreQuantity = 0 //-1 means infinite
 
-  constructor(boardData: BoardData, gameState: GameState) {
+  constructor(gameState: GameState, serializedData?: SerializedPlayer) {
     super()
 
     this.gameState = gameState
-    this.board = new Board(boardData, this, gameState)
-    this.moveHistory = new MoveHistory(this, gameState)
+    this.board = new Board(getBoardData(this.gameState.boardName), this, this.gameState)
+
+    if (serializedData) {
+      this.fromJSON(serializedData)
+    } else {
+      this.newGame()
+    }
+  }
+
+  newGame() {
+    this.moveHistory = new MoveHistory(this, this.gameState)
 
     this.treasureCards = new TreasureHand(this)
     this.investigateCards = new InvestigateHand(this)
@@ -458,6 +498,21 @@ export class Player extends EventTarget {
       era4SelectedInvestigateCard: this.era4SelectedInvestigateCard,
     }
   }
+
+  fromJSON(data: SerializedPlayer) {
+    this.moveHistory = new MoveHistory(this, this.gameState, data.moveHistory)
+    this.treasureCards = new TreasureHand(this, data.treasureCards)
+    this.investigateCards = new InvestigateHand(this, data.investigateCards)
+    this.investigateCardCandidates = data.investigateCardCandidates
+      ? [
+          new InvestigateCard(investigateCardDataLookup[data.investigateCardCandidates[0].id]),
+          new InvestigateCard(investigateCardDataLookup[data.investigateCardCandidates[1].id]),
+        ]
+      : null
+    this.era4SelectedInvestigateCard = data.era4SelectedInvestigateCard
+      ? new InvestigateCard(investigateCardDataLookup[data.era4SelectedInvestigateCard.id])
+      : null
+  }
 }
 
 export interface SerializedMove {
@@ -465,8 +520,8 @@ export interface SerializedMove {
   hex?: SerializedHex
   tradingHex?: SerializedHex
   era?: number
-  chosenCard: SerializedCard
-  discardedCard: SerializedCard
+  chosenCard?: SerializedCard
+  discardedCard?: SerializedCard
 }
 
 /**
@@ -534,48 +589,69 @@ export class MoveHistory {
   gameState: GameState
   player: Player
 
-  constructor(player: Player, gameState: GameState) {
+  constructor(player: Player, gameState: GameState, serializedData?: SerializedMoveHistory) {
     this.player = player
     this.gameState = gameState
+
+    if (serializedData) {
+      this.currentMoves = serializedData.currentMoves.map((sm) => this.moveFromJSON(sm))
+    }
   }
 
-  doMove(move: Move) {
-    this.currentMoves.push(move)
+  moveFromJSON(sm: SerializedMove) {
+    const move = {
+      action: sm.action,
+    } as Move
+
+    switch (move.action) {
+      case 'cover-tradepost':
+        if (sm.tradingHex) {
+          move.tradingHex = this.player.board.getHex(sm.tradingHex.row, sm.tradingHex.column)!
+        }
+      case 'explore':
+      case 'freely-explore':
+      case 'choose-trade-route':
+      case 'choose-village':
+      case 'discover-tower':
+      case 'discover-crystal':
+      case 'discover-land':
+        if (sm.hex) {
+          move.hex = this.player.board.getHex(sm.hex.row, sm.hex.column)!
+        }
+        break
+      case 'choose-investigate-card-reuse':
+        if (sm.era != null) {
+          move.era = sm.era
+        }
+        break
+      case 'choose-investigate-card':
+        if (sm.chosenCard) {
+          move.chosenCard = new InvestigateCard(investigateCardDataLookup[sm.chosenCard.id])
+        }
+        if (sm.discardedCard) {
+          move.discardedCard = new InvestigateCard(investigateCardDataLookup[sm.discardedCard.id])
+        }
+      case 'advance-card-phase':
+      case 'draw-treasure':
+      default:
+        break
+    }
+
+    return move
+  }
+
+  doMove(move: Move, replaying = false) {
+    if (!replaying) {
+      this.currentMoves.push(move)
+    }
 
     switch (move.action) {
       case 'advance-card-phase':
         this.player.cardPhase++
-        this.player.message =
-          this.gameState.currentExplorerCard?.rules(this.player)?.[this.player.cardPhase]?.message ?? 'Explore!'
         break
       case 'explore':
+      case 'freely-explore':
         move.hex.explore()
-
-        if (
-          this.gameState.currentCardRules?.[this.player.cardPhase + 1] &&
-          this.gameState.currentCardRules?.[this.player.cardPhase].limit ===
-            this.getPlacedHexes()[this.player.cardPhase].size
-        ) {
-          this.doMove({ action: 'advance-card-phase' })
-        }
-
-        // auto-handle actions that don't require user decisions
-        if (!move.hex.isCovered) {
-          if (move.hex.isTower) {
-            this.doMove({ action: 'discover-tower', hex: move.hex })
-          }
-
-          if (move.hex.crystalValue) {
-            this.doMove({ action: 'discover-crystal', hex: move.hex })
-          }
-        }
-
-        if (!move.hex.land?.hasBeenReached) {
-          this.doMove({ action: 'discover-land', hex: move.hex })
-        }
-
-        this.player.checkForUserDecision()
-
         break
       case 'discover-tower':
         move.hex.isCovered = true
@@ -607,18 +683,97 @@ export class MoveHistory {
         }
 
         break
-      case 'freely-explore':
-        move.hex.explore()
+      case 'choose-trade-route':
+        this.player.chosenRoute.push(move.hex)
+        break
+      case 'cover-tradepost':
+        move.hex.isCovered = true
 
+        //Add coins that were just collected
+        this.player.coins += this.player.chosenRoute[0].tradingPostValue * this.player.chosenRoute[1].tradingPostValue
+
+        //clear the chosen route
+        this.player.finalizedTradingRoutes.push(this.player.chosenRoute)
+        this.player.chosenRoute = []
+        break
+      case 'choose-village':
+        move.hex.isVillage = true
+
+        this.player.coins += this.gameState.era + 1
+        this.player.regionForVillage = undefined
+        break
+      case 'draw-treasure':
+        move.hex.isCovered = true
+        break
+      case 'choose-investigate-card':
+      case 'choose-investigate-card-reuse':
+        // nothing more to do, cards are already drawn and evaluated
+        break
+    }
+
+    if (!replaying) {
+      this.adjustGameStateFromMove(move)
+
+      this.gameState.emitStateChange()
+    }
+  }
+
+  /**
+   * This method specifically handles game state changes that follow from a given state after a move.
+   * This is relevant only to the active player _during play_, not for opponents or restoring game state.
+   */
+  adjustGameStateFromMove(move: Move) {
+    switch (move.action) {
+      case 'advance-card-phase':
+        this.player.message =
+          this.gameState.currentExplorerCard?.rules(this.player)?.[this.player.cardPhase]?.message ?? 'Explore!'
+        break
+      case 'explore':
+        //Finds trading routes every time a hex is explored
+        this.player.connectedTradePosts = move.hex.getConnectedTradingPosts()
+
+        if (
+          this.gameState.currentCardRules?.[this.player.cardPhase + 1] &&
+          this.gameState.currentCardRules?.[this.player.cardPhase].limit ===
+            this.getPlacedHexes()[this.player.cardPhase].size
+        ) {
+          this.doMove({ action: 'advance-card-phase' })
+        }
+
+        // auto-handle actions that don't require user decisions
+        if (!move.hex.isCovered) {
+          if (move.hex.isTower) {
+            this.doMove({ action: 'discover-tower', hex: move.hex })
+          }
+
+          if (move.hex.crystalValue) {
+            this.doMove({ action: 'discover-crystal', hex: move.hex })
+          }
+
+          if (move.hex.isRuin) {
+            this.player.treasureCardHex = move.hex
+          }
+        }
+
+        if (!move.hex.land?.hasBeenReached) {
+          this.doMove({ action: 'discover-land', hex: move.hex })
+        }
+
+        this.player.checkForUserDecision()
+        break
+      case 'freely-explore':
         if (this.player.freeExploreQuantity > 0) {
           this.player.freeExploreQuantity--
         }
 
         this.player.checkForUserDecision()
         break
+      case 'discover-tower':
+      case 'discover-crystal':
+      case 'discover-land':
+        // no extra game logic
+        break
       case 'choose-trade-route':
-        this.player.chosenRoute.push(move.hex)
-
         if (this.player.chosenRoute.length === 2) {
           this.player.enterTradingMode()
         } else {
@@ -627,23 +782,6 @@ export class MoveHistory {
 
         break
       case 'cover-tradepost':
-        move.hex.isCovered = true
-
-        //records the trading hex for undoing purposes
-        if (this.player.chosenRoute[0] === move.hex) {
-          move.tradingHex = this.player.chosenRoute[1]
-        } else {
-          move.tradingHex = this.player.chosenRoute[0]
-        }
-
-        //Adds coins that were just collected
-        const coins = this.player.chosenRoute[0].tradingPostValue * this.player.chosenRoute[1].tradingPostValue
-        this.player.coins += coins
-
-        //clears the chosen route
-        this.player.finalizedTradingRoutes.push(this.player.chosenRoute)
-        this.player.chosenRoute = []
-
         //removes the hex that was just covered
         const index = this.player.connectedTradePosts.indexOf(move.hex)
         this.player.connectedTradePosts.splice(index, 1)
@@ -658,11 +796,6 @@ export class MoveHistory {
 
         break
       case 'choose-village':
-        move.hex.isVillage = true
-
-        this.player.coins += this.gameState.era + 1
-        this.player.regionForVillage = undefined
-
         this.player.checkForUserDecision()
 
         break
@@ -693,7 +826,6 @@ export class MoveHistory {
 
         //Unassigns the treasure card hex when all treasure cards have been drawn
         if (this.player.treasureCardsToDraw === 0 && this.player.treasureCardHex) {
-          this.player.treasureCardHex.isCovered = true
           this.player.treasureCardHex = undefined
         }
 
@@ -712,12 +844,10 @@ export class MoveHistory {
         this.player.enterExploringMode()
         break
       case 'choose-investigate-card-reuse':
-        this.player.era4SelectedInvestigateCard = this.player.investigateCards[move.era]
+        this.player.era4SelectedInvestigateCard = this.player.investigateCards.keptCards[move.era]
         this.player.enterExploringMode()
         break
     }
-
-    this.gameState.emitStateChange()
   }
 
   undoMove() {
@@ -737,6 +867,13 @@ export class MoveHistory {
           break
         case 'explore':
           undoing.hex.unexplore()
+
+          if (undoing.hex.isRuin) {
+            this.player.treasureCardHex = undefined
+          }
+
+          this.player.chosenRoute = []
+          this.player.connectedTradePosts = []
 
           this.player.checkForUserDecision()
           break
@@ -836,8 +973,6 @@ export class MoveHistory {
           //This means it's not technically possible to hit this switch case.
           //But if you do hit this case, there will be a funny error message in the console.
           console.error('How did we get here?!?')
-          this.player.treasureCardHex = undoing.hex
-          this.player.enterDrawTreasureMode()
           break
         case 'choose-investigate-card':
           this.player.investigateCardCandidates = this.player.investigateCards.undoCardSelection()
