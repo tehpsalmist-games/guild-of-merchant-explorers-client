@@ -23,6 +23,7 @@ import { ScoreBoard } from './ScoreBoard'
 import { northProyliaData } from '../data/boards/north-proylia'
 import { xawskilData } from '../data/boards/xawskil'
 import { investigateCardDataLookup } from '../data/cards/investigate-cards'
+import { cardFlipSFX, crystalSFX, placeBlockSFX, towerSFX, tradeSFX, treasureSFX, villageSFX } from '../audio'
 
 export type BoardName = 'aghon' | 'avenia' | 'kazan' | 'cnidaria' | 'northProylia' | 'xawskil'
 
@@ -649,6 +650,7 @@ export class MoveHistory {
       case 'explore':
       case 'freely-explore':
         move.hex.explore()
+        this.playAudio(placeBlockSFX, replaying)
         break
       case 'discover-tower':
         move.hex.isCovered = true
@@ -663,6 +665,8 @@ export class MoveHistory {
         } else if (towers.length === 4) {
           this.player.coins += 14
         }
+
+        this.playAudio(towerSFX, replaying)
         break
       case 'discover-crystal':
         move.hex.isCovered = true
@@ -673,6 +677,8 @@ export class MoveHistory {
           .reduce((sum, h) => sum + h.crystalValue, 0)
 
         this.player.coins += crystalValueSum
+
+        this.playAudio(crystalSFX, replaying)
         break
       case 'discover-land':
         if (move.hex.land) {
@@ -692,15 +698,19 @@ export class MoveHistory {
         //clear the chosen route
         this.player.finalizedTradingRoutes.push(this.player.chosenRoute)
         this.player.chosenRoute = []
+        this.playAudio(tradeSFX, replaying)
         break
       case 'choose-village':
         move.hex.isVillage = true
 
         this.player.coins += this.gameState.era + 1
         this.player.regionForVillage = undefined
+
+        this.playAudio(villageSFX, replaying)
         break
       case 'draw-treasure':
         move.hex.isCovered = true
+        this.playAudio(treasureSFX, replaying)
         break
       case 'choose-investigate-card':
       case 'choose-investigate-card-reuse':
@@ -1034,6 +1044,17 @@ export class MoveHistory {
 
   get size() {
     return this.currentMoves.length
+  }
+
+  playAudio(sfx: HTMLAudioElement, replaying: boolean) {
+    if (replaying) {
+      return
+    }
+
+    //restarts the audio if it's already playing
+    sfx.currentTime = 0
+
+    sfx.play()
   }
 
   lockInMoveState() {
