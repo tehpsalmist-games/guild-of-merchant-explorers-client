@@ -106,6 +106,8 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
     ],
   })
 
+  const explorerMapDiv = document.getElementById('explorer-map')
+
   return (
     <>
       <path
@@ -123,7 +125,8 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
         {...props}
       />
       {/* Floating Element for Piece Images */}
-      {hasPiece &&
+      {explorerMapDiv &&
+        hasPiece &&
         createPortal(
           <div
             ref={refs.setFloating}
@@ -173,7 +176,7 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
               )}
             </div>
           </div>,
-          document.getElementById('explorer-map')!,
+          explorerMapDiv,
         )}
     </>
   )

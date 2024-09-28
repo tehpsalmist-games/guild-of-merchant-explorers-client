@@ -44,7 +44,7 @@ export const ExplorerMap = ({ className = '', ...props }: ExplorerMapProps) => {
       <div
         id="explorer-map"
         ref={boardRef}
-        className="aghon relative mx-auto bg-cover"
+        className="relative mx-auto bg-cover"
         style={{
           backgroundImage: `url(${gameState.activePlayer.board.imageURL})`,
           aspectRatio: `${gameState.activePlayer.board.width}/${gameState.activePlayer.board.height}`,

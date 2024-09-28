@@ -54,7 +54,13 @@ export const App = ({ className = '', ...props }: AppProps) => {
     )
 
   return (
-    <GameStateProvider resetGame={() => setBoardName('')} name={boardName}>
+    <GameStateProvider
+      resetGame={() => {
+        localStorage.removeItem('gome-serialized-game-state')
+        setBoardName('')
+      }}
+      name={boardName}
+    >
       <GameBoard className={`${className}`} {...props} />
     </GameStateProvider>
   )

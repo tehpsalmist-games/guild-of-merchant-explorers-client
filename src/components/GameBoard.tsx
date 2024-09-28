@@ -41,7 +41,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
   useEffect(() => {
     const stateListener = () => updateState((s) => ++s)
     const serializationListener = (e: CustomEvent<{ serializedData: string }>) => {
-      console.log('serialized:', JSON.parse(e.detail.serializedData))
+      localStorage.setItem('gome-serialized-game-state', e.detail.serializedData)
     }
 
     gameState.addEventListener('onstatechange', stateListener)
