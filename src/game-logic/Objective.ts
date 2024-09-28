@@ -392,7 +392,7 @@ export class Objective {
           return ah?.crystalValue
         case 'border':
           // maps with this objective have no interior empty spaces, so this check is thorough to determine border (avenia 3)
-          return ah === null
+          return !ah
         case 'north-border':
           // no interior empties on this map either (north proylia 5)
           // index 2 is the top hex
