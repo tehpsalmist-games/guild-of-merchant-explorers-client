@@ -64,19 +64,19 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
       case 'exploring':
         if (!hex.isExplorable()) return
 
-        return gameState.activePlayer.moveHistory.doMove({ action: 'explore', hex })
+        return gameState.activePlayer.selectMove({ action: 'explore', hex })
       case 'free-exploring':
         if (!hex.isExplorable()) return
 
-        return gameState.activePlayer.moveHistory.doMove({ action: 'freely-explore', hex })
+        return gameState.activePlayer.selectMove({ action: 'freely-explore', hex })
       case 'choosing-village':
         if (!isVillageCandidate) return
 
-        return gameState.activePlayer.moveHistory.doMove({ action: 'choose-village', hex })
+        return gameState.activePlayer.selectMove({ action: 'choose-village', hex })
       case 'choosing-trade-route':
         if (!isTradeRouteCandidate) return
 
-        return gameState.activePlayer.moveHistory.doMove({ action: 'choose-trade-route', hex })
+        return gameState.activePlayer.selectMove({ action: 'choose-trade-route', hex })
       case 'trading':
         if (!isTradeCandidate) return
 
@@ -84,7 +84,7 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
 
         if (!tradingHex) return
 
-        return gameState.activePlayer.moveHistory.doMove({
+        return gameState.activePlayer.selectMove({
           action: 'cover-tradepost',
           hex,
           tradingHex,

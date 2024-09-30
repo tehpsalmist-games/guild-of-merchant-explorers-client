@@ -1,10 +1,7 @@
 import React, { ReactNode, createContext, useContext, useMemo } from 'react'
 import { BoardName, GameState } from '../game-logic/GameState'
 
-const GameStateContext = createContext<{ resetGame(): void; gameState: GameState }>({
-  resetGame() {},
-  gameState: new GameState('aghon'),
-})
+const GameStateContext = createContext<{ resetGame(): void; gameState: GameState }>({} as any)
 
 export interface GameStateProviderProps {
   children: ReactNode
@@ -13,7 +10,28 @@ export interface GameStateProviderProps {
 }
 
 export const GameStateProvider = ({ children, name, resetGame }: GameStateProviderProps) => {
-  const gameState = useMemo(() => new GameState(name), [name])
+  const gameState = useMemo(() => {
+    const savedState = localStorage.getItem('gome-serialized-game-state')
+
+    if (savedState) {
+      try {
+        const parsedState = JSON.parse(savedState)
+        // const restoredGameState = new GameState(name, parsedState)
+        console.log(parsedState)
+        // restoredGameState.activePlayer.replayMoves()
+
+        // return restoredGameState
+      } catch (e) {
+        console.error('bad game state:', e, savedState)
+        // localStorage.removeItem('gome-serialized-game-state')
+      }
+    }
+
+    return new GameState(name)
+  }, [name])
+
+  if (!gameState) return null
+
   return <GameStateContext.Provider value={{ gameState, resetGame }}>{children}</GameStateContext.Provider>
 }
 

@@ -16,11 +16,9 @@ export const EraCards = ({ className = '', ...props }: EraCardsProps) => {
     }
   })
 
-  const slots = [
-    gameState.activePlayer.investigateCards[0],
-    gameState.activePlayer.investigateCards[1],
-    gameState.activePlayer.investigateCards[2],
-  ]
+  const chosenCards = gameState.activePlayer.investigateCards.chosenCards
+
+  const slots = [chosenCards[0], chosenCards[1], chosenCards[2]]
 
   if (!gameState.activePlayer.investigateCards.size) {
     return null
@@ -38,7 +36,7 @@ export const EraCards = ({ className = '', ...props }: EraCardsProps) => {
     >
       {slots.map((card, i) =>
         card ? (
-          <img key={i} src={card.imageUrl.href} className="h-full max-h-1/4 rounded-2xl" />
+          <img key={i} src={card.card.imageUrl.href} className="h-full max-h-1/4 rounded-2xl" />
         ) : (
           <div key={i} className="h-full max-h-1/4" />
         ),

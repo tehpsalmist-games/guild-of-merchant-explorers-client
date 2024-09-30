@@ -172,3 +172,7 @@ export const getLaterExplorerList = (): ExplorerCardData[] => [
     },
   },
 ]
+
+export const explorerCardDataMapping = getInitialExplorerList()
+  .concat(getLaterExplorerList())
+  .reduce<Record<string, ExplorerCardData>>((map, cardData) => ({ ...map, [cardData.id]: cardData }), {})

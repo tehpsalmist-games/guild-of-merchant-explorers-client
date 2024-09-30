@@ -1,5 +1,5 @@
 import { Hex, Land, Terrain } from './Board'
-import { GameState, Player } from './GameState'
+import { GameState, Player, SerializedPlayer } from './GameState'
 
 type Operator = 'eq' | 'gte' | 'lte'
 type Position = 'adjacent' | 'on'
@@ -51,6 +51,11 @@ type ComplexAlgorithm = {
 
 export interface SerializedObjective {
   id: string
+  turnAndEraOfFirstAward: [number, number]
+  isFirstBlocked: boolean
+  isSecondBlocked: boolean
+  firstPlayers: SerializedPlayer[]
+  secondPlayers: SerializedPlayer[]
 }
 
 export interface ObjectiveData {
@@ -88,7 +93,7 @@ export class Objective {
   isFirstBlocked = false
   isSecondBlocked = false
 
-  constructor(data: ObjectiveData, gameState: GameState) {
+  constructor(data: ObjectiveData, gameState: GameState, serializedData?: SerializedObjective) {
     this.id = data.id
     this.gameState = gameState
 
@@ -98,6 +103,20 @@ export class Objective {
 
     if (data.simpleAlgorithm) this.simpleAlgorithm = data.simpleAlgorithm
     if (data.complexAlgorithm) this.complexAlgorithm = data.complexAlgorithm
+
+    if (serializedData) {
+      this.turnAndEraOfFirstAward = serializedData.turnAndEraOfFirstAward
+
+      this.isFirstBlocked = serializedData.isFirstBlocked
+      this.isSecondBlocked = serializedData.isSecondBlocked
+
+      this.firstPlayers = serializedData.firstPlayers
+        .map((fp) => this.gameState.players.find((p) => p.id === fp.id)!)
+        .filter(Boolean)
+      this.secondPlayers = serializedData.secondPlayers
+        .map((fp) => this.gameState.players.find((p) => p.id === fp.id)!)
+        .filter(Boolean)
+    }
   }
 
   isPlayerFirst() {
@@ -406,6 +425,11 @@ export class Objective {
   toJSON(): SerializedObjective {
     return {
       id: this.id,
+      turnAndEraOfFirstAward: this.turnAndEraOfFirstAward,
+      isFirstBlocked: this.isFirstBlocked,
+      isSecondBlocked: this.isSecondBlocked,
+      firstPlayers: this.firstPlayers,
+      secondPlayers: this.secondPlayers,
     }
   }
 }

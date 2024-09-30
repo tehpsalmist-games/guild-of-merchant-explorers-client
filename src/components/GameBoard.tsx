@@ -1,7 +1,7 @@
 import React, { ComponentProps, useEffect, useState } from 'react'
 import { useGameState } from '../hooks/useGameState'
 import { ExplorerMap } from './ExplorerMap'
-import { Button, Modal, useEventListener } from '@8thday/react'
+import { Button, Modal, toast, useEventListener } from '@8thday/react'
 import ChevronRightIcon from '@heroicons/react/24/solid/ChevronRightIcon'
 import ChevronLeftIcon from '@heroicons/react/24/solid/ChevronLeftIcon'
 import UTurnIcon from '@heroicons/react/24/solid/ArrowUturnLeftIcon'
@@ -10,6 +10,7 @@ import { coinImage, placeBlock, plankPanelHorizontal, treasureChestImage } from 
 import { EraLabel } from './EraLabel'
 import { ExplorerCardMat } from './ExplorerCardMat'
 import { ObjectiveCards } from './ObjectiveCards'
+import { PlayerMessage } from './PlayerMessage'
 
 export interface GameBoardProps extends ComponentProps<'main'> {}
 
@@ -31,7 +32,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
 
   useEventListener('keydown', (e) => {
     if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
-      gameState.activePlayer.moveHistory.undoMove()
+      gameState.activePlayer.selectUndo()
     }
     if (e.key === 'd') {
       setSideBarOpen((o) => !o)
@@ -61,15 +62,14 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
   }, [gameState.activePlayer])
 
   useEffect(() => {
-    if (
-      gameState.activePlayer.mode === 'choosing-investigate-card' ||
-      gameState.activePlayer.mode === 'choosing-investigate-card-reuse'
-    ) {
-      setInvestigateModalOpen(true)
-    }
-
-    if (gameState.activePlayer.mode === 'user-prompting' || gameState.activePlayer.mode === 'game-over') {
-      setUserPromptOpen(true)
+    switch (gameState.activePlayer.mode) {
+      case 'choosing-investigate-card':
+      case 'choosing-investigate-card-reuse':
+        return setInvestigateModalOpen(true)
+      case 'user-prompting':
+      case 'game-over':
+      case 'treasure-to-draw':
+        return setUserPromptOpen(true)
     }
   }, [gameState.activePlayer.mode])
 
@@ -124,35 +124,35 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
               </button>
             )}
             {gameState.activePlayer.mode === 'exploring' &&
-              gameState.currentCardRules &&
+              gameState.activePlayer.currentCardRules &&
               (!gameState.currentExplorerCard ||
-                (gameState.currentCardRules?.length ?? 1) - 1 === gameState.activePlayer.cardPhase) && (
+                (gameState.activePlayer.currentCardRules?.length ?? 1) - 1 === gameState.activePlayer.cardPhase) && (
                 <Button
                   className="mr-4 whitespace-nowrap"
                   variant={
                     gameState.activePlayer.moveHistory.getPlacedHexes()[gameState.activePlayer.cardPhase]?.size ===
-                      gameState.currentCardRules[gameState.activePlayer.cardPhase]?.limit ||
+                      gameState.activePlayer.currentCardRules[gameState.activePlayer.cardPhase]?.limit ||
                     gameState.activePlayer.board.getFlatHexes().every((h) => !h.isExplorable())
                       ? 'primary'
                       : 'dismissive'
                   }
-                  onClick={() => gameState.flipExplorerCard()}
+                  onClick={() => gameState.activePlayer.selectMove({ action: 'confirm-turn' })}
                 >
                   Next Card
                 </Button>
               )}
             {gameState.activePlayer.mode === 'exploring' &&
-              gameState.currentCardRules &&
-              (gameState.currentCardRules?.length ?? 1) - 1 !== gameState.activePlayer.cardPhase && (
+              gameState.activePlayer.currentCardRules &&
+              (gameState.activePlayer.currentCardRules?.length ?? 1) - 1 !== gameState.activePlayer.cardPhase && (
                 <Button
                   className="mr-4 whitespace-nowrap"
                   variant={
                     gameState.activePlayer.moveHistory.getPlacedHexes()[gameState.activePlayer.cardPhase]?.size ===
-                    gameState.currentCardRules[gameState.activePlayer.cardPhase]?.limit
+                    gameState.activePlayer.currentCardRules[gameState.activePlayer.cardPhase]?.limit
                       ? 'primary'
                       : 'dismissive'
                   }
-                  onClick={() => gameState.activePlayer.enterNextCardPhaseMode()}
+                  onClick={() => gameState.activePlayer.selectMove({ action: 'advance-card-phase' })}
                 >
                   Next Phase
                 </Button>
@@ -172,7 +172,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                 className="mr-4"
                 variant="dismissive"
                 PreIcon={UTurnIcon}
-                onClick={() => gameState.activePlayer.moveHistory.undoMove()}
+                onClick={() => gameState.activePlayer.selectUndo()}
               >
                 Undo
               </Button>
@@ -191,9 +191,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
           </div>
         </div>
       </div>
-      <div className="fixed bottom-24 left-1/2 z-50 mt-2 w-max max-w-[95vw] -translate-x-1/2 rounded bg-slate-900/50 p-2 text-lg font-bold text-white">
-        {gameState.activePlayer.message}
-      </div>
+      <PlayerMessage className="fixed bottom-24 left-1/2 z-50 mt-2 w-max max-w-[95vw] -translate-x-1/2 rounded bg-slate-900/50 p-2 text-lg font-bold text-white" />
       <main className={`${className} game-board-grid relative min-h-screen w-full`} {...props}>
         <ExplorerMap className="row-start-2" />
         <div
@@ -206,10 +204,10 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
           <div className="relative flex h-full flex-col items-center gap-2 overflow-y-auto p-2 text-white">
             <div className="flex-center sticky top-0 min-h-12 w-full gap-2 py-2">
               {gameState.activePlayer.moveHistory.size > 1 && (
-                <Button onClick={() => gameState.activePlayer.moveHistory.undoAllMoves()}>Reset Moves</Button>
+                <Button onClick={() => gameState.activePlayer.selectUndo(true)}>Reset Moves</Button>
               )}
               {gameState.activePlayer.moveHistory.size > 0 && (
-                <Button onClick={() => gameState.activePlayer.moveHistory.undoMove()}>Undo Move</Button>
+                <Button onClick={() => gameState.activePlayer.selectUndo()}>Undo Move</Button>
               )}
             </div>
             <div className="p-2 text-center text-xl">
@@ -273,23 +271,29 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
           ></Button>
         </div>
       </main>
-      {gameState.activePlayer.mode === 'user-prompting' && userPromptOpen && (
+      {['user-prompting', 'treasure-to-draw'].includes(gameState.activePlayer.mode) && userPromptOpen && (
         <Modal onClose={() => setUserPromptOpen(false)}>
           <div
             className="flex-center flex-col gap-4 p-2 text-white"
             style={{ backgroundImage: `url(${plankPanelHorizontal.href})` }}
           >
             <p>How would you like to proceed?</p>
-            {gameState.activePlayer.treasureCardHex && (
+            {gameState.activePlayer.treasureCardsToDraw > 0 && (
               <div className="flex-center flex-col">
                 <Button
                   variant="primary"
-                  onClick={() =>
-                    gameState.activePlayer.moveHistory.doMove({
+                  onClick={() => {
+                    const [treasureCard] = gameState.treasureDeck.drawCards()
+
+                    if (treasureCard.discard) {
+                      gameState.treasureDeck.discard(treasureCard)
+                    }
+
+                    gameState.activePlayer.selectMove({
                       action: 'draw-treasure',
-                      hex: gameState.activePlayer.treasureCardHex!,
+                      treasureCard,
                     })
-                  }
+                  }}
                 >
                   Draw Treasure
                 </Button>
@@ -297,19 +301,26 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
               </div>
             )}
             {gameState.activePlayer.connectedTradePosts.length > 1 && (
-              <Button variant="primary" onClick={() => gameState.activePlayer.enterPickingTradeRouteMode()}>
+              <Button
+                variant="primary"
+                onClick={() =>
+                  gameState.activePlayer.setMode(
+                    gameState.activePlayer.connectedTradePosts.length === 2 ? 'trading' : 'choosing-trade-route',
+                  )
+                }
+              >
                 Trade
               </Button>
             )}
             {gameState.activePlayer.regionForVillage && (
-              <Button variant="primary" onClick={() => gameState.activePlayer.enterVillageMode()}>
+              <Button variant="primary" onClick={() => gameState.activePlayer.setMode('choosing-village')}>
                 Place Village
               </Button>
             )}
             {gameState.activePlayer.moveHistory.currentMoves.length > 0 && (
               <Button
-                variant={gameState.activePlayer.treasureCardHex ? 'destructive' : 'dismissive'}
-                onClick={() => gameState.activePlayer.moveHistory.undoMove()}
+                variant={gameState.activePlayer.treasureCardsToDraw ? 'destructive' : 'dismissive'}
+                onClick={() => gameState.activePlayer.selectUndo()}
               >
                 Undo
               </Button>
@@ -327,14 +338,25 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
               {(gameState.era < 3
                 ? gameState.activePlayer.investigateCardCandidates
                 : gameState.activePlayer.investigateCards.keptCards
-              )?.map((candidate, index) => (
+              )?.map((candidate, index, cards) => (
                 <button
                   key={candidate.id}
                   onClick={() => {
                     if (gameState.era < 3) {
-                      gameState.activePlayer.chooseInvestigateCard(candidate)
+                      const discardedCard = cards.find((c) => c !== candidate)
+                      if (!discardedCard) {
+                        return toast.error({
+                          message: 'Error choosing Investigate Card',
+                          description: 'Please refresh the browser and try again.',
+                        })
+                      }
+                      gameState.activePlayer.selectMove({
+                        action: 'choose-investigate-card',
+                        chosenCard: candidate,
+                        discardedCard,
+                      })
                     } else {
-                      gameState.activePlayer.chooseInvestigateCardForReuse(index)
+                      gameState.activePlayer.selectMove({ action: 'choose-investigate-card-reuse', era: index })
                     }
                   }}
                 >
@@ -366,6 +388,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
           onClose={() => setUserPromptOpen(false)}
         >
           <div
+            key="div"
             className="flex-center flex-col gap-4 p-6 text-white"
             style={{ backgroundImage: `url(${plankPanelHorizontal.href})` }}
           >

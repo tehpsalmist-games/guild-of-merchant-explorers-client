@@ -1,4 +1,4 @@
-import { getInitialExplorerList, getLaterExplorerList } from '../data/cards/explorer-cards'
+import { explorerCardDataMapping, getInitialExplorerList, getLaterExplorerList } from '../data/cards/explorer-cards'
 import { investigateCardDataLookup, investigateCards } from '../data/cards/investigate-cards'
 import { treasureCardDataLookup, treasureCards } from '../data/cards/treasure-cards'
 import { Board, Terrain } from './Board'
@@ -11,7 +11,7 @@ export interface SerializedCard {
 export class Card {
   id: string
 
-  constructor({ id }: { id: string }) {
+  constructor({ id }: SerializedCard) {
     this.id = id
   }
 
@@ -146,19 +146,14 @@ export class ExplorerDeck extends Deck<ExplorerCard> {
   constructor(serializedData?: SerializedExplorerDeck) {
     const initialList = getInitialExplorerList()
 
-    const initialMap = initialList.reduce<Record<string, ExplorerCardData>>(
-      (cards, cardData) => ({ ...cards, [cardData.id]: cardData }),
-      {},
-    )
-
     const cards = serializedData
-      ? serializedData.cards.map((sc) => new ExplorerCard(initialMap[sc.id]))
+      ? serializedData.cards.map((sc) => new ExplorerCard(explorerCardDataMapping[sc.id]))
       : initialList.map((c) => new ExplorerCard(c))
 
     super(cards)
 
     if (serializedData) {
-      this.discarded = serializedData.discarded.map((sc) => new ExplorerCard(initialMap[sc.id]))
+      this.discarded = serializedData.discarded.map((sc) => new ExplorerCard(explorerCardDataMapping[sc.id]))
       this.laterCards = getLaterExplorerList()
         .filter((lcd) => serializedData.laterCards.some((sc) => sc.id === lcd.id))
         .map((lcd) => new ExplorerCard(lcd))
@@ -221,8 +216,18 @@ export class InvestigateDeck extends Deck<InvestigateCard> {
   }
 }
 
+type TreasureType =
+  | 'sandVillageBonus'
+  | 'grassVillageBonus'
+  | 'mountainVillageBonus'
+  | 'landVillageHalfBonus'
+  | 'towerBonus'
+  | 'placeBlock'
+  | 'twoCoins'
+  | 'jarMultiplier'
+
 export interface TreasureCardData {
-  type: string
+  type: TreasureType
   imageUrl: URL
   count: number
   //We can assume that if it needs to be discarded, it will be played immediately.
@@ -233,7 +238,7 @@ export interface TreasureCardData {
 }
 
 export class TreasureCard extends Card {
-  type: string
+  type: TreasureType
   imageUrl: URL
   //We can assume that if it needs to be discarded, it will be played immediately.
   //We can also assume that if it doesn't need to be discarded, it doesn't need to be played immediately.
@@ -350,6 +355,10 @@ export class InvestigateHand extends Hand<InvestigateCard> {
     if (serializedData) {
       this.fromJSON(serializedData)
     }
+  }
+
+  get chosenCards() {
+    return this.cards.filter((c) => !c.discarded)
   }
 
   undoCardSelection(): [InvestigateCard, InvestigateCard] {

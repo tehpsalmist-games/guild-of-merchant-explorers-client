@@ -223,11 +223,14 @@ export class Hex {
     this.isExplored = true
 
     if (this.coins) {
-      const bonus = this.board.gameState.currentExplorerCard.bonus(this.board.player)
+      const bonus = this.board.player.currentExplorerCard?.bonus(this.board.player)
       const multiplier = bonus?.type === 'coin' ? bonus.multiplier : 1
 
       this.board.player.coins += this.coins * multiplier
     }
+
+    //Finds trading routes every time a hex is explored
+    this.board.player.connectedTradePosts = this.getConnectedTradingPosts()
 
     if (this.region) {
       this.region.explore()
@@ -241,11 +244,14 @@ export class Hex {
     this.isExplored = false
 
     if (this.coins) {
-      const bonus = this.board.gameState.currentExplorerCard.bonus(this.board.player)
+      const bonus = this.board.player.currentExplorerCard?.bonus(this.board.player)
       const multiplier = bonus?.type === 'coin' ? bonus.multiplier : 1
 
       this.board.player.coins -= this.coins * multiplier
     }
+
+    // clear any connected trading posts
+    this.board.player.connectedTradePosts = []
 
     if (this.region) {
       this.region.unexplore()
@@ -253,7 +259,11 @@ export class Hex {
   }
 
   isExplorable() {
-    if (this.isExplored || this.board.hexContactIterator(this).every((h) => !h.isExplored)) {
+    if (
+      !this.board.player.currentExplorerCard ||
+      this.isExplored ||
+      this.board.hexContactIterator(this).every((h) => !h.isExplored)
+    ) {
       return false
     }
 
@@ -268,9 +278,9 @@ export class Hex {
     }
 
     const rules =
-      typeof this.board.gameState.currentExplorerCard.rules === 'function'
-        ? this.board.gameState.currentExplorerCard.rules(this.board.player)
-        : this.board.gameState.currentExplorerCard.rules
+      typeof this.board.player.currentExplorerCard.rules === 'function'
+        ? this.board.player.currentExplorerCard.rules(this.board.player)
+        : this.board.player.currentExplorerCard.rules
 
     const placedHexes = this.board.player.moveHistory.getPlacedHexes()
     const touchingHexes = this.board.hexContactIterator(this, true)
@@ -370,6 +380,7 @@ export class Hex {
     // must be in the same region as the initial placement
     if (rule.regionBound && placedHexes[phase][0] && placedHexes[phase][0].region !== this.region) {
       // console.log('region bound', rules, phase, placedHexes)
+      // This doesn't work! Fix if logic above!
       return false
     }
 
