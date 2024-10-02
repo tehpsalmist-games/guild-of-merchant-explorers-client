@@ -143,6 +143,9 @@ export class GameState extends EventTarget {
     if (this.era > 3) {
       this.activePlayer.addEndgameCoins()
 
+      // reset to an actual era
+      this.era--
+
       this.scoreBoard = new ScoreBoard(this.activePlayer)
     } else {
       // only wipe the board if we're going to a new era, otherwise leave it up for satisfactory reviewing
