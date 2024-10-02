@@ -16,18 +16,18 @@ export const GameStateProvider = ({ children, name, resetGame }: GameStateProvid
     if (savedState) {
       try {
         const parsedState = JSON.parse(savedState)
-        // const restoredGameState = new GameState(name, parsedState)
         console.log(parsedState)
-        // restoredGameState.activePlayer.replayMoves()
+        const restoredGameState = new GameState({ boardName: parsedState.boardName }, parsedState)
+        restoredGameState.activePlayer.replayMoves()
 
-        // return restoredGameState
+        return restoredGameState
       } catch (e) {
         console.error('bad game state:', e, savedState)
         // localStorage.removeItem('gome-serialized-game-state')
       }
     }
 
-    return new GameState(name)
+    return new GameState({ boardName: name, playerIds: ['solo'], activePlayerId: 'solo' })
   }, [name])
 
   if (!gameState) return null

@@ -394,14 +394,14 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
           >
             <h1>All Eras Complete!</h1>
 
-            {gameState.scoreBoard.stats.map((stat) => (
-              <div key={stat.name}>
-                <div className="flex-center gap-4">
+            {gameState.scoreBoard.stats.map((stat, i) => (
+              <div key={i}>
+                <div className="flex-center gap-4 text-gray-100">
                   {stat.image && <img className="max-h-8 max-w-8" src={stat.image.href} />}
-                  {stat.name && <p>{stat.name}</p>}
+                  {stat.name && <p className="text-lg">{stat.name}</p>}
                 </div>
-                <div className="flex-center gap-4">
-                  <p>
+                <div className="flex-center gap-4 font-semibold">
+                  <p className="text-xl">
                     {stat.visibleScore >= 0 ? stat.visibleScore : '-'}
                     {stat.visibleScore >= 0 && stat.maxScore ? ` / ${stat.maxScore}` : ''}
                   </p>

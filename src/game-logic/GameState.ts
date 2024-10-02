@@ -24,8 +24,9 @@ import { ScoreBoard } from './ScoreBoard'
 import { northProyliaData } from '../data/boards/north-proylia'
 import { xawskilData } from '../data/boards/xawskil'
 import { investigateCardDataLookup } from '../data/cards/investigate-cards'
-import { cardFlipSFX, crystalSFX, placeBlockSFX, towerSFX, tradeSFX, treasureSFX, villageSFX } from '../audio'
+import { crystalSFX, placeBlockSFX, towerSFX, tradeSFX } from '../audio'
 import { explorerCardDataMapping } from '../data/cards/explorer-cards'
+import { treasureCardDataLookup } from '../data/cards/treasure-cards'
 
 export type BoardName = 'aghon' | 'avenia' | 'kazan' | 'cnidaria' | 'northProylia' | 'xawskil'
 
@@ -61,6 +62,12 @@ export interface SerializedGameState {
   currentExplorerCard: SerializedCard | null
 }
 
+export interface GameInputs {
+  boardName: BoardName
+  playerIds?: string[]
+  activePlayerId?: string
+}
+
 export class GameState extends EventTarget {
   boardName: BoardName
 
@@ -88,7 +95,7 @@ export class GameState extends EventTarget {
 
   soloMode = true
 
-  constructor(boardName: BoardName, numberOfPlayers = 1, serializedData?: SerializedGameState) {
+  constructor({ boardName, playerIds, activePlayerId }: GameInputs, serializedData?: SerializedGameState) {
     super()
 
     if (serializedData) {
@@ -97,15 +104,27 @@ export class GameState extends EventTarget {
     } else {
       this.boardName = boardName
       this.newGame()
+
+      if (!playerIds || !activePlayerId) {
+        throw new Error('No players provided for this game!')
+      }
+
+      this.players = playerIds.map((id) => new Player(id, this))
+
+      const activePlayer = this.players.find((p) => p.id === activePlayerId)
+      if (!activePlayer) {
+        throw new Error('Active player not included in this game!')
+      }
+
+      this.activePlayer = activePlayer
+
+      // start game!
+      this.flipExplorerCard()
     }
   }
 
-  newGame(numberOfPlayers = 1) {
+  newGame() {
     this.objectives = randomSelection(objectives[this.boardName], 3).map((algorithm) => new Objective(algorithm, this))
-
-    // make this dynamic for actual multiplayer
-    this.players = [new Player('solo', this)]
-    this.activePlayer = this.players[0]
 
     this.turnHistory = new TurnHistory(this)
 
@@ -117,9 +136,6 @@ export class GameState extends EventTarget {
 
     this.treasureDeck = new TreasureDeck()
     this.treasureDeck.shuffle()
-
-    // start game!
-    this.flipExplorerCard()
   }
 
   startNextAge() {
@@ -132,7 +148,7 @@ export class GameState extends EventTarget {
       // only wipe the board if we're going to a new era, otherwise leave it up for satisfactory reviewing
       this.currentTurn = 0
       this.activePlayer.board.wipe()
-      this.activePlayer.freeExploreQuantity = 0
+
       this.explorerDeck.prepareForNextEra()
 
       this.flipExplorerCard()
@@ -276,7 +292,7 @@ export class GameState extends EventTarget {
     this.players = data.players.map((d) => new Player(d.id, this, d.moveHistory))
     const activePlayer = this.players.find((p) => p.id === data.activePlayer)
 
-    if (!activePlayer) throw new Error('Player data out of sync:')
+    if (!activePlayer) throw new Error(`Player data out of sync: id ${data.activePlayer}`)
 
     this.activePlayer = activePlayer
   }
@@ -363,6 +379,8 @@ export class Player extends EventTarget {
   replayableMoveHistory?: MoveHistory
   replaying = false
   replayingExplorerCard?: ExplorerCard
+  replayEra = 0
+  replayTurn = 0
 
   mode: PlayerMode = 'exploring'
 
@@ -411,6 +429,14 @@ export class Player extends EventTarget {
     this.investigateCards = new InvestigateHand(this)
   }
 
+  get era() {
+    return this.replaying ? this.replayEra ?? this.gameState.era : this.gameState.era
+  }
+
+  get currentTurn() {
+    return this.replaying ? this.replayTurn ?? this.gameState.currentTurn : this.gameState.currentTurn
+  }
+
   get currentExplorerCard(): ExplorerCard | null {
     if (this.replaying && this.replayingExplorerCard) {
       return this.replayingExplorerCard
@@ -428,7 +454,14 @@ export class Player extends EventTarget {
 
     // iterate through moves
     this.replayableMoveHistory?.historicalMoves.forEach((era, i) => {
+      if (!era.length) return
+
+      this.board.wipe()
+
+      this.replayEra = i
+
       era.forEach((turn, j) => {
+        this.replayTurn = j
         const cardId = this.gameState.turnHistory[`era${i + 1}`]?.[j]
 
         if (!cardId) {
@@ -437,7 +470,7 @@ export class Player extends EventTarget {
 
         this.replayingExplorerCard = new ExplorerCard(explorerCardDataMapping[cardId])
 
-        turn.forEach((move) => {
+        turn.forEach((move, k) => {
           this.moveHistory.doMove(move)
         })
       })
@@ -449,8 +482,10 @@ export class Player extends EventTarget {
       this.moveHistory.doMove(move)
     })
 
+    this.replaying = false
+
     // add up treasure card coins earned
-    this.coins = this.treasureCards.cards.filter((c) => c.card.type === 'twoCoins').length * 2
+    this.coins += this.treasureCards.cards.filter((c) => c.card.type === 'twoCoins').length * 2
 
     // add up objectives earned
     this.gameState.objectives.forEach((objective) => {
@@ -463,7 +498,6 @@ export class Player extends EventTarget {
       }
     })
 
-    this.replaying = false
     this.replayableMoveHistory = undefined
 
     this.gameState.emitStateChange()
@@ -494,11 +528,6 @@ export class Player extends EventTarget {
       case !hasTradePosts && !needsVillage && !hasTreasureCards:
         return this.setMode('exploring')
       case hasTradePosts && !needsVillage && !hasTreasureCards:
-        if (this.connectedTradePosts.length === 2) {
-          this.chosenRoute.push(this.connectedTradePosts[0], this.connectedTradePosts[1])
-          return this.setMode('trading')
-        }
-
         return this.setMode('choosing-trade-route')
       case !hasTradePosts && needsVillage && !hasTreasureCards:
         return this.setMode('choosing-village')
@@ -553,6 +582,7 @@ export interface SerializedMove {
   era?: number
   chosenCard?: SerializedCard
   discardedCard?: SerializedCard
+  treasureCard?: SerializedCard
 }
 
 /**
@@ -683,7 +713,9 @@ export class MoveHistory {
         }
         break
       case 'draw-treasure':
-        // should take in the card drawn
+        if (sm.treasureCard) {
+          move.treasureCard = new TreasureCard(treasureCardDataLookup[sm.treasureCard.id])
+        }
         break
       case 'advance-card-phase':
 
@@ -704,6 +736,10 @@ export class MoveHistory {
         this.player.cardPhase++
 
         break
+      case 'freely-explore':
+        if (this.player.freeExploreQuantity > 0) {
+          this.player.freeExploreQuantity--
+        }
       case 'explore':
         move.hex.explore()
         this.playAudio(placeBlockSFX)
@@ -731,6 +767,11 @@ export class MoveHistory {
           }
         }
 
+        if (this.player.connectedTradePosts.length === 2) {
+          nextMoves.push({ action: 'choose-trade-route', hex: this.player.connectedTradePosts[0] })
+          nextMoves.push({ action: 'choose-trade-route', hex: this.player.connectedTradePosts[1] })
+        }
+
         if (move.hex.land && !move.hex.land.hasBeenReached) {
           nextMoves.push({ action: 'discover-land', hex: move.hex, auto: true })
         }
@@ -743,14 +784,6 @@ export class MoveHistory {
             auto: true,
           })
         }
-
-        break
-      case 'freely-explore':
-        if (this.player.freeExploreQuantity > 0) {
-          this.player.freeExploreQuantity--
-        }
-
-        nextMoves.push({ action: 'explore', hex: move.hex, auto: true })
 
         break
       case 'discover-tower':
@@ -826,7 +859,7 @@ export class MoveHistory {
       case 'choose-village':
         move.hex.isVillage = true
 
-        this.player.coins += this.gameState.era + 1
+        this.player.coins += this.player.era + 1
         this.player.regionForVillage = undefined
 
         break
@@ -881,16 +914,13 @@ export class MoveHistory {
           this.player.cardPhase--
 
           break
+        case 'freely-explore':
+          this.player.freeExploreQuantity++
         case 'explore':
           undoing.hex.unexplore()
 
           this.player.chosenRoute = []
           this.player.connectedTradePosts = []
-
-          break
-        case 'freely-explore':
-          undoing.hex.unexplore()
-          this.player.freeExploreQuantity++
 
           break
         case 'discover-tower':
@@ -953,7 +983,7 @@ export class MoveHistory {
           break
         case 'choose-village':
           undoing.hex.isVillage = false
-          this.player.coins -= this.gameState.era + 1
+          this.player.coins -= this.player.era + 1
 
           //If there was only one village candidate, undoing the village placement should undo the explore action as well
           if (undoing.hex.region && undoing.hex.region.villageCandidates.length !== 1) {
@@ -1004,7 +1034,7 @@ export class MoveHistory {
    * deduce the placed hexes for the current turn from the move history
    */
   getPlacedHexes() {
-    const relevantMoves = (this.historicalMoves[this.gameState.era][this.gameState.currentTurn] || [])
+    const relevantMoves = (this.historicalMoves[this.player.era][this.player.currentTurn] || [])
       .concat(this.currentMoves)
       .filter((m) => m.action === 'explore' || m.action === 'advance-card-phase')
 
@@ -1052,17 +1082,15 @@ export class MoveHistory {
     // if they are still in play in the current moves
     const investigateCardChoice = this.currentMoves.find((m) => m.action === 'choose-investigate-card')
 
-    if (investigateCardChoice?.action === 'choose-investigate-card') {
+    if (investigateCardChoice?.action === 'choose-investigate-card' && !this.player.replaying) {
       this.gameState.investigateDeck.discard(investigateCardChoice.discardedCard)
     }
 
     // get any pre-existing moves (prior to treasure card draw, for example)
-    const preexistingTurnMoves = this.historicalMoves[this.gameState.era][this.gameState.currentTurn] || []
+    const preexistingTurnMoves = this.historicalMoves[this.player.era][this.player.currentTurn] || []
 
     // insert these moves in the corresponding era/turn slot of the historical state for replay purposes
-    this.historicalMoves[this.gameState.era][this.gameState.currentTurn] = preexistingTurnMoves.concat(
-      this.currentMoves,
-    )
+    this.historicalMoves[this.player.era][this.player.currentTurn] = preexistingTurnMoves.concat(this.currentMoves)
 
     // clear move state
     this.currentMoves = []

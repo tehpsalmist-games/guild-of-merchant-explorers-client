@@ -305,7 +305,6 @@ export interface SerializedHand {
 export class Hand<CardType extends Card> {
   player: Player
   cards: DrawnCard<CardType>[] = []
-  currentChoiceIndex = 0
 
   constructor(player: Player) {
     this.player = player
@@ -321,24 +320,6 @@ export class Hand<CardType extends Card> {
 
   addCard(card: CardType, discarded: boolean) {
     this.cards.push({ card, discarded })
-    this.currentChoiceIndex = this.cards.length
-  }
-
-  /**
-   * Useful for replaying former moves when reconstructing history
-   */
-  hasCardAlready() {
-    return !!this.cards[this.currentChoiceIndex]
-  }
-
-  useCurrentCard() {
-    const currentCard = this.cards[this.currentChoiceIndex]
-
-    if (currentCard) {
-      this.currentChoiceIndex++
-    }
-
-    return currentCard || null
   }
 
   toJSON(): SerializedHand {
@@ -371,8 +352,6 @@ export class InvestigateHand extends Hand<InvestigateCard> {
       discarded: c.discarded,
       card: new InvestigateCard(investigateCardDataLookup[c.card.id]),
     }))
-
-    this.currentChoiceIndex = 0
   }
 }
 
@@ -416,7 +395,5 @@ export class TreasureHand extends Hand<TreasureCard> {
       discarded: c.discarded,
       card: new TreasureCard(treasureCardDataLookup[c.card.id]),
     }))
-
-    this.currentChoiceIndex = 0
   }
 }
