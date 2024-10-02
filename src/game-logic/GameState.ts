@@ -290,8 +290,8 @@ export class GameState extends EventTarget {
 
     // must do this last to replay state properly
     this.players = data.players.map((d) => new Player(d.id, this, d.moveHistory))
-    const activePlayer = this.players.find((p) => p.id === data.activePlayer)
 
+    const activePlayer = this.players.find((p) => p.id === data.activePlayer)
     if (!activePlayer) throw new Error(`Player data out of sync: id ${data.activePlayer}`)
 
     this.activePlayer = activePlayer
@@ -452,15 +452,19 @@ export class Player extends EventTarget {
   replayMoves() {
     this.replaying = true
 
-    // iterate through moves
-    this.replayableMoveHistory?.historicalMoves.forEach((era, i) => {
-      if (!era.length) return
+    // replay each move
+    this.replayableMoveHistory?.historicalMoves.forEach((historicalEra, i) => {
+      // wipe the board if there are turns for this era, even if there are no moves registered yet in this era
+      if (this.gameState.turnHistory[`era${i + 1}`]?.[0]) {
+        this.board.wipe()
+      }
 
-      this.board.wipe()
+      // no moves in this era, nothing left to do
+      if (!historicalEra.length) return
 
       this.replayEra = i
 
-      era.forEach((turn, j) => {
+      historicalEra.forEach((historicalTurn, j) => {
         this.replayTurn = j
         const cardId = this.gameState.turnHistory[`era${i + 1}`]?.[j]
 
@@ -470,8 +474,8 @@ export class Player extends EventTarget {
 
         this.replayingExplorerCard = new ExplorerCard(explorerCardDataMapping[cardId])
 
-        turn.forEach((move, k) => {
-          this.moveHistory.doMove(move)
+        historicalTurn.forEach((historicalMove) => {
+          this.moveHistory.doMove(historicalMove)
         })
       })
     })
