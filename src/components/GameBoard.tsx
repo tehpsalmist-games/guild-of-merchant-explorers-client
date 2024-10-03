@@ -76,6 +76,11 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
     }
   }, [gameState.activePlayer.mode, gameState.gameOver])
 
+  const isEndOfPhase =
+    gameState.activePlayer.moveHistory.getPlacedHexes()[gameState.activePlayer.cardPhase]?.size ===
+    gameState.activePlayer.currentCardRules?.[gameState.activePlayer.cardPhase]?.limit
+  const noLegalMoves = isEndOfPhase || gameState.activePlayer.board.getFlatHexes().every((h) => !h.isExplorable())
+
   return (
     <>
       <div className="fixed top-0 z-30 h-16 w-full">
@@ -132,16 +137,17 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                 (gameState.activePlayer.currentCardRules?.length ?? 1) - 1 === gameState.activePlayer.cardPhase) && (
                 <Button
                   className="mr-4 whitespace-nowrap"
-                  variant={
-                    gameState.activePlayer.moveHistory.getPlacedHexes()[gameState.activePlayer.cardPhase]?.size ===
-                      gameState.activePlayer.currentCardRules[gameState.activePlayer.cardPhase]?.limit ||
-                    gameState.activePlayer.board.getFlatHexes().every((h) => !h.isExplorable())
-                      ? 'primary'
-                      : 'dismissive'
-                  }
-                  onClick={() => gameState.activePlayer.selectMove({ action: 'confirm-turn' })}
+                  variant={noLegalMoves ? 'primary' : 'dismissive'}
+                  onClick={() => {
+                    if (
+                      noLegalMoves ||
+                      confirm('There are legal moves left on the board, are you sure you want to end your turn?')
+                    ) {
+                      gameState.activePlayer.selectMove({ action: 'confirm-turn' })
+                    }
+                  }}
                 >
-                  Next Card
+                  {gameState.soloMode ? 'Next Card' : 'End Turn'}
                 </Button>
               )}
             {gameState.activePlayer.mode === 'exploring' &&
@@ -149,12 +155,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
               (gameState.activePlayer.currentCardRules?.length ?? 1) - 1 !== gameState.activePlayer.cardPhase && (
                 <Button
                   className="mr-4 whitespace-nowrap"
-                  variant={
-                    gameState.activePlayer.moveHistory.getPlacedHexes()[gameState.activePlayer.cardPhase]?.size ===
-                    gameState.activePlayer.currentCardRules[gameState.activePlayer.cardPhase]?.limit
-                      ? 'primary'
-                      : 'dismissive'
-                  }
+                  variant={isEndOfPhase ? 'primary' : 'dismissive'}
                   onClick={() => gameState.activePlayer.selectMove({ action: 'advance-card-phase' })}
                 >
                   Next Phase
