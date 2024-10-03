@@ -28,6 +28,14 @@ export class ScoreBoard {
 
   constructor(player: Player) {
     this.player = player
+  }
+
+  get itemLength() {
+    return this.stats.length
+  }
+
+  calculateStats() {
+    this.stats = []
 
     const hexes = this.player.board.getFlatHexes()
 
@@ -98,27 +106,24 @@ export class ScoreBoard {
     })
 
     this.stats.push({ image: coinImage, score: this.player.coins, visibleScore: -1 })
-
-    this.revealScore()
   }
 
-  get itemLength() {
-    return this.stats.length
-  }
+  async revealScore(dramatic = false) {
+    this.doneRevealing = false
+    this.player.gameState.emitStateChange()
 
-  async revealScore() {
     for (let i = 0; i < this.stats.length; i++) {
-      await sleep(1000)
+      if (dramatic) await sleep(1000)
 
       this.stats[i].visibleScore = 0
 
-      this.player.gameState.emitStateChange()
+      if (dramatic) this.player.gameState.emitStateChange()
 
       while (this.stats[i].visibleScore < this.stats[i].score) {
-        await sleep(this.stats[i].visibleScore > 15 ? (this.stats[i].visibleScore > 30 ? 10 : 50) : 100)
+        if (dramatic) await sleep(this.stats[i].visibleScore > 15 ? (this.stats[i].visibleScore > 30 ? 10 : 50) : 100)
 
         this.stats[i].visibleScore++
-        this.player.gameState.emitStateChange()
+        if (dramatic) this.player.gameState.emitStateChange()
       }
     }
 

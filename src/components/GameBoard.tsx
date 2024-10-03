@@ -62,16 +62,19 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
   }, [gameState.activePlayer])
 
   useEffect(() => {
+    if (gameState.gameOver) {
+      setUserPromptOpen(true)
+    }
+
     switch (gameState.activePlayer.mode) {
       case 'choosing-investigate-card':
       case 'choosing-investigate-card-reuse':
         return setInvestigateModalOpen(true)
       case 'user-prompting':
-      case 'game-over':
       case 'treasure-to-draw':
         return setUserPromptOpen(true)
     }
-  }, [gameState.activePlayer.mode])
+  }, [gameState.activePlayer.mode, gameState.gameOver])
 
   return (
     <>
@@ -157,7 +160,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                   Next Phase
                 </Button>
               )}
-            {gameState.activePlayer.mode === 'game-over' && (
+            {gameState.gameOver && (
               <Button className="mr-4 whitespace-nowrap" variant="primary" onClick={() => setUserPromptOpen(true)}>
                 Score Board
               </Button>
@@ -381,37 +384,44 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
           </Button>
         </Modal>
       )}
-      {gameState.activePlayer.mode === 'game-over' && userPromptOpen && gameState.scoreBoard && (
+      {gameState.gameOver && userPromptOpen && (
         <Modal
           className="rounded-none !p-0 shadow-2xl"
           bgClass="bg-transparent"
           onClose={() => setUserPromptOpen(false)}
         >
           <div
-            key="div"
-            className="flex-center flex-col gap-4 p-6 text-white"
-            style={{ backgroundImage: `url(${plankPanelHorizontal.href})` }}
+            className="grid min-w-[50vw] gap-4 py-4 text-white"
+            style={{
+              gridTemplateColumns: `repeat(${gameState.players.length}, auto)`,
+              gridAutoRows: 'auto',
+              backgroundImage: `url(${plankPanelHorizontal.href})`,
+            }}
           >
-            <h1>All Eras Complete!</h1>
-
-            {gameState.scoreBoard.stats.map((stat, i) => (
-              <div key={i}>
-                <div className="flex-center gap-4 text-gray-100">
-                  {stat.image && <img className="max-h-8 max-w-8" src={stat.image.href} />}
-                  {stat.name && <p className="text-lg">{stat.name}</p>}
-                </div>
-                <div className="flex-center gap-4 font-semibold">
-                  <p className="text-xl">
-                    {stat.visibleScore >= 0 ? stat.visibleScore : '-'}
-                    {stat.visibleScore >= 0 && stat.maxScore ? ` / ${stat.maxScore}` : ''}
-                  </p>
-                </div>
+            <h1 className="col-span-full w-full text-center">All Eras Complete!</h1>
+            {gameState.players.map((player) => (
+              <div key={player.id} className="flex-center flex-col gap-4 p-2">
+                {!gameState.soloMode && <h3>{player.id}</h3>}
+                {player.scoreBoard.stats.map((stat, i) => (
+                  <div key={i}>
+                    <div className="flex-center gap-4 text-gray-100">
+                      {stat.image && <img className="max-h-8 max-w-8" src={stat.image.href} />}
+                      {stat.name && <p className="text-lg">{stat.name}</p>}
+                    </div>
+                    <div className="flex-center gap-4 font-semibold">
+                      <p className="text-xl">
+                        {stat.visibleScore >= 0 ? stat.visibleScore : '-'}
+                        {stat.visibleScore >= 0 && stat.maxScore ? ` / ${stat.maxScore}` : ''}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
             ))}
             <Button
-              className="mt-8"
-              disabled={!gameState.scoreBoard.doneRevealing}
-              variant={gameState.scoreBoard.doneRevealing ? 'primary' : 'dismissive'}
+              className="col-span-full row-start-3 place-self-center"
+              disabled={!gameState.activePlayer.scoreBoard.doneRevealing}
+              variant={gameState.activePlayer.scoreBoard.doneRevealing ? 'primary' : 'dismissive'}
               onClick={resetGame}
             >
               New Game

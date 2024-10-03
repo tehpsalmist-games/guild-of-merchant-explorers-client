@@ -13,7 +13,6 @@ import {
   SerializedCard,
   SerializedDeck,
   SerializedExplorerDeck,
-  SerializedHand,
   TreasureCard,
   TreasureDeck,
   TreasureHand,
@@ -60,6 +59,7 @@ export interface SerializedGameState {
   currentTurn: number
   soloMode: boolean
   currentExplorerCard: SerializedCard | null
+  gameOver: boolean
 }
 
 export interface GameInputs {
@@ -71,12 +71,13 @@ export interface GameInputs {
 export class GameState extends EventTarget {
   boardName: BoardName
 
-  era = 0
-  currentTurn = 0
+  soloMode = true
 
-  players: Player[]
+  players: Player[] = []
   activePlayer: Player
 
+  era = 0
+  currentTurn = 0
   turnHistory: TurnHistory
 
   explorerDeck: ExplorerDeck
@@ -88,12 +89,10 @@ export class GameState extends EventTarget {
 
   treasureDeck: TreasureDeck
 
-  scoreBoard?: ScoreBoard
+  gameOver = false
 
   serializationTimeout = 0
   lastEmittedSerializedState = ''
-
-  soloMode = true
 
   constructor({ boardName, playerIds, activePlayerId }: GameInputs, serializedData?: SerializedGameState) {
     super()
@@ -141,12 +140,13 @@ export class GameState extends EventTarget {
   startNextAge() {
     this.era++
     if (this.era > 3) {
-      this.activePlayer.addEndgameCoins()
+      this.players.forEach((p) => p.addEndgameCoins())
 
-      // reset to an actual era
+      // reset to a valid era
       this.era--
 
-      this.scoreBoard = new ScoreBoard(this.activePlayer)
+      this.gameOver = true
+      this.tallyScores()
     } else {
       // only wipe the board if we're going to a new era, otherwise leave it up for satisfactory reviewing
       this.currentTurn = 0
@@ -254,6 +254,13 @@ export class GameState extends EventTarget {
     )
   }
 
+  tallyScores() {
+    for (const player of this.players) {
+      player.scoreBoard.calculateStats()
+      player.scoreBoard.revealScore(true)
+    }
+  }
+
   /**
    * JSON.stringify will use this method if available
    */
@@ -271,10 +278,18 @@ export class GameState extends EventTarget {
       currentTurn: this.currentTurn,
       soloMode: this.soloMode,
       currentExplorerCard: this.currentExplorerCard,
+      gameOver: this.gameOver,
     }
   }
 
   fromJSON(data: SerializedGameState) {
+    this.players = data.players.map((d) => new Player(d.id, this, d.moveHistory))
+
+    const activePlayer = this.players.find((p) => p.id === data.activePlayer)
+    if (!activePlayer) throw new Error(`Player data out of sync: id ${data.activePlayer}`)
+
+    this.activePlayer = activePlayer
+
     this.turnHistory = new TurnHistory(this, data.turnHistory)
     this.objectives = data.objectives.map(
       (od) => new Objective(objectives[this.boardName].find((o) => od.id === o.id)!, this, od),
@@ -291,13 +306,7 @@ export class GameState extends EventTarget {
       ? new ExplorerCard(explorerCardDataMapping[data.currentExplorerCard.id])
       : null
 
-    // must do this last to replay state properly
-    this.players = data.players.map((d) => new Player(d.id, this, d.moveHistory))
-
-    const activePlayer = this.players.find((p) => p.id === data.activePlayer)
-    if (!activePlayer) throw new Error(`Player data out of sync: id ${data.activePlayer}`)
-
-    this.activePlayer = activePlayer
+    this.gameOver = data.gameOver
   }
 }
 
@@ -370,7 +379,6 @@ export type PlayerMode =
   | 'choosing-trade-route'
   | 'trading'
   | 'clearing-history'
-  | 'game-over'
   | 'treasure-to-draw'
 
 export class Player extends EventTarget {
@@ -378,6 +386,7 @@ export class Player extends EventTarget {
   gameState: GameState
   board: Board
   moveHistory: MoveHistory
+  scoreBoard: ScoreBoard
 
   replayableMoveHistory?: MoveHistory
   replaying = false
@@ -414,6 +423,7 @@ export class Player extends EventTarget {
 
     this.gameState = gameState
     this.board = new Board(getBoardData(this.gameState.boardName), this, this.gameState)
+    this.scoreBoard = new ScoreBoard(this)
 
     this.replayableMoveHistory = new MoveHistory(this, this.gameState, serializedMoveHistory)
 
@@ -507,7 +517,7 @@ export class Player extends EventTarget {
 
     this.replayableMoveHistory = undefined
 
-    this.gameState.emitStateChange()
+    this.determinePlayerMode()
   }
 
   reportDone() {
@@ -522,8 +532,6 @@ export class Player extends EventTarget {
     const hasTreasureCards = this.treasureCardsToDraw > 0
 
     switch (true) {
-      case this.gameState.era > 3:
-        return this.setMode('game-over')
       case !!this.investigateCardCandidates:
         return this.setMode('choosing-investigate-card')
       case this.currentExplorerCard?.id === 'era-any' && !this.era4SelectedInvestigateCard:
@@ -590,6 +598,7 @@ export interface SerializedMove {
   chosenCard?: SerializedCard
   discardedCard?: SerializedCard
   treasureCard?: SerializedCard
+  auto?: boolean
 }
 
 /**
@@ -687,6 +696,7 @@ export class MoveHistory {
   moveFromJSON(sm: SerializedMove) {
     const move = {
       action: sm.action,
+      auto: sm.auto,
     } as Move
 
     switch (move.action) {

@@ -20,6 +20,8 @@ export const GameStateProvider = ({ children, name, resetGame }: GameStateProvid
         const restoredGameState = new GameState({ boardName: parsedState.boardName }, parsedState)
         restoredGameState.activePlayer.replayMoves()
 
+        if (restoredGameState.gameOver) restoredGameState.tallyScores()
+
         return restoredGameState
       } catch (e) {
         console.error('bad game state:', e, savedState)
