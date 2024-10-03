@@ -76,12 +76,12 @@ export const ObjectiveCards = ({ className = '', ...props }: ObjectiveCardsProps
             )}
             <div className="absolute left-1/4 top-1/2 grid h-1/6 -translate-y-1/2 grid-cols-2 gap-2">
               {card.firstPlayers.map((p) => (
-                <ExplorerBlock color={p.color} className="h-10" />
+                <ExplorerBlock key={p.id} color={p.color} className="h-10" />
               ))}
             </div>
             <div className="absolute right-1/4 top-1/2 grid h-1/6 -translate-y-1/2 grid-cols-2 gap-2">
               {card.secondPlayers.map((p) => (
-                <ExplorerBlock color={p.color} className="h-8" />
+                <ExplorerBlock key={p.id} color={p.color} className="h-8" />
               ))}
             </div>
           </div>

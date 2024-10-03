@@ -166,7 +166,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                 Score Board
               </Button>
             )}
-            {!userPromptOpen && gameState.activePlayer.mode === 'user-prompting' && (
+            {!userPromptOpen && ['user-prompting', 'treasure-to-draw'].includes(gameState.activePlayer.mode) && (
               <Button className="mr-2" variant="primary" onClick={() => setUserPromptOpen(true)}>
                 View Choices
               </Button>

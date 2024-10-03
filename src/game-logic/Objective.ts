@@ -158,6 +158,7 @@ export class Objective {
         p.coins += this.firstPlaceReward
 
         this.firstPlayers.push(p)
+        this.turnAndEraOfFirstAward = [this.gameState.era, this.gameState.currentTurn]
       } else {
         p.coins += this.secondPlaceReward
 
