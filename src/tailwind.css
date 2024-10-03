@@ -38,11 +38,7 @@ em {
 
 @layer components {
   .game-board-grid {
-    display: grid;
-    grid-template:
-      'controls' 4rem
-      'board   ' auto
-      / 1fr;
+    @apply grid grid-cols-1 pt-16;
   }
 }
 

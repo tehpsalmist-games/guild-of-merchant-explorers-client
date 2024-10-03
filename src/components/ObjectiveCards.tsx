@@ -1,8 +1,9 @@
 import clsx from 'clsx'
 import React, { ComponentProps, useEffect, useState } from 'react'
 import { useGameState } from '../hooks/useGameState'
-import { blockImage, era2Blocker, era3Blocker, eraAnyBlocker, treasureChestImage } from '../images'
+import { blockImage, era2Blocker, era3Blocker, eraAnyBlocker } from '../images'
 import { useEventListener } from '@8thday/react'
+import { ExplorerBlock } from './ExplorerBlock'
 
 export interface ObjectiveCardsProps extends ComponentProps<'div'> {}
 
@@ -19,10 +20,10 @@ export const ObjectiveCards = ({ className = '', ...props }: ObjectiveCardsProps
 
   useEffect(() => {
     const listener = () => setInView(true)
-    gameState.activePlayer.addEventListener('objective-achieved', listener)
+    gameState.players.forEach((p) => p.addEventListener('objective-achieved', listener))
 
-    return () => gameState.activePlayer.removeEventListener('objective-achieved', listener)
-  }, [gameState.activePlayer])
+    return () => gameState.players.forEach((p) => p.removeEventListener('objective-achieved', listener))
+  }, [gameState.players])
 
   return (
     <div
@@ -42,47 +43,47 @@ export const ObjectiveCards = ({ className = '', ...props }: ObjectiveCardsProps
               <img
                 src={era2Blocker.href}
                 alt="era 2 objective blocker"
-                className={clsx('left-1/5 absolute top-1/2 h-1/3')}
+                className={clsx('absolute left-1/5 top-1/2 h-1/3')}
               />
             )}
             {card.isSecondBlocked && i === 0 && (
               <img
                 src={era3Blocker.href}
                 alt="era 3 objective blocker"
-                className={clsx('right-1/5 absolute top-1/2 h-1/3')}
+                className={clsx('absolute right-1/5 top-1/2 h-1/3')}
               />
             )}
             {card.isFirstBlocked && i === 1 && (
               <img
                 src={era3Blocker.href}
                 alt="era 3 objective blocker"
-                className={clsx('left-1/5 absolute top-1/2 h-1/3')}
+                className={clsx('absolute left-1/5 top-1/2 h-1/3')}
               />
             )}
             {card.isSecondBlocked && i === 1 && (
               <img
                 src={eraAnyBlocker.href}
                 alt="era any objective blocker"
-                className={clsx('right-1/5 absolute top-1/2 h-1/3')}
+                className={clsx('absolute right-1/5 top-1/2 h-1/3')}
               />
             )}
             {card.isFirstBlocked && i === 2 && (
               <img
                 src={eraAnyBlocker.href}
                 alt="era any objective blocker"
-                className={clsx('left-1/5 absolute top-1/2 h-1/3')}
+                className={clsx('absolute left-1/5 top-1/2 h-1/3')}
               />
             )}
-            {card.firstPlayers.concat(card.secondPlayers).some((p) => p === gameState.activePlayer) && (
-              <img
-                src={blockImage.href}
-                alt="explorer block"
-                className={clsx(
-                  'absolute top-1/2 h-1/6 -translate-y-1/2 hue-rotate-[120deg] saturate-200',
-                  card.firstPlayers.includes(gameState.activePlayer) ? 'left-1/4 ' : 'right-1/4',
-                )}
-              />
-            )}
+            <div className="absolute left-1/4 top-1/2 grid h-1/6 -translate-y-1/2 grid-cols-2 gap-2">
+              {card.firstPlayers.map((p) => (
+                <ExplorerBlock color={p.color} className="h-10" />
+              ))}
+            </div>
+            <div className="absolute right-1/4 top-1/2 grid h-1/6 -translate-y-1/2 grid-cols-2 gap-2">
+              {card.secondPlayers.map((p) => (
+                <ExplorerBlock color={p.color} className="h-8" />
+              ))}
+            </div>
           </div>
         ) : (
           <div key={i} className="w-full max-w-1/4" />

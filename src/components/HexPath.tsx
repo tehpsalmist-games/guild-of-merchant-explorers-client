@@ -15,34 +15,33 @@ import {
 } from '../images'
 import { autoUpdate, offset, size, useFloating } from '@floating-ui/react-dom'
 import { createPortal } from 'react-dom'
+import { Player } from '../game-logic/GameState'
 
 export interface HexProps extends ComponentProps<'path'> {
   x: number
   y: number
   hex: Hex
+  player: Player
+  isActive: boolean
 }
 
-export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) => {
+export const HexPath = ({ className = '', id, x, y, hex, player, isActive, ...props }: HexProps) => {
   const { gameState } = useGameState()
 
   const [hovered, setHovered] = useState(false)
 
   // show/hide logic for game pieces
   const isVillageCandidate =
-    gameState.activePlayer.mode === 'choosing-village' &&
-    hex.region === gameState.activePlayer.regionForVillage &&
-    hex.isVillageCandidate
+    player.mode === 'choosing-village' && hex.region === player.regionForVillage && hex.isVillageCandidate
   const isTradeRouteCandidate =
-    gameState.activePlayer.mode === 'choosing-trade-route' &&
-    gameState.activePlayer.connectedTradePosts.includes(hex) &&
-    !gameState.activePlayer.chosenRoute.includes(hex)
-  const isSelectedTradeRoute =
-    gameState.activePlayer.mode === 'choosing-trade-route' && gameState.activePlayer.chosenRoute.includes(hex)
-  const isTradeCandidate = gameState.activePlayer.mode === 'trading' && gameState.activePlayer.chosenRoute.includes(hex)
+    player.mode === 'choosing-trade-route' &&
+    player.connectedTradePosts.includes(hex) &&
+    !player.chosenRoute.includes(hex)
+  const isSelectedTradeRoute = player.mode === 'choosing-trade-route' && player.chosenRoute.includes(hex)
+  const isTradeCandidate = player.mode === 'trading' && player.chosenRoute.includes(hex)
 
   const isExplorable =
-    (gameState.activePlayer.mode === 'exploring' || gameState.activePlayer.mode === 'free-exploring') &&
-    hex.isExplorable()
+    isActive && (player.mode === 'exploring' || player.mode === 'free-exploring') && hex.isExplorable()
 
   const hasReachedMark = gameState.boardName === 'xawskil' && hex.land?.hasBeenReached && hex === hex.land?.markableHex
 
@@ -60,31 +59,33 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
   const handleClick = () => {
     console.log(hex)
 
-    switch (gameState.activePlayer.mode) {
+    if (!isActive) return
+
+    switch (player.mode) {
       case 'exploring':
         if (!hex.isExplorable()) return
 
-        return gameState.activePlayer.selectMove({ action: 'explore', hex })
+        return player.selectMove({ action: 'explore', hex })
       case 'free-exploring':
         if (!hex.isExplorable()) return
 
-        return gameState.activePlayer.selectMove({ action: 'freely-explore', hex })
+        return player.selectMove({ action: 'freely-explore', hex })
       case 'choosing-village':
         if (!isVillageCandidate) return
 
-        return gameState.activePlayer.selectMove({ action: 'choose-village', hex })
+        return player.selectMove({ action: 'choose-village', hex })
       case 'choosing-trade-route':
         if (!isTradeRouteCandidate) return
 
-        return gameState.activePlayer.selectMove({ action: 'choose-trade-route', hex })
+        return player.selectMove({ action: 'choose-trade-route', hex })
       case 'trading':
         if (!isTradeCandidate) return
 
-        const tradingHex = gameState.activePlayer.chosenRoute.find((h) => h !== hex)
+        const tradingHex = player.chosenRoute.find((h) => h !== hex)
 
         if (!tradingHex) return
 
-        return gameState.activePlayer.selectMove({
+        return player.selectMove({
           action: 'cover-tradepost',
           hex,
           tradingHex,
@@ -106,7 +107,7 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
     ],
   })
 
-  const explorerMapDiv = document.getElementById('explorer-map')
+  const explorerMapDiv = document.getElementById(`explorer-map-${player.id.toLowerCase()}`)
 
   return (
     <>
@@ -166,13 +167,10 @@ export const HexPath = ({ className = '', id, x, y, hex, ...props }: HexProps) =
                 <img src={towerImage.href} className="absolute bottom-0 left-1/4 w-1/2" />
               )}
               {showBlock && (
-                <img src={blockImage.href} className="absolute inset-1/4 z-10 w-1/2 hue-rotate-[120deg] saturate-200" />
+                <img src={blockImage.href} className={clsx(player.color, 'absolute inset-1/4 z-10 w-1/2')} />
               )}
               {hex.isVillage && (
-                <img
-                  src={villageImage.href}
-                  className="absolute inset-1/4 z-10 w-1/2 hue-rotate-[120deg] saturate-200"
-                />
+                <img src={villageImage.href} className={clsx(player.color, 'absolute inset-1/4 z-10 w-1/2')} />
               )}
             </div>
           </div>,

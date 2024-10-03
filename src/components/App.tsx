@@ -1,55 +1,123 @@
-import React, { ComponentProps } from 'react'
-import { BoardName } from '../game-logic/GameState'
+import React, { ComponentProps, useState } from 'react'
+import { BoardName, PlayerInputs } from '../game-logic/GameState'
 import { GameStateProvider } from '../hooks/useGameState'
 import { GameBoard } from './GameBoard'
-import { useRememberedState } from '@8thday/react'
+import { Button, TextInput, useRememberedState } from '@8thday/react'
 import { aghonBoard, aveniaBoard, cnidariaBoard, kazanBoard, northProyliaBoard, xawskilBaseBoard } from '../images'
+import clsx from 'clsx'
+import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { ColorPicker } from './ColorPicker'
 
 export interface AppProps extends ComponentProps<'main'> {}
 
 export const App = ({ className = '', ...props }: AppProps) => {
   const [boardName, setBoardName] = useRememberedState<BoardName | ''>('gome-board-name', '')
+  const [playerData, setPlayerData] = useRememberedState<PlayerInputs[]>('gome-player-data', [{ id: '', color: '' }])
+  const [readyToPlay, setReadyToPlay] = useRememberedState('gome-ready-to-play', false)
 
-  if (!boardName)
+  const disabled = !boardName || !playerData?.length || playerData.some(({ id, color }) => !id || !color)
+  if (!readyToPlay || disabled)
     return (
-      <main className={`${className} grid grid-cols-auto-2 gap-4 p-4`} {...props}>
-        <h2 className="col-span-full text-center">Choose A Board To Play</h2>
-        <button
-          className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
-          onClick={() => setBoardName('aghon')}
+      <main className={clsx(className, 'flex flex-col items-center')} {...props}>
+        <h2 className="mb-4">Players</h2>
+        <div className="flex flex-col items-center gap-1">
+          {playerData.map(({ id, color }, i) => (
+            <div className="flex items-center gap-x-1" key={i}>
+              <TextInput
+                value={id}
+                onChange={(e) =>
+                  setPlayerData((pns) => pns.map((pn, pi) => (pi === i ? { ...pn, id: e.target.value } : pn)))
+                }
+                placeholder="Player Name"
+                required
+                collapseDescriptionArea
+              />
+              <ColorPicker
+                value={color}
+                disabledColors={playerData.map(({ color }) => color)}
+                onValueChange={(c) =>
+                  setPlayerData((pns) => pns.map((pn, pi) => (pi === i ? { ...pn, color: c } : pn)))
+                }
+              />
+              {playerData.length > 1 && (
+                <Button
+                  PreIcon={XMarkIcon}
+                  variant="dismissive"
+                  onClick={() => setPlayerData((pns) => pns.filter((_pn, pi) => pi !== i))}
+                />
+              )}
+            </div>
+          ))}
+          <Button
+            className="mt-4"
+            PreIcon={PlusIcon}
+            onClick={() => setPlayerData((p) => [...p, { color: '', id: '' }])}
+          >
+            Add Player
+          </Button>
+        </div>
+        <div
+          className={clsx(
+            className,
+            'grid gap-4 p-4',
+            boardName ? 'mx-auto max-w-[50vw] grid-cols-1 place-content-center' : 'grid-cols-auto-2',
+          )}
         >
-          <img className="h-full w-full" src={aghonBoard.href} />
-        </button>
-        <button
-          className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
-          onClick={() => setBoardName('avenia')}
-        >
-          <img className="h-full w-full" src={aveniaBoard.href} />
-        </button>
-        <button
-          className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
-          onClick={() => setBoardName('kazan')}
-        >
-          <img className="h-full w-full" src={kazanBoard.href} />
-        </button>
-        <button
-          className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
-          onClick={() => setBoardName('cnidaria')}
-        >
-          <img className="h-full w-full" src={cnidariaBoard.href} />
-        </button>
-        <button
-          className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
-          onClick={() => setBoardName('northProylia')}
-        >
-          <img className="h-full w-full" src={northProyliaBoard.href} />
-        </button>
-        <button
-          className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
-          onClick={() => setBoardName('xawskil')}
-        >
-          <img className="h-full w-full" src={xawskilBaseBoard.href} />
-        </button>
+          <h2 className="col-span-full text-center">Choose A Board To Play</h2>
+          {(boardName === '' || boardName === 'aghon') && (
+            <button
+              className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
+              onClick={() => setBoardName(boardName ? '' : 'aghon')}
+            >
+              <img className="h-full w-full" src={aghonBoard.href} />
+            </button>
+          )}
+          {(boardName === '' || boardName === 'avenia') && (
+            <button
+              className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
+              onClick={() => setBoardName(boardName ? '' : 'avenia')}
+            >
+              <img className="h-full w-full" src={aveniaBoard.href} />
+            </button>
+          )}
+          {(boardName === '' || boardName === 'kazan') && (
+            <button
+              className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
+              onClick={() => setBoardName(boardName ? '' : 'kazan')}
+            >
+              <img className="h-full w-full" src={kazanBoard.href} />
+            </button>
+          )}
+          {(boardName === '' || boardName === 'cnidaria') && (
+            <button
+              className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
+              onClick={() => setBoardName(boardName ? '' : 'cnidaria')}
+            >
+              <img className="h-full w-full" src={cnidariaBoard.href} />
+            </button>
+          )}
+          {(boardName === '' || boardName === 'northProylia') && (
+            <button
+              className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
+              onClick={() => setBoardName(boardName ? '' : 'northProylia')}
+            >
+              <img className="h-full w-full" src={northProyliaBoard.href} />
+            </button>
+          )}
+          {(boardName === '' || boardName === 'xawskil') && (
+            <button
+              className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
+              onClick={() => setBoardName(boardName ? '' : 'xawskil')}
+            >
+              <img className="h-full w-full" src={xawskilBaseBoard.href} />
+            </button>
+          )}
+        </div>
+        {!disabled && (
+          <Button variant="primary" onClick={() => setReadyToPlay(true)}>
+            Play{playerData.length === 1 && ' in Solo Mode'}
+          </Button>
+        )}
       </main>
     )
 
@@ -57,9 +125,11 @@ export const App = ({ className = '', ...props }: AppProps) => {
     <GameStateProvider
       resetGame={() => {
         localStorage.removeItem('gome-serialized-game-state')
+        setReadyToPlay(false)
         setBoardName('')
       }}
       name={boardName}
+      playerData={playerData}
     >
       <GameBoard className={`${className}`} {...props} />
     </GameStateProvider>

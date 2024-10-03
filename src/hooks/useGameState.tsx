@@ -1,15 +1,16 @@
 import React, { ReactNode, createContext, useContext, useMemo } from 'react'
-import { BoardName, GameState } from '../game-logic/GameState'
+import { BoardName, GameState, PlayerInputs } from '../game-logic/GameState'
 
 const GameStateContext = createContext<{ resetGame(): void; gameState: GameState }>({} as any)
 
 export interface GameStateProviderProps {
   children: ReactNode
   name: BoardName
+  playerData: PlayerInputs[]
   resetGame(): void
 }
 
-export const GameStateProvider = ({ children, name, resetGame }: GameStateProviderProps) => {
+export const GameStateProvider = ({ children, name, playerData, resetGame }: GameStateProviderProps) => {
   const gameState = useMemo(() => {
     const savedState = localStorage.getItem('gome-serialized-game-state')
 
@@ -18,7 +19,7 @@ export const GameStateProvider = ({ children, name, resetGame }: GameStateProvid
         const parsedState = JSON.parse(savedState)
         console.log(parsedState)
         const restoredGameState = new GameState({ boardName: parsedState.boardName }, parsedState)
-        restoredGameState.activePlayer.replayMoves()
+        restoredGameState.players.forEach((p) => p.replayMoves())
 
         if (restoredGameState.gameOver) restoredGameState.tallyScores()
 
@@ -29,8 +30,8 @@ export const GameStateProvider = ({ children, name, resetGame }: GameStateProvid
       }
     }
 
-    return new GameState({ boardName: name, playerIds: ['solo'], activePlayerId: 'solo' })
-  }, [name])
+    return new GameState({ boardName: name, playerData })
+  }, [name, playerData])
 
   if (!gameState) return null
 

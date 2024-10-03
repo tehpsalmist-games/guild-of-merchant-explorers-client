@@ -17,7 +17,7 @@ export interface GameBoardProps extends ComponentProps<'main'> {}
 export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
   const [sideBarOpen, setSideBarOpen] = useState(false)
   const [investigateModalOpen, setInvestigateModalOpen] = useState(false)
-  const [newTreasureCard, setNewTreasureCard] = useState(0)
+  const [newTreasureCard, setNewTreasureCard] = useState(false)
   const [userPromptOpen, setUserPromptOpen] = useState(false)
   const updateState = useState(0)[1]
 
@@ -55,7 +55,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
   }, [gameState])
 
   useEffect(() => {
-    const treasureListener = () => setNewTreasureCard((nt) => nt + 1)
+    const treasureListener = () => setNewTreasureCard(true)
     gameState.activePlayer.addEventListener('treasure-gained', treasureListener)
 
     return () => gameState.activePlayer.removeEventListener('treasure-gained', treasureListener)
@@ -185,11 +185,11 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
           <ExplorerCardMat />
           <div className="flex justify-end gap-2">
             <img className="max-h-16 max-w-32" src={coinImage.href} alt="coin" />
-            <span className="text-6xl font-bold leading-[1em] text-primary-500 [text-shadow:_0_0_6px_rgba(255_255_255)]">
+            <span className="text-shadow text-6xl font-bold leading-[1em] text-primary-500 shadow-white">
               {gameState.activePlayer.coins}
             </span>
             <img className="max-h-16 max-w-32" src={treasureChestImage.href} alt="treasure" />
-            <span className="text-6xl font-bold leading-[1em] text-primary-500 [text-shadow:_0_0_6px_rgba(255_255_255)]">
+            <span className="text-shadow text-6xl font-bold leading-[1em] text-primary-500 shadow-white">
               {treasureCards.length + treasureJars.length}
             </span>
           </div>
@@ -197,7 +197,11 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
       </div>
       <PlayerMessage className="fixed bottom-24 left-1/2 z-50 mt-2 w-max max-w-[95vw] -translate-x-1/2 rounded bg-slate-900/50 p-2 text-lg font-bold text-white" />
       <main className={`${className} game-board-grid relative min-h-screen w-full`} {...props}>
-        <ExplorerMap className="row-start-2" />
+        <ExplorerMap key={gameState.activePlayer.id} player={gameState.activePlayer} isActive />
+        {gameState.players.map(
+          (player) =>
+            player !== gameState.activePlayer && <ExplorerMap key={player.id} player={player} isActive={false} />,
+        )}
         <div
           className={clsx(
             'fixed right-0 top-0 z-30 h-screen w-sm bg-gray-700/60 pt-16 transition-all duration-300',
@@ -258,7 +262,11 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
                 </div>
               ))}
             </div>
-            <Button className="mt-8" variant="destructive" onClick={resetGame}>
+            <Button
+              className="mt-8"
+              variant="destructive"
+              onClick={() => (gameState.soloMode || confirm('Do all players agree to this?')) && resetGame()}
+            >
               Quit Game
             </Button>
           </div>
@@ -281,7 +289,9 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
             className="flex-center flex-col gap-4 p-2 text-white"
             style={{ backgroundImage: `url(${plankPanelHorizontal.href})` }}
           >
-            <p>How would you like to proceed?</p>
+            <p>
+              <strong>{gameState.activePlayer.id}</strong>: How would you like to proceed?
+            </p>
             {gameState.activePlayer.treasureCardsToDraw > 0 && (
               <div className="flex-center flex-col">
                 <Button
@@ -336,7 +346,8 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
         investigateModalOpen && (
           <Modal onClose={() => setInvestigateModalOpen(false)}>
             <p className="mb-4 text-center">
-              Choose an Investigate Card for Era {gameState.era > 2 ? 'IV' : 'I'.repeat(gameState.era + 1)}.
+              <strong>{gameState.activePlayer.id}</strong>: Choose an Investigate Card for Era{' '}
+              {gameState.era > 2 ? 'IV' : 'I'.repeat(gameState.era + 1)}.
             </p>
             <div className="flex-center gap-4">
               {(gameState.era < 3
@@ -370,17 +381,19 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
             </div>
           </Modal>
         )}
-      {newTreasureCard > 0 && (
-        <Modal onClose={() => setNewTreasureCard((t) => t - 1)}>
-          <p className="mb-4 text-center">You drew a treasure card:</p>
+      {newTreasureCard && (
+        <Modal onClose={() => setNewTreasureCard(false)}>
+          <p className="mb-4 text-center">
+            Congratulations, <strong>{gameState.activePlayer.id}</strong>, you drew a treasure card:
+          </p>
           <img
             className="block max-w-md rounded-2xl"
             src={
-              gameState.activePlayer.treasureCards.cards[gameState.activePlayer.treasureCards.size - newTreasureCard]
-                ?.card.imageUrl.href
+              gameState.activePlayer.treasureCards.cards[gameState.activePlayer.treasureCards.size - 1]?.card.imageUrl
+                .href
             }
           />
-          <Button variant="primary" onClick={() => setNewTreasureCard((t) => t - 1)}>
+          <Button variant="primary" onClick={() => setNewTreasureCard(false)}>
             OK
           </Button>
         </Modal>

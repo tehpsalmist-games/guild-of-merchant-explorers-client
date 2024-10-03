@@ -48,7 +48,6 @@ const getBoardData = (boardName: BoardName) => {
 
 export interface SerializedGameState {
   boardName: BoardName
-  activePlayer: string
   players: SerializedPlayer[]
   turnHistory: SerializedTurnHistory
   objectives: SerializedObjective[]
@@ -57,21 +56,19 @@ export interface SerializedGameState {
   treasureDeck: SerializedDeck
   era: number
   currentTurn: number
-  soloMode: boolean
   currentExplorerCard: SerializedCard | null
   gameOver: boolean
 }
 
 export interface GameInputs {
   boardName: BoardName
-  playerIds?: string[]
-  activePlayerId?: string
+  playerData?: PlayerInputs[]
 }
 
 export class GameState extends EventTarget {
   boardName: BoardName
 
-  soloMode = true
+  soloMode: boolean
 
   players: Player[] = []
   activePlayer: Player
@@ -89,12 +86,14 @@ export class GameState extends EventTarget {
 
   treasureDeck: TreasureDeck
 
+  readyPlayers: Player[] = []
+
   gameOver = false
 
   serializationTimeout = 0
   lastEmittedSerializedState = ''
 
-  constructor({ boardName, playerIds, activePlayerId }: GameInputs, serializedData?: SerializedGameState) {
+  constructor({ boardName, playerData }: GameInputs, serializedData?: SerializedGameState) {
     super()
 
     if (serializedData) {
@@ -104,18 +103,15 @@ export class GameState extends EventTarget {
       this.boardName = boardName
       this.newGame()
 
-      if (!playerIds || !activePlayerId) {
+      if (!playerData) {
         throw new Error('No players provided for this game!')
       }
 
-      this.players = playerIds.map((id) => new Player(id, this))
+      this.players = playerData.map((d) => new Player(d, this))
 
-      const activePlayer = this.players.find((p) => p.id === activePlayerId)
-      if (!activePlayer) {
-        throw new Error('Active player not included in this game!')
-      }
+      this.activePlayer = this.players[0]
 
-      this.activePlayer = activePlayer
+      this.soloMode = this.players.length === 1
 
       // start game!
       this.flipExplorerCard()
@@ -150,7 +146,7 @@ export class GameState extends EventTarget {
     } else {
       // only wipe the board if we're going to a new era, otherwise leave it up for satisfactory reviewing
       this.currentTurn = 0
-      this.activePlayer.board.wipe()
+      this.players.forEach((p) => p.board.wipe())
 
       this.explorerDeck.prepareForNextEra()
 
@@ -161,9 +157,20 @@ export class GameState extends EventTarget {
   }
 
   playerReady(p: Player) {
-    // for multiplayer, iterate over all players to verify they are ready
-    if (this.activePlayer === p) {
+    if (!this.readyPlayers.includes(p)) {
+      this.readyPlayers.push(p)
+    }
+
+    if (this.readyPlayers.length === this.players.length) {
       this.flipExplorerCard()
+      this.readyPlayers = []
+    }
+
+    for (const player of this.players) {
+      if (!this.readyPlayers.includes(player)) {
+        this.activePlayer = player
+        return
+      }
     }
   }
 
@@ -183,8 +190,10 @@ export class GameState extends EventTarget {
 
       // first era card flip, need to deal new ones to the player(s)
       if (this.currentExplorerCard.id === `era-${this.era + 1}`) {
-        this.dealInvestigateCards(this.activePlayer)
-        this.activePlayer.determinePlayerMode()
+        for (const player of this.players) {
+          this.dealInvestigateCards(player)
+          player.determinePlayerMode()
+        }
       }
 
       this.blockObjectives()
@@ -198,7 +207,9 @@ export class GameState extends EventTarget {
   checkObjectives() {
     for (const objective of this.objectives) {
       // in multiplayer we will obviously loop over all the players
-      objective.checkAndScoreForPlayer(this.activePlayer)
+      for (const player of this.players) {
+        objective.checkAndScoreForPlayer(player)
+      }
     }
   }
 
@@ -267,7 +278,6 @@ export class GameState extends EventTarget {
   toJSON(): SerializedGameState {
     return {
       boardName: this.boardName,
-      activePlayer: this.activePlayer.id,
       players: this.players as SerializedPlayer[],
       turnHistory: this.turnHistory,
       objectives: this.objectives,
@@ -276,19 +286,14 @@ export class GameState extends EventTarget {
       treasureDeck: this.treasureDeck,
       era: this.era,
       currentTurn: this.currentTurn,
-      soloMode: this.soloMode,
       currentExplorerCard: this.currentExplorerCard,
       gameOver: this.gameOver,
     }
   }
 
   fromJSON(data: SerializedGameState) {
-    this.players = data.players.map((d) => new Player(d.id, this, d.moveHistory))
-
-    const activePlayer = this.players.find((p) => p.id === data.activePlayer)
-    if (!activePlayer) throw new Error(`Player data out of sync: id ${data.activePlayer}`)
-
-    this.activePlayer = activePlayer
+    this.players = data.players.map((d) => new Player(d, this, d.moveHistory))
+    this.activePlayer = this.players[0]
 
     this.turnHistory = new TurnHistory(this, data.turnHistory)
     this.objectives = data.objectives.map(
@@ -300,7 +305,7 @@ export class GameState extends EventTarget {
 
     this.era = data.era
     this.currentTurn = data.currentTurn
-    this.soloMode = data.soloMode
+    this.soloMode = this.players.length === 1
 
     this.currentExplorerCard = data.currentExplorerCard
       ? new ExplorerCard(explorerCardDataMapping[data.currentExplorerCard.id])
@@ -366,6 +371,7 @@ export class TurnHistory {
 
 export interface SerializedPlayer {
   id: string
+  color: string
   moveHistory: SerializedMoveHistory
 }
 
@@ -381,8 +387,15 @@ export type PlayerMode =
   | 'clearing-history'
   | 'treasure-to-draw'
 
+export interface PlayerInputs {
+  id: string
+  color: string
+}
+
 export class Player extends EventTarget {
   id: string
+  color: string
+
   gameState: GameState
   board: Board
   moveHistory: MoveHistory
@@ -416,10 +429,11 @@ export class Player extends EventTarget {
 
   freeExploreQuantity = 0
 
-  constructor(id: string, gameState: GameState, serializedMoveHistory?: SerializedMoveHistory) {
+  constructor({ id, color }: PlayerInputs, gameState: GameState, serializedMoveHistory?: SerializedMoveHistory) {
     super()
 
     this.id = id
+    this.color = color
 
     this.gameState = gameState
     this.board = new Board(getBoardData(this.gameState.boardName), this, this.gameState)
@@ -518,6 +532,15 @@ export class Player extends EventTarget {
     this.replayableMoveHistory = undefined
 
     this.determinePlayerMode()
+
+    if (
+      !this.moveHistory.currentMoves.length &&
+      this.moveHistory.historicalMoves[this.gameState.era]?.[this.gameState.currentTurn]?.some(
+        (m) => m.action === 'confirm-turn',
+      )
+    ) {
+      this.reportDone()
+    }
   }
 
   reportDone() {
@@ -585,6 +608,7 @@ export class Player extends EventTarget {
   toJSON(): SerializedPlayer {
     return {
       id: this.id,
+      color: this.color,
       moveHistory: this.moveHistory as SerializedMoveHistory,
     }
   }
