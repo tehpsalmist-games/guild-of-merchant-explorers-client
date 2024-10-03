@@ -1,14 +1,14 @@
 import clsx from 'clsx'
 import React, { ComponentProps, useState } from 'react'
-import { useGameState } from '../hooks/useGameState'
 import { useEventListener } from '@8thday/react'
+import { Player } from '../game-logic/GameState'
 
-export interface EraCardsProps extends ComponentProps<'div'> {}
+export interface EraCardsProps extends ComponentProps<'div'> {
+  player: Player
+}
 
-export const EraCards = ({ className = '', ...props }: EraCardsProps) => {
+export const EraCards = ({ className = '', player, ...props }: EraCardsProps) => {
   const [inView, setInView] = useState(false)
-
-  const { gameState } = useGameState()
 
   useEventListener('keydown', (e) => {
     if (e.key === 'a') {
@@ -16,11 +16,11 @@ export const EraCards = ({ className = '', ...props }: EraCardsProps) => {
     }
   })
 
-  const chosenCards = gameState.activePlayer.investigateCards.chosenCards
+  const chosenCards = player.investigateCards.chosenCards
 
   const slots = [chosenCards[0], chosenCards[1], chosenCards[2]]
 
-  if (!gameState.activePlayer.investigateCards.size) {
+  if (!player.investigateCards.size) {
     return null
   }
 

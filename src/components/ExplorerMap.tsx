@@ -80,7 +80,7 @@ export const ExplorerMap = ({ className = '', player, isActive, ...props }: Expl
             ),
           )}
         </svg>
-        <EraCards />
+        <EraCards player={player} />
       </div>
       <span className="text-shadow-lg absolute right-[5%] top-[5%] font-bold text-primary-500 shadow-white sm:text-lg md:text-4xl">
         {player.id} <ExplorerBlock color={player.color} className="inline h-8" />
