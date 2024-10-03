@@ -136,8 +136,6 @@ export class GameState extends EventTarget {
   startNextAge() {
     this.era++
     if (this.era > 3) {
-      this.players.forEach((p) => p.addEndgameCoins())
-
       // reset to a valid era
       this.era--
 
@@ -267,6 +265,8 @@ export class GameState extends EventTarget {
 
   tallyScores() {
     for (const player of this.players) {
+      player.addEndgameCoins()
+
       player.scoreBoard.calculateStats()
       player.scoreBoard.revealScore(true)
     }
