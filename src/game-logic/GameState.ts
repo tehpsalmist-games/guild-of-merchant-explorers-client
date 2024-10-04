@@ -190,13 +190,16 @@ export class GameState extends EventTarget {
       if (this.currentExplorerCard.id === `era-${this.era + 1}`) {
         for (const player of this.players) {
           this.dealInvestigateCards(player)
-          player.determinePlayerMode()
         }
       }
 
       this.blockObjectives()
     } else {
       this.startNextAge()
+    }
+
+    for (const player of this.players) {
+      player.determinePlayerMode()
     }
 
     this.emitStateChange()
