@@ -15,7 +15,10 @@ export const App = ({ className = '', ...props }: AppProps) => {
   const [playerData, setPlayerData] = useRememberedState<PlayerInputs[]>('gome-player-data', [{ id: '', color: '' }])
   const [readyToPlay, setReadyToPlay] = useRememberedState('gome-ready-to-play', false)
 
-  const disabled = !boardName || !playerData?.length || playerData.some(({ id, color }) => !id || !color)
+  const hasDupes = playerData.some((pi, i) => playerData.some((pj, j) => i !== j && pi.id === pj.id))
+
+  const disabled = !boardName || !playerData?.length || playerData.some(({ id, color }) => !id || !color) || hasDupes
+
   if (!readyToPlay || disabled)
     return (
       <main className={clsx(className, 'flex flex-col items-center')} {...props}>
@@ -48,6 +51,7 @@ export const App = ({ className = '', ...props }: AppProps) => {
               )}
             </div>
           ))}
+          {hasDupes && <p className="text-orange-500">Player names must be unique</p>}
           <Button
             className="mt-4"
             PreIcon={PlusIcon}
