@@ -15,7 +15,9 @@ export const App = ({ className = '', ...props }: AppProps) => {
   const [playerData, setPlayerData] = useRememberedState<PlayerInputs[]>('gome-player-data', [{ id: '', color: '' }])
   const [readyToPlay, setReadyToPlay] = useRememberedState('gome-ready-to-play', false)
 
-  const hasDupes = playerData.some((pi, i) => playerData.some((pj, j) => i !== j && pi.id === pj.id))
+  const hasDupes = playerData.some((pi, i) =>
+    playerData.some((pj, j) => i !== j && (pi.id === pj.id || pi.color === pj.color)),
+  )
 
   const disabled = !boardName || !playerData?.length || playerData.some(({ id, color }) => !id || !color) || hasDupes
 
@@ -51,7 +53,7 @@ export const App = ({ className = '', ...props }: AppProps) => {
               )}
             </div>
           ))}
-          {hasDupes && <p className="text-orange-500">Player names must be unique</p>}
+          {hasDupes && <p className="text-orange-500">Please choose a unique name and color for each player.</p>}
           <Button
             className="mt-4"
             PreIcon={PlusIcon}

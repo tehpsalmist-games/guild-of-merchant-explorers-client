@@ -366,7 +366,7 @@ export class TreasureHand extends Hand<TreasureCard> {
 
   getCoinTotal() {
     let coins = 0
-    for (const card of this.keptCards.filter((card) => card.type !== 'jarMultiplier')) {
+    for (const card of this.keptCards.filter((card) => card.type !== 'jarMultiplier' && card.type !== 'twoCoins')) {
       coins += card.value(this.player.board)
     }
 
