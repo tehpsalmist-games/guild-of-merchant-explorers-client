@@ -378,9 +378,7 @@ export class Hex {
     }
 
     // must be in the same region as the initial placement
-    if (rule.regionBound && placedHexes[phase][0] && placedHexes[phase][0].region !== this.region) {
-      // console.log('region bound', rules, phase, placedHexes)
-      // This doesn't work! Fix if logic above!
+    if (rule.regionBound && placedHexes[phase]?.hexes?.[0] && placedHexes[phase].hexes[0].region !== this.region) {
       return false
     }
 
