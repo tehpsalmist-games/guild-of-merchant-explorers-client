@@ -518,9 +518,6 @@ export class Player extends EventTarget {
 
     this.replaying = false
 
-    // add up treasure card coins earned
-    this.coins += this.treasureCards.cards.filter((c) => c.card.type === 'twoCoins').length * 2
-
     // add up objectives earned
     this.gameState.objectives.forEach((objective) => {
       if (objective.firstPlayers.includes(this)) {
