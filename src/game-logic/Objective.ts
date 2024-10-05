@@ -40,12 +40,12 @@ type SimpleAlgorithm = {
 
 type ComplexAlgorithm = {
   spec:
-    | 'trade-route-ice'
-    | 'trade-route-value'
-    | '2-cities-2-ruins'
-    | 'ruin-c-northeast-tower'
-    | 'westernmost-land'
-    | 'ruins-near-all-terrains'
+  | 'trade-route-ice'
+  | 'trade-route-value'
+  | '2-cities-2-ruins'
+  | 'ruin-c-northeast-tower'
+  | 'westernmost-land'
+  | 'ruins-near-all-terrains'
   value?: number
 }
 
@@ -155,12 +155,12 @@ export class Objective {
 
     if (matchingHexes) {
       if (this.isPlayerFirst()) {
-        p.coins += this.firstPlaceReward
+        p.addCoins(this.firstPlaceReward)
 
         this.firstPlayers.push(p)
         this.turnAndEraOfFirstAward = [this.gameState.era, this.gameState.currentTurn]
       } else {
-        p.coins += this.secondPlaceReward
+        p.addCoins(this.secondPlaceReward)
 
         this.secondPlayers.push(p)
       }

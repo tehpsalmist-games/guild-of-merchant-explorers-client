@@ -226,7 +226,7 @@ export class Hex {
       const bonus = this.board.player.currentExplorerCard?.bonus(this.board.player)
       const multiplier = bonus?.type === 'coin' ? bonus.multiplier : 1
 
-      this.board.player.coins += this.coins * multiplier
+      this.board.player.addCoins(this.coins * multiplier)
     }
 
     //Finds trading routes every time a hex is explored
@@ -247,7 +247,7 @@ export class Hex {
       const bonus = this.board.player.currentExplorerCard?.bonus(this.board.player)
       const multiplier = bonus?.type === 'coin' ? bonus.multiplier : 1
 
-      this.board.player.coins -= this.coins * multiplier
+      this.board.player.removeCoins(this.coins * multiplier)
     }
 
     // clear any connected trading posts

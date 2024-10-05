@@ -23,7 +23,7 @@ import { ScoreBoard } from './ScoreBoard'
 import { northProyliaData } from '../data/boards/north-proylia'
 import { xawskilData } from '../data/boards/xawskil'
 import { investigateCardDataLookup } from '../data/cards/investigate-cards'
-import { crystalSFX, placeBlockSFX, towerSFX, tradeSFX } from '../audio'
+import { crystalSFX, placeBlock1SFX, treasureSFX, towerSFX, tradeSFX, villageSFX, coin1SFX, coin2SFX } from '../audio'
 import { explorerCardDataMapping } from '../data/cards/explorer-cards'
 import { treasureCardDataLookup } from '../data/cards/treasure-cards'
 
@@ -447,6 +447,24 @@ export class Player extends EventTarget {
     this.newGame()
   }
 
+  //Add coins to player and play sound effect after an optional delay
+  addCoins(amount: number, soundDelay = 0) {
+    this.coins += amount
+
+    setTimeout(() => {
+      coin1SFX.play()
+    }, soundDelay)
+  }
+
+  //Remove coins from player and play sound effect after an optional delay
+  removeCoins(amount: number, soundDelay = 0) {
+    this.coins -= amount
+
+    setTimeout(() => {
+      coin2SFX.play()
+    }, soundDelay)
+  }
+
   setMode(mode: PlayerMode) {
     this.mode = mode
     this.gameState.emitStateChange()
@@ -521,11 +539,11 @@ export class Player extends EventTarget {
     // add up objectives earned
     this.gameState.objectives.forEach((objective) => {
       if (objective.firstPlayers.includes(this)) {
-        this.coins += objective.firstPlaceReward
+        this.addCoins(objective.firstPlaceReward)
       }
 
       if (objective.secondPlayers.includes(this)) {
-        this.coins += objective.secondPlaceReward
+        this.addCoins(objective.secondPlaceReward)
       }
     })
 
@@ -592,7 +610,7 @@ export class Player extends EventTarget {
     if (all) {
       this.moveHistory.undoAllMoves()
     } else {
-      while (this.moveHistory.undoMove()) {}
+      while (this.moveHistory.undoMove()) { }
     }
 
     this.determinePlayerMode()
@@ -600,9 +618,9 @@ export class Player extends EventTarget {
   }
 
   addEndgameCoins() {
-    this.coins += this.treasureCards.getCoinTotal()
+    this.addCoins(this.treasureCards.getCoinTotal())
 
-    this.coins += this.board.getXawskilCoins()
+    this.addCoins(this.board.getXawskilCoins())
   }
 
   toJSON(): SerializedPlayer {
@@ -630,69 +648,69 @@ export interface SerializedMove {
  */
 type Move =
   | {
-      action: 'advance-card-phase'
-      auto?: boolean
-    }
+    action: 'advance-card-phase'
+    auto?: boolean
+  }
   | {
-      action: 'explore'
-      hex: Hex
-      auto?: boolean
-    }
+    action: 'explore'
+    hex: Hex
+    auto?: boolean
+  }
   | {
-      action: 'freely-explore'
-      hex: Hex
-    }
+    action: 'freely-explore'
+    hex: Hex
+  }
   | {
-      action: 'choose-trade-route'
-      hex: Hex
-      auto?: boolean
-    }
+    action: 'choose-trade-route'
+    hex: Hex
+    auto?: boolean
+  }
   | {
-      action: 'cover-tradepost'
-      hex: Hex
-      tradingHex: Hex
-    }
+    action: 'cover-tradepost'
+    hex: Hex
+    tradingHex: Hex
+  }
   | {
-      action: 'choose-village'
-      hex: Hex
-      auto?: boolean
-    }
+    action: 'choose-village'
+    hex: Hex
+    auto?: boolean
+  }
   | {
-      action: 'draw-treasure'
-      treasureCard: TreasureCard
-    }
+    action: 'draw-treasure'
+    treasureCard: TreasureCard
+  }
   | {
-      action: 'choose-investigate-card'
-      chosenCard: InvestigateCard
-      discardedCard: InvestigateCard
-    }
+    action: 'choose-investigate-card'
+    chosenCard: InvestigateCard
+    discardedCard: InvestigateCard
+  }
   | {
-      action: 'choose-investigate-card-reuse'
-      era: number
-    }
+    action: 'choose-investigate-card-reuse'
+    era: number
+  }
   | {
-      action: 'discover-tower'
-      hex: Hex
-      auto?: boolean
-    }
+    action: 'discover-tower'
+    hex: Hex
+    auto?: boolean
+  }
   | {
-      action: 'discover-ruin'
-      hex: Hex
-      auto?: boolean
-    }
+    action: 'discover-ruin'
+    hex: Hex
+    auto?: boolean
+  }
   | {
-      action: 'discover-crystal'
-      hex: Hex
-      auto?: boolean
-    }
+    action: 'discover-crystal'
+    hex: Hex
+    auto?: boolean
+  }
   | {
-      action: 'discover-land'
-      hex: Hex
-      auto?: boolean
-    }
+    action: 'discover-land'
+    hex: Hex
+    auto?: boolean
+  }
   | {
-      action: 'confirm-turn'
-    }
+    action: 'confirm-turn'
+  }
 
 export interface SerializedMoveHistory {
   historicalMoves: SerializedMove[][][]
@@ -783,12 +801,12 @@ export class MoveHistory {
         }
       case 'explore':
         move.hex.explore()
-        this.playAudio(placeBlockSFX)
+        this.playAudio(placeBlock1SFX)
 
         if (
           this.player.currentCardRules?.[this.player.cardPhase + 1] &&
           this.player.currentCardRules?.[this.player.cardPhase].limit ===
-            this.getPlacedHexes()[this.player.cardPhase].size
+          this.getPlacedHexes()[this.player.cardPhase].size
         ) {
           nextMoves.push({ action: 'advance-card-phase', auto: true })
         }
@@ -832,13 +850,13 @@ export class MoveHistory {
         const towers = this.player.board.getFlatHexes().filter((h) => h.isTower && h.isCovered)
 
         if (towers.length === 1) {
-          this.player.coins += 6
+          this.player.addCoins(6, 1000)
         } else if (towers.length === 2) {
-          this.player.coins += 8
+          this.player.addCoins(8, 1000)
         } else if (towers.length === 3) {
-          this.player.coins += 10
+          this.player.addCoins(10, 1000)
         } else if (towers.length === 4) {
-          this.player.coins += 14
+          this.player.addCoins(14, 1000)
         }
 
         this.playAudio(towerSFX)
@@ -861,7 +879,7 @@ export class MoveHistory {
           .filter((h) => h.crystalValue && h.isCovered)
           .reduce((sum, h) => sum + h.crystalValue, 0)
 
-        this.player.coins += crystalValueSum
+        this.player.addCoins(crystalValueSum, 500)
 
         this.playAudio(crystalSFX)
 
@@ -880,7 +898,7 @@ export class MoveHistory {
         move.hex.isCovered = true
 
         // Add coins that were just collected
-        this.player.coins += this.player.chosenRoute[0].tradingPostValue * this.player.chosenRoute[1].tradingPostValue
+        this.player.addCoins(this.player.chosenRoute[0].tradingPostValue * this.player.chosenRoute[1].tradingPostValue, 1000)
 
         // clear the chosen route
         this.player.finalizedTradingRoutes.push(this.player.chosenRoute)
@@ -900,7 +918,8 @@ export class MoveHistory {
       case 'choose-village':
         move.hex.isVillage = true
 
-        this.player.coins += this.player.era + 1
+        this.player.addCoins(this.player.era + 1, 500)
+        villageSFX.play()
         this.player.regionForVillage = undefined
 
         break
@@ -908,7 +927,7 @@ export class MoveHistory {
         this.player.treasureCards.addCard(move.treasureCard, move.treasureCard.discard)
 
         if (move.treasureCard.type === 'twoCoins') {
-          this.player.coins += move.treasureCard.value(this.player.board)
+          this.player.addCoins(move.treasureCard.value(this.player.board), 1000)
         }
 
         if (move.treasureCard.type === 'placeBlock') {
@@ -918,6 +937,8 @@ export class MoveHistory {
         this.player.treasureCardsToDraw--
         //Completely blocks the ability to undo anything prior to drawing a treasure card
         this.lockInMoveState()
+
+        treasureSFX.play()
 
         this.player.dispatchEvent(new CustomEvent('treasure-gained'))
 
@@ -968,13 +989,13 @@ export class MoveHistory {
           const towers = undoing.hex.board.getFlatHexes().filter((h) => h.isTower && h.isCovered)
 
           if (towers.length === 1) {
-            this.player.coins -= 6
+            this.player.removeCoins(6)
           } else if (towers.length === 2) {
-            this.player.coins -= 8
+            this.player.removeCoins(8)
           } else if (towers.length === 3) {
-            this.player.coins -= 10
+            this.player.removeCoins(10)
           } else if (towers.length === 4) {
-            this.player.coins -= 14
+            this.player.removeCoins(14)
           }
 
           undoing.hex.isCovered = false
@@ -986,7 +1007,7 @@ export class MoveHistory {
             .filter((h) => h.crystalValue && h.isCovered)
             .reduce((sum, h) => sum + h.crystalValue, 0)
 
-          this.player.board.player.coins -= crystalValueSum
+          this.player.board.player.removeCoins(crystalValueSum)
 
           undoing.hex.isCovered = false
 
@@ -1015,7 +1036,7 @@ export class MoveHistory {
         case 'cover-tradepost':
           undoing.hex.isCovered = false
           if (undoing.tradingHex) {
-            this.player.coins -= undoing.tradingHex.tradingPostValue * undoing.hex.tradingPostValue
+            this.player.removeCoins(undoing.tradingHex.tradingPostValue * undoing.hex.tradingPostValue)
             this.player.connectedTradePosts = undoing.hex.getConnectedTradingPosts()
             this.player.chosenRoute = [undoing.hex, undoing.tradingHex]
             this.player.finalizedTradingRoutes.pop()
@@ -1024,7 +1045,7 @@ export class MoveHistory {
           break
         case 'choose-village':
           undoing.hex.isVillage = false
-          this.player.coins -= this.player.era + 1
+          this.player.removeCoins(this.player.era + 1)
 
           //If there was only one village candidate, undoing the village placement should undo the explore action as well
           if (undoing.hex.region && undoing.hex.region.villageCandidates.length !== 1) {
