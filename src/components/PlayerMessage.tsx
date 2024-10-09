@@ -10,7 +10,6 @@ const messages: Record<PlayerMode, string> = {
   'clearing-history': 'Clearing move history...',
   exploring: 'Explore!',
   'free-exploring': 'Explore anywhere!',
-  'game-over': 'Game Over!',//TODO fix this
   trading: 'Complete the trade by picking a trading post to permanently cover.',
   'user-prompting': 'Choose what to do next.',
   'treasure-to-draw': 'Draw a treasure card!',

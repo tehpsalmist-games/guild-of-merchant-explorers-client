@@ -54,7 +54,7 @@ export const App = ({ className = '', ...props }: AppProps) => {
             </div>
           ))}
           {hasDupes && <p className="text-orange-500">Please choose a unique name and color for each player.</p>}
-          
+
           <Button
             className="mt-4"
             PreIcon={PlusIcon}
@@ -64,10 +64,10 @@ export const App = ({ className = '', ...props }: AppProps) => {
           </Button>
 
           {!disabled && (
-          <Button variant="primary" onClick={() => setReadyToPlay(true)}>
-            Play{playerData.length === 1 && ' in Solo Mode'}
-          </Button>
-        )}
+            <Button variant="primary" onClick={() => setReadyToPlay(true)}>
+              Play{playerData.length === 1 && ' in Solo Mode'}
+            </Button>
+          )}
         </div>
         <div
           className={clsx(

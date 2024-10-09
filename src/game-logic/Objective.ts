@@ -40,12 +40,12 @@ type SimpleAlgorithm = {
 
 type ComplexAlgorithm = {
   spec:
-  | 'trade-route-ice'
-  | 'trade-route-value'
-  | '2-cities-2-ruins'
-  | 'ruin-c-northeast-tower'
-  | 'westernmost-land'
-  | 'ruins-near-all-terrains'
+    | 'trade-route-ice'
+    | 'trade-route-value'
+    | '2-cities-2-ruins'
+    | 'ruin-c-northeast-tower'
+    | 'westernmost-land'
+    | 'ruins-near-all-terrains'
   value?: number
 }
 

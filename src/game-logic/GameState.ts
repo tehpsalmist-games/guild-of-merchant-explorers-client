@@ -610,7 +610,7 @@ export class Player extends EventTarget {
     if (all) {
       this.moveHistory.undoAllMoves()
     } else {
-      while (this.moveHistory.undoMove()) { }
+      while (this.moveHistory.undoMove()) {}
     }
 
     this.determinePlayerMode()
@@ -648,69 +648,69 @@ export interface SerializedMove {
  */
 type Move =
   | {
-    action: 'advance-card-phase'
-    auto?: boolean
-  }
+      action: 'advance-card-phase'
+      auto?: boolean
+    }
   | {
-    action: 'explore'
-    hex: Hex
-    auto?: boolean
-  }
+      action: 'explore'
+      hex: Hex
+      auto?: boolean
+    }
   | {
-    action: 'freely-explore'
-    hex: Hex
-  }
+      action: 'freely-explore'
+      hex: Hex
+    }
   | {
-    action: 'choose-trade-route'
-    hex: Hex
-    auto?: boolean
-  }
+      action: 'choose-trade-route'
+      hex: Hex
+      auto?: boolean
+    }
   | {
-    action: 'cover-tradepost'
-    hex: Hex
-    tradingHex: Hex
-  }
+      action: 'cover-tradepost'
+      hex: Hex
+      tradingHex: Hex
+    }
   | {
-    action: 'choose-village'
-    hex: Hex
-    auto?: boolean
-  }
+      action: 'choose-village'
+      hex: Hex
+      auto?: boolean
+    }
   | {
-    action: 'draw-treasure'
-    treasureCard: TreasureCard
-  }
+      action: 'draw-treasure'
+      treasureCard: TreasureCard
+    }
   | {
-    action: 'choose-investigate-card'
-    chosenCard: InvestigateCard
-    discardedCard: InvestigateCard
-  }
+      action: 'choose-investigate-card'
+      chosenCard: InvestigateCard
+      discardedCard: InvestigateCard
+    }
   | {
-    action: 'choose-investigate-card-reuse'
-    era: number
-  }
+      action: 'choose-investigate-card-reuse'
+      era: number
+    }
   | {
-    action: 'discover-tower'
-    hex: Hex
-    auto?: boolean
-  }
+      action: 'discover-tower'
+      hex: Hex
+      auto?: boolean
+    }
   | {
-    action: 'discover-ruin'
-    hex: Hex
-    auto?: boolean
-  }
+      action: 'discover-ruin'
+      hex: Hex
+      auto?: boolean
+    }
   | {
-    action: 'discover-crystal'
-    hex: Hex
-    auto?: boolean
-  }
+      action: 'discover-crystal'
+      hex: Hex
+      auto?: boolean
+    }
   | {
-    action: 'discover-land'
-    hex: Hex
-    auto?: boolean
-  }
+      action: 'discover-land'
+      hex: Hex
+      auto?: boolean
+    }
   | {
-    action: 'confirm-turn'
-  }
+      action: 'confirm-turn'
+    }
 
 export interface SerializedMoveHistory {
   historicalMoves: SerializedMove[][][]
@@ -806,7 +806,7 @@ export class MoveHistory {
         if (
           this.player.currentCardRules?.[this.player.cardPhase + 1] &&
           this.player.currentCardRules?.[this.player.cardPhase].limit ===
-          this.getPlacedHexes()[this.player.cardPhase].size
+            this.getPlacedHexes()[this.player.cardPhase].size
         ) {
           nextMoves.push({ action: 'advance-card-phase', auto: true })
         }
@@ -898,7 +898,10 @@ export class MoveHistory {
         move.hex.isCovered = true
 
         // Add coins that were just collected
-        this.player.addCoins(this.player.chosenRoute[0].tradingPostValue * this.player.chosenRoute[1].tradingPostValue, 1000)
+        this.player.addCoins(
+          this.player.chosenRoute[0].tradingPostValue * this.player.chosenRoute[1].tradingPostValue,
+          1000,
+        )
 
         // clear the chosen route
         this.player.finalizedTradingRoutes.push(this.player.chosenRoute)
