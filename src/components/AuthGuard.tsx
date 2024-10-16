@@ -1,5 +1,5 @@
 import { Redirect } from '@8thday/react'
-import { SignedIn, SignedOut } from '@nhost/react'
+import { SignedIn, SignedOut, useAuthenticationStatus } from '@nhost/react'
 import React, { ReactNode } from 'react'
 
 export interface AuthGuardProps {
@@ -9,6 +9,12 @@ export interface AuthGuardProps {
 }
 
 export const AuthGuard = ({ children, invertGuard = false, redirectTo = '/online/login' }: AuthGuardProps) => {
+  const { isLoading } = useAuthenticationStatus()
+
+  if (isLoading) {
+    return null
+  }
+
   if (invertGuard) {
     return (
       <>

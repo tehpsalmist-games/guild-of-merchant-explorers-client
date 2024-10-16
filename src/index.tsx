@@ -105,7 +105,7 @@ const root = createRoot(document.getElementById('app')!)
 
 root.render(
   <NhostProvider nhost={nhost}>
-    <Toaster position="top-right" />
+    <Toaster position="top-right" containerClassName="mt-12" />
     <RouterProvider router={router} />
   </NhostProvider>,
 )
