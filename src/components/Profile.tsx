@@ -14,8 +14,12 @@ export const Profile = (_: ProfileProps) => {
   return (
     <Main className="p-4">
       {user.avatarUrl ? <img src={user.avatarUrl} className="rounded-full" alt="Profile Pic" /> : <UserCircleIcon />}
-      <p>Email: {user.email}</p>
-      <p>Display Name: {user.displayName}</p>
+      <p>
+        Email: <strong>{user.email}</strong>
+      </p>
+      <p>
+        Display Name: <strong>{user.displayName}</strong>
+      </p>
       <hr className="my-4" />
       <h3>Change Password</h3>
       <ChangePassword className="w-xs" />
