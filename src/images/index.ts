@@ -17,6 +17,7 @@ export const tradingPostMountain = new URL(
 )
 export const exploredMarker = new URL('/src/images/pieces/explored-marker.png?as=webp&width=800', import.meta.url)
 export const explorerMat = new URL('/src/images/pieces/explorer-mat.png?as=webp&width=800', import.meta.url)
+export const gomeArt = new URL('/src/images/pieces/explorer-mat-back.png?as=webp&width=1200', import.meta.url)
 
 // planks
 export const plankPanelVertical = new URL('/src/images/pieces/Plank-Panel-Vertical.png?as=webp', import.meta.url)

@@ -42,7 +42,7 @@ export const ColorPicker = ({
       {colors.map(
         (color) =>
           !disabledColors.includes(color) && (
-            <Option label={color}>
+            <Option key={color} label={color}>
               <ExplorerBlock color={color} className="h-10" />
             </Option>
           ),

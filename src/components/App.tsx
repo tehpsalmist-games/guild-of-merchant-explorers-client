@@ -1,145 +1,56 @@
-import React, { ComponentProps, useState } from 'react'
-import { BoardName, PlayerInputs } from '../game-logic/GameState'
-import { GameStateProvider } from '../hooks/useGameState'
-import { GameBoard } from './GameBoard'
-import { Button, TextInput, useRememberedState } from '@8thday/react'
-import { aghonBoard, aveniaBoard, cnidariaBoard, kazanBoard, northProyliaBoard, xawskilBaseBoard } from '../images'
+import React from 'react'
+import { NavLink, Outlet } from 'react-router-dom'
+import { plankPanelHorizontal } from '../images'
+import { SignedIn, SignedOut, useSignOut, useUserData } from '@nhost/react'
+import { toast, useOnlyOnce } from '@8thday/react'
 import clsx from 'clsx'
-import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
-import { ColorPicker } from './ColorPicker'
+import { UserCircleIcon } from '@heroicons/react/24/outline'
 
-export interface AppProps extends ComponentProps<'main'> {}
+const navClasses = 'flex-center px-3 font-semibold text-white hover:bg-white/10'
 
-export const App = ({ className = '', ...props }: AppProps) => {
-  const [boardName, setBoardName] = useRememberedState<BoardName | ''>('gome-board-name', '')
-  const [playerData, setPlayerData] = useRememberedState<PlayerInputs[]>('gome-player-data', [{ id: '', color: '' }])
-  const [readyToPlay, setReadyToPlay] = useRememberedState('gome-ready-to-play', false)
+export interface AppProps {}
 
-  const hasDupes = playerData.some((pi, i) =>
-    playerData.some((pj, j) => i !== j && (pi.id === pj.id || pi.color === pj.color)),
-  )
+export const App = (_: AppProps) => {
+  const { signOut } = useSignOut()
 
-  const disabled = !boardName || !playerData?.length || playerData.some(({ id, color }) => !id || !color) || hasDupes
+  const user = useUserData()
 
-  if (!readyToPlay || disabled)
-    return (
-      <main className={clsx(className, 'flex flex-col items-center')} {...props}>
-        <h2 className="mb-4">Players</h2>
-        <div className="flex flex-col items-center gap-1">
-          {playerData.map(({ id, color }, i) => (
-            <div className="flex items-center gap-x-1" key={i}>
-              <TextInput
-                value={id}
-                onChange={(e) =>
-                  setPlayerData((pns) => pns.map((pn, pi) => (pi === i ? { ...pn, id: e.target.value } : pn)))
-                }
-                placeholder="Player Name"
-                required
-                collapseDescriptionArea
-              />
-              <ColorPicker
-                value={color}
-                disabledColors={playerData.map(({ color }) => color)}
-                onValueChange={(c) =>
-                  setPlayerData((pns) => pns.map((pn, pi) => (pi === i ? { ...pn, color: c } : pn)))
-                }
-              />
-              {playerData.length > 1 && (
-                <Button
-                  PreIcon={XMarkIcon}
-                  variant="dismissive"
-                  onClick={() => setPlayerData((pns) => pns.filter((_pn, pi) => pi !== i))}
-                />
-              )}
-            </div>
-          ))}
-          {hasDupes && <p className="text-orange-500">Please choose a unique name and color for each player.</p>}
-
-          <Button
-            className="mt-4"
-            PreIcon={PlusIcon}
-            onClick={() => setPlayerData((p) => [...p, { color: '', id: '' }])}
-          >
-            Add Player
-          </Button>
-
-          {!disabled && (
-            <Button variant="primary" onClick={() => setReadyToPlay(true)}>
-              Play{playerData.length === 1 && ' in Solo Mode'}
-            </Button>
-          )}
-        </div>
-        <div
-          className={clsx(
-            className,
-            'grid gap-4 p-4',
-            boardName ? 'mx-auto max-w-[50vw] grid-cols-1 place-content-center' : 'grid-cols-auto-2',
-          )}
-        >
-          <h2 className="col-span-full text-center">Choose A Board To Play</h2>
-          {(boardName === '' || boardName === 'aghon') && (
-            <button
-              className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
-              onClick={() => setBoardName(boardName ? '' : 'aghon')}
-            >
-              <img className="h-full w-full" src={aghonBoard.href} />
-            </button>
-          )}
-          {(boardName === '' || boardName === 'avenia') && (
-            <button
-              className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
-              onClick={() => setBoardName(boardName ? '' : 'avenia')}
-            >
-              <img className="h-full w-full" src={aveniaBoard.href} />
-            </button>
-          )}
-          {(boardName === '' || boardName === 'kazan') && (
-            <button
-              className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
-              onClick={() => setBoardName(boardName ? '' : 'kazan')}
-            >
-              <img className="h-full w-full" src={kazanBoard.href} />
-            </button>
-          )}
-          {(boardName === '' || boardName === 'cnidaria') && (
-            <button
-              className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
-              onClick={() => setBoardName(boardName ? '' : 'cnidaria')}
-            >
-              <img className="h-full w-full" src={cnidariaBoard.href} />
-            </button>
-          )}
-          {(boardName === '' || boardName === 'northProylia') && (
-            <button
-              className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
-              onClick={() => setBoardName(boardName ? '' : 'northProylia')}
-            >
-              <img className="h-full w-full" src={northProyliaBoard.href} />
-            </button>
-          )}
-          {(boardName === '' || boardName === 'xawskil') && (
-            <button
-              className="opacity-100 hover:opacity-70 focus:opacity-70 focus:outline-none"
-              onClick={() => setBoardName(boardName ? '' : 'xawskil')}
-            >
-              <img className="h-full w-full" src={xawskilBaseBoard.href} />
-            </button>
-          )}
-        </div>
-      </main>
-    )
+  useOnlyOnce(() => toast.success({ message: `Welcome, ${user?.displayName}!` }), !!user)
 
   return (
-    <GameStateProvider
-      resetGame={() => {
-        localStorage.removeItem('gome-serialized-game-state')
-        setReadyToPlay(false)
-        setBoardName('')
-      }}
-      name={boardName}
-      playerData={playerData}
-    >
-      <GameBoard className={`${className}`} {...props} />
-    </GameStateProvider>
+    <>
+      <nav
+        className="fixed top-0 z-10 flex h-12 w-full items-stretch"
+        style={{ backgroundImage: `url(${plankPanelHorizontal.href})` }}
+      >
+        <NavLink to="local" className={({ isActive }) => clsx(navClasses, isActive && 'bg-white/15')}>
+          Play Local
+        </NavLink>
+        <NavLink to="online" className={({ isActive }) => clsx(navClasses, isActive && 'bg-white/15')}>
+          Play Online
+        </NavLink>
+        <SignedOut>
+          <NavLink
+            to="online/login"
+            className={({ isActive }) => clsx(navClasses, 'ml-auto', isActive && 'bg-white/15')}
+          >
+            Login
+          </NavLink>
+        </SignedOut>
+        <SignedIn>
+          <button className={clsx(navClasses, 'ml-auto')} onClick={() => signOut()}>
+            Logout
+          </button>
+          <NavLink to="profile" className={({ isActive }) => clsx(navClasses, isActive && 'bg-white/15')}>
+            {user?.avatarUrl ? (
+              <img src={user?.avatarUrl} className="aspect-square max-h-10 rounded-full" />
+            ) : (
+              <UserCircleIcon className="h-6 w-6" />
+            )}
+          </NavLink>
+        </SignedIn>
+      </nav>
+      <Outlet />
+    </>
   )
 }

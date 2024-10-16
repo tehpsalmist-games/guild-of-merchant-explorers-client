@@ -40,6 +40,10 @@ em {
   .game-board-grid {
     @apply grid grid-cols-1 pt-16;
   }
+
+  .link-on-light {
+    @apply text-blue-500 hover:text-blue-400 focus:underline focus:outline-none;
+  }
 }
 
 @layer utilities {

@@ -43,7 +43,7 @@ export const ExplorerMap = ({ className = '', player, isActive, ...props }: Expl
   return (
     <div
       ref={containerRef}
-      className={clsx(className, `relative h-full max-h-full w-full max-w-full overflow-hidden bg-left bg-repeat-y`, {
+      className={clsx(className, `relative h-full max-h-full w-full max-w-full overflow-hidden bg-left`, {
         'opacity-70': !isActive,
       })}
       style={{ backgroundImage: `url(${plankPanelHorizontal.href})` }}
@@ -82,7 +82,7 @@ export const ExplorerMap = ({ className = '', player, isActive, ...props }: Expl
         </svg>
         <EraCards player={player} />
       </div>
-      <span className="text-shadow-lg absolute right-[5%] top-[5%] font-bold text-primary-500 shadow-white sm:text-lg md:text-4xl">
+      <span className="absolute right-[5%] top-[5%] font-bold text-primary-500 shadow-white text-shadow-lg sm:text-lg md:text-4xl">
         {player.id} <ExplorerBlock color={player.color} className="inline h-8" />
       </span>
     </div>
