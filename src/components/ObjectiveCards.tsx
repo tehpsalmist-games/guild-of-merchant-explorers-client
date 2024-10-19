@@ -4,6 +4,7 @@ import { useGameState } from '../hooks/useGameState'
 import { blockImage, era2Blocker, era3Blocker, eraAnyBlocker } from '../images'
 import { useEventListener } from '@8thday/react'
 import { ExplorerBlock } from './ExplorerBlock'
+import { audioTools, uiCardCloseSound, uiCardOpenSound } from '../audio'
 
 export interface ObjectiveCardsProps extends ComponentProps<'div'> {}
 
@@ -14,12 +15,24 @@ export const ObjectiveCards = ({ className = '', ...props }: ObjectiveCardsProps
 
   useEventListener('keydown', (e) => {
     if (e.key === 'w') {
-      setInView((v) => !v)
+      toggleView()
     }
   })
 
+  function toggleView() {
+    setInView((v) => !v)
+    if (inView) {
+      audioTools.play(uiCardCloseSound)
+    } else {
+      audioTools.play(uiCardOpenSound)
+    }
+  }
+
   useEffect(() => {
-    const listener = () => setInView(true)
+    const listener = () => {
+      setInView(true)
+      audioTools.play(uiCardOpenSound)
+    }
     gameState.players.forEach((p) => p.addEventListener('objective-achieved', listener))
 
     return () => gameState.players.forEach((p) => p.removeEventListener('objective-achieved', listener))
@@ -32,7 +45,7 @@ export const ObjectiveCards = ({ className = '', ...props }: ObjectiveCardsProps
         `absolute left-0 top-16 z-10 flex w-full cursor-pointer justify-evenly transition-all duration-200`,
         inView ? 'translate-y-2 opacity-100' : '-translate-y-[80%] opacity-50',
       )}
-      onClick={() => setInView((v) => !v)}
+      onClick={() => toggleView()}
       {...props}
     >
       {gameState.objectives.map((card, i) =>

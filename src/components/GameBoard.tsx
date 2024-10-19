@@ -7,6 +7,7 @@ import ChevronLeftIcon from '@heroicons/react/24/solid/ChevronLeftIcon'
 import UTurnIcon from '@heroicons/react/24/solid/ArrowUturnLeftIcon'
 import clsx from 'clsx'
 import { coinImage, placeBlock, plankPanelHorizontal, treasureChestImage } from '../images'
+import { audioTools, uiWoodCloseSound, uiWoodOpenSound } from '../audio'
 import { EraLabel } from './EraLabel'
 import { ExplorerCardMat } from './ExplorerCardMat'
 import { ObjectiveCards } from './ObjectiveCards'
@@ -35,9 +36,18 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
       gameState.activePlayer.selectUndo()
     }
     if (e.key === 'd') {
-      setSideBarOpen((o) => !o)
+      toggleSideBar()
     }
   })
+
+  function toggleSideBar() {
+    setSideBarOpen((o) => !o)
+    if (sideBarOpen) {
+      audioTools.play(uiWoodCloseSound)
+    } else {
+      audioTools.play(uiWoodOpenSound)
+    }
+  }
 
   useEffect(() => {
     const stateListener = () => updateState((s) => ++s)
@@ -94,7 +104,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
           <div className="flex h-16 items-center py-0.5">
             <EraLabel className="mr-4" />
             {gameState.currentExplorerCard && (
-              <button className="mx-4 flex h-full" onClick={() => setSideBarOpen((o) => !o)}>
+              <button className="mx-4 flex h-full" onClick={() => toggleSideBar()}>
                 {!investigateCard && (
                   <img
                     className="max-h-full max-w-12 rounded border-2 border-transparent"
@@ -185,11 +195,11 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
           <ExplorerCardMat />
           <div className="flex justify-end gap-2">
             <img className="max-h-16 max-w-32" src={coinImage.href} alt="coin" />
-            <span className="text-shadow text-6xl font-bold leading-[1em] text-primary-500 shadow-white">
+            <span className="text-6xl font-bold leading-[1em] text-primary-500 shadow-white text-shadow">
               {gameState.activePlayer.coins}
             </span>
             <img className="max-h-16 max-w-32" src={treasureChestImage.href} alt="treasure" />
-            <span className="text-shadow text-6xl font-bold leading-[1em] text-primary-500 shadow-white">
+            <span className="text-6xl font-bold leading-[1em] text-primary-500 shadow-white text-shadow">
               {treasureCards.length + treasureJars.length}
             </span>
           </div>
@@ -277,10 +287,7 @@ export const GameBoard = ({ className = '', ...props }: GameBoardProps) => {
             sideBarOpen ? 'right-[calc(theme(spacing.sm)+theme(spacing.2))]' : 'right-2',
           )}
         >
-          <Button
-            PreIcon={sideBarOpen ? ChevronRightIcon : ChevronLeftIcon}
-            onClick={() => setSideBarOpen((o) => !o)}
-          ></Button>
+          <Button PreIcon={sideBarOpen ? ChevronRightIcon : ChevronLeftIcon} onClick={() => toggleSideBar()}></Button>
         </div>
       </main>
       {['user-prompting', 'treasure-to-draw'].includes(gameState.activePlayer.mode) && userPromptOpen && (

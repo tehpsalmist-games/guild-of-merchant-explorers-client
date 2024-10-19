@@ -23,7 +23,17 @@ import { ScoreBoard } from './ScoreBoard'
 import { northProyliaData } from '../data/boards/north-proylia'
 import { xawskilData } from '../data/boards/xawskil'
 import { investigateCardDataLookup } from '../data/cards/investigate-cards'
-import { crystalSFX, placeBlock1SFX, treasureSFX, towerSFX, tradeSFX, villageSFX, coin1SFX, coin2SFX } from '../audio'
+import {
+  audioTools,
+  crystalSound,
+  placeBlock1Sound,
+  treasureSound,
+  towerSound,
+  tradeSound,
+  villageSound,
+  coin1Sound,
+  coin2Sound,
+} from '../audio'
 import { explorerCardDataMapping } from '../data/cards/explorer-cards'
 import { treasureCardDataLookup } from '../data/cards/treasure-cards'
 
@@ -451,18 +461,18 @@ export class Player extends EventTarget {
   addCoins(amount: number, soundDelay = 0) {
     this.coins += amount
 
-    setTimeout(() => {
-      coin1SFX.play()
-    }, soundDelay)
+    if (!this.replaying) {
+      audioTools.playAfterDelay(coin1Sound, soundDelay)
+    }
   }
 
   //Remove coins from player and play sound effect after an optional delay
   removeCoins(amount: number, soundDelay = 0) {
     this.coins -= amount
 
-    setTimeout(() => {
-      coin2SFX.play()
-    }, soundDelay)
+    if (!this.replaying) {
+      audioTools.playAfterDelay(coin2Sound, soundDelay)
+    }
   }
 
   setMode(mode: PlayerMode) {
@@ -801,7 +811,7 @@ export class MoveHistory {
         }
       case 'explore':
         move.hex.explore()
-        this.playAudio(placeBlock1SFX)
+        this.playAudio(placeBlock1Sound)
 
         if (
           this.player.currentCardRules?.[this.player.cardPhase + 1] &&
@@ -859,7 +869,7 @@ export class MoveHistory {
           this.player.addCoins(14, 1000)
         }
 
-        this.playAudio(towerSFX)
+        this.playAudio(towerSound)
         break
       case 'discover-ruin':
         move.hex.isCovered = true
@@ -881,7 +891,7 @@ export class MoveHistory {
 
         this.player.addCoins(crystalValueSum, 500)
 
-        this.playAudio(crystalSFX)
+        this.playAudio(crystalSound)
 
         break
       case 'discover-land':
@@ -906,7 +916,7 @@ export class MoveHistory {
         // clear the chosen route
         this.player.finalizedTradingRoutes.push(this.player.chosenRoute)
         this.player.chosenRoute = []
-        this.playAudio(tradeSFX)
+        this.playAudio(tradeSound)
 
         // removes the hex that was just covered
         const index = this.player.connectedTradePosts.indexOf(move.hex)
@@ -922,7 +932,7 @@ export class MoveHistory {
         move.hex.isVillage = true
 
         this.player.addCoins(this.player.era + 1, 500)
-        villageSFX.play()
+        this.playAudio(villageSound)
         this.player.regionForVillage = undefined
 
         break
@@ -941,7 +951,7 @@ export class MoveHistory {
         //Completely blocks the ability to undo anything prior to drawing a treasure card
         this.lockInMoveState()
 
-        treasureSFX.play()
+        this.playAudio(treasureSound)
 
         this.player.dispatchEvent(new CustomEvent('treasure-gained'))
 
@@ -1136,10 +1146,7 @@ export class MoveHistory {
       return
     }
 
-    //restarts the audio if it's already playing
-    sfx.currentTime = 0
-
-    sfx.play()
+    audioTools.play(sfx)
   }
 
   lockInMoveState() {

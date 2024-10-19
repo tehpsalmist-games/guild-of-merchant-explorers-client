@@ -1,5 +1,6 @@
 import { Hex, Land, Terrain } from './Board'
 import { GameState, Player, SerializedPlayer } from './GameState'
+import { audioTools, completeObjectiveSound } from '../audio'
 
 type Operator = 'eq' | 'gte' | 'lte'
 type Position = 'adjacent' | 'on'
@@ -166,6 +167,8 @@ export class Objective {
       }
 
       p.dispatchEvent(new CustomEvent('objective-achieved'))
+
+      audioTools.play(completeObjectiveSound)
     }
 
     // emit event for UI display instead?
