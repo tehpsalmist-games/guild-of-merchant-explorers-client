@@ -29,14 +29,16 @@ export class AudioTools {
   stopTrack(fadeSpeed: number = 100) {
     if (this.currentBackgroundTrack) {
       const fadeOutInterval = setInterval(() => {
-        if (this.currentBackgroundTrack!.volume > 0.1) {
-          this.currentBackgroundTrack!.volume -= 0.1
+        if (this.currentBackgroundTrack && this.currentBackgroundTrack.volume > 0.1) {
+          this.currentBackgroundTrack.volume -= 0.1
+        } else if (this.currentBackgroundTrack) {
+          clearInterval(fadeOutInterval)
+          this.currentBackgroundTrack.pause()
+          this.currentBackgroundTrack.currentTime = 0
+          this.currentBackgroundTrack.volume = 1 // Reset volume for next play
+          this.currentBackgroundTrack = null
         } else {
           clearInterval(fadeOutInterval)
-          this.currentBackgroundTrack!.pause()
-          this.currentBackgroundTrack!.currentTime = 0
-          this.currentBackgroundTrack!.volume = 1 // Reset volume for next play
-          this.currentBackgroundTrack = null
         }
       }, fadeSpeed) // Adjust the interval time as needed for a smoother fade out
     }

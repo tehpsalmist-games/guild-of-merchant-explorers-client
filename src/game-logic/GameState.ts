@@ -261,7 +261,7 @@ export class GameState extends EventTarget {
   enqueueSerialization() {
     clearTimeout(this.serializationTimeout)
 
-    this.serializationTimeout = setTimeout(
+    this.serializationTimeout = window.setTimeout(
       () => {
         const savedState = JSON.stringify(this)
 

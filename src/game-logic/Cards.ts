@@ -343,8 +343,15 @@ export class InvestigateHand extends Hand<InvestigateCard> {
   }
 
   undoCardSelection(): [InvestigateCard, InvestigateCard] {
+    const card1 = this.cards.pop()?.card
+    const card2 = this.cards.pop()?.card
+
+    if (!card1 || !card2) {
+      console.error(card1, card2, 'no cards selected???')
+      throw new Error('Somehow there were not cards selected to be undone???')
+    }
     // frankly, I don't care to assume this won't work. Not in the mood to write error handling
-    return [this.cards.pop()!.card, this.cards.pop()!.card]
+    return [card1, card2]
   }
 
   fromJSON(data: SerializedHand) {
