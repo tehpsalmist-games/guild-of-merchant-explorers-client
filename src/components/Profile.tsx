@@ -21,7 +21,7 @@ export const Profile = (_: ProfileProps) => {
 
   return (
     <Main className="p-4">
-      <Avatar avatarUrl={user.avatarUrl} />
+      <Avatar className="mt-4 aspect-square w-48" avatarUrl={user.avatarUrl} />
       <div className="mb-2">
         <label className="font-medium text-gray-800">Email</label>
         <p>

@@ -16,7 +16,7 @@ export const GET_GAME = gql`
 
 export const GET_ROOMS = gql`
   subscription GetRooms {
-    room(where: { game_id: { _eq: "${GOME_ID}" } }) {
+    room(where: { game_id: { _eq: "${GOME_ID}" } }, order_by: { created_at: desc }) {
       id
       name
       is_public
@@ -32,7 +32,7 @@ export const GET_ROOMS = gql`
 
 export const GET_HOSTED_ROOM_NAMES = gql`
   query HostedRooms ($hostId: uuid!) {
-    room(where: { game_id: { _eq: "${GOME_ID}" }, host_id: { _eq: $hostId } }) {
+    room(where: { game_id: { _eq: "${GOME_ID}" }, host_id: { _eq: $hostId } }, order_by: { created_at: desc }) {
       id
       name
     }
@@ -41,7 +41,7 @@ export const GET_HOSTED_ROOM_NAMES = gql`
 
 export const PLAYER_LIST = gql`
   query PlayerList {
-    game_player (where: { game_id: {_eq: "${GOME_ID}" } }) {
+    game_player (where: { game_id: {_eq: "${GOME_ID}" } }, order_by: { player: { displayName: asc } }) {
       id
       player {
         id
