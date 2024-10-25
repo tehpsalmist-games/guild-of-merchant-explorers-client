@@ -14,6 +14,7 @@ import { Profile } from './components/Profile'
 import { LoginForm } from './components/LoginForm'
 import { AuthGuard } from './components/AuthGuard'
 import { ResetPassword } from './components/ResetPassword'
+import { NhostApolloProvider } from '@nhost/react-apollo'
 
 export const nhost = new NhostClient({
   subdomain: process.env.REACT_APP_NHOST_SUBDOMAIN,
@@ -105,7 +106,9 @@ const root = createRoot(document.getElementById('app')!)
 
 root.render(
   <NhostProvider nhost={nhost}>
-    <Toaster position="top-right" containerClassName="mt-12" />
-    <RouterProvider router={router} />
+    <NhostApolloProvider nhost={nhost}>
+      <Toaster position="bottom-right" containerClassName="mb-12 sm:mb-0" />
+      <RouterProvider router={router} />
+    </NhostApolloProvider>
   </NhostProvider>,
 )

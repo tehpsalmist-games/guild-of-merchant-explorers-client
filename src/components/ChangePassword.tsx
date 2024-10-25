@@ -42,6 +42,7 @@ export const ChangePassword = ({ className = '', onSuccess, ...props }: ChangePa
         autoComplete="new-password"
         value={newPassword}
         onChange={(e) => setNewPassword(e.target.value)}
+        required
       />
       <TextInput
         label="Confirm New Password"
@@ -51,6 +52,7 @@ export const ChangePassword = ({ className = '', onSuccess, ...props }: ChangePa
         value={confirmNewPassword}
         onChange={(e) => setConfirmNewPassword(e.target.value)}
         errorMessage={confirmNewPassword && disabled ? 'Passwords do not match.' : ''}
+        required
       />
       <Button variant="primary" type="submit" disabled={disabled}>
         Submit

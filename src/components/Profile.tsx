@@ -1,10 +1,11 @@
 import React, { useRef, useState } from 'react'
 import { Main } from '../design-system/Main'
 import { useNhostClient, useUserData } from '@nhost/react'
-import { CheckIcon, UserCircleIcon } from '@heroicons/react/24/outline'
+import { CheckIcon } from '@heroicons/react/24/outline'
 import { ChangePassword } from './ChangePassword'
 import { Button, TextInput, toast } from '@8thday/react'
 import { UPDATE_DISPLAY_NAME } from '../graphql/mutations'
+import { Avatar } from './Avatar'
 
 export interface ProfileProps {}
 
@@ -20,7 +21,7 @@ export const Profile = (_: ProfileProps) => {
 
   return (
     <Main className="p-4">
-      {user.avatarUrl ? <img src={user.avatarUrl} className="rounded-full" alt="Profile Pic" /> : <UserCircleIcon />}
+      <Avatar avatarUrl={user.avatarUrl} />
       <div className="mb-2">
         <label className="font-medium text-gray-800">Email</label>
         <p>
