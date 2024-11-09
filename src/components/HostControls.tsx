@@ -73,36 +73,42 @@ export const HostControls = ({ className = '', buttonClasses = '', room, ...prop
             <h3 className="mb-4 text-center">{room.name}</h3>
             <h4>At the Table</h4>
             <ul className="-mx-2">
-              <li className="px-2 py-1">{userLookup[room.host_id]?.displayName}</li>
-              {room.members.map((m) => (
-                <li
-                  key={m.player_id}
-                  className="flex items-center justify-between px-2 py-1 even:bg-gray-50 hover:bg-gray-100"
-                >
-                  {userLookup[m.player_id]?.displayName}
-                  <Button
-                    variant="dismissive"
-                    className={buttonClasses}
-                    PreIcon={XMarkIcon}
-                    onClick={async () => {
-                      if (!confirm('Are you sure you want to remove this player from the game?')) {
-                        return
-                      }
+              <li className="flex items-center justify-between px-2 py-1">
+                {userLookup[room.host_id]?.displayName}
+                <em>Host</em>
+              </li>
+              {room.members.map(
+                (m) =>
+                  m.player_id !== room.host_id && (
+                    <li
+                      key={m.player_id}
+                      className="flex items-center justify-between px-2 py-1 even:bg-gray-50 hover:bg-gray-100"
+                    >
+                      {userLookup[m.player_id]?.displayName}
+                      <Button
+                        variant="dismissive"
+                        className={buttonClasses}
+                        PreIcon={XMarkIcon}
+                        onClick={async () => {
+                          if (!confirm('Are you sure you want to remove this player from the game?')) {
+                            return
+                          }
 
-                      const res = await nhost.graphql.request(DISINVITE_PLAYER, { roomMemberId: m.id })
+                          const res = await nhost.graphql.request(DISINVITE_PLAYER, { roomMemberId: m.id })
 
-                      if (res.error) {
-                        return toast.error({
-                          message: 'Trouble folding up table...',
-                          description: getGraphqlErrorMessage(res.error),
-                        })
-                      }
+                          if (res.error || !res.data?.delete_room_member_by_pk?.id) {
+                            return toast.error({
+                              message: 'Trouble disinviting player...',
+                              description: res.error ? getGraphqlErrorMessage(res.error) : undefined,
+                            })
+                          }
 
-                      toast.success({ message: `${userLookup[m.player_id]?.displayName} has been disinvited.` })
-                    }}
-                  />
-                </li>
-              ))}
+                          toast.success({ message: `${userLookup[m.player_id]?.displayName} has been disinvited.` })
+                        }}
+                      />
+                    </li>
+                  ),
+              )}
             </ul>
             <h4>Invite a Player</h4>
             <ul className="-mx-2">

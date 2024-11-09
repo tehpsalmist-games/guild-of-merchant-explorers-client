@@ -36,7 +36,7 @@ export const Lobby = ({ className = '', ...props }: LobbyProps) => {
     const roomName = prompt('Name your table')
     if (!roomName) return
 
-    const res = await nhost.graphql.request(CREATE_ROOM, { roomName })
+    const res = await nhost.graphql.request(CREATE_ROOM, { roomName, userId })
 
     console.log(res)
   }
@@ -118,11 +118,13 @@ export const Lobby = ({ className = '', ...props }: LobbyProps) => {
           return (
             <li key={room.id} className="flex items-center gap-2 px-2 py-1 even:bg-gray-50">
               <span className="mr-auto text-sm">{room.name}</span>
-              <NavLink to={`../room/${room.id}`}>
-                <Button type="button" className="min-h-8" variant="primary">
-                  Play
-                </Button>
-              </NavLink>
+              {inviteAccepted && (
+                <NavLink to={`../room/${room.id}`}>
+                  <Button type="button" className="min-h-8" variant="primary">
+                    Play
+                  </Button>
+                </NavLink>
+              )}
               {!inviteAccepted && (
                 <Button
                   variant="primary"

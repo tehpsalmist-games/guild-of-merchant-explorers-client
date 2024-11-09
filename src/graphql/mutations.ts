@@ -1,9 +1,9 @@
 import { gql } from '@apollo/client'
 import { GOME_ID } from '../data/get-a-room'
 
-export const UPDATE_DISPLAY_NAME = gql`
-  mutation UpdateUserDisplayName($userId: uuid!, $displayName: String!) {
-    updateUser(pk_columns: { id: $userId }, _set: { displayName: $displayName }) {
+export const UPDATE_USER = gql`
+  mutation UpdateUser($userId: uuid!, $set: users_set_input) {
+    updateUser(pk_columns: { id: $userId }, _set: $set) {
       id
     }
   }
@@ -26,8 +26,14 @@ export const LEAVE_GAME_PERMANENTLY = gql`
 `
 
 export const CREATE_ROOM = gql`
-  mutation CreateRoom($roomName: String!) {
-    insert_room_one(object: { game_id: "${GOME_ID}", name: $roomName }) {
+  mutation CreateRoom($roomName: String!, $userId: uuid!) {
+    insert_room_one(object: {
+      game_id: "${GOME_ID}",
+      name: $roomName,
+      members: {
+        data: [{ invite_accepted: true, player_id: $userId }]
+      }
+    }) {
       id
     }
   }
@@ -94,6 +100,30 @@ export const DELETE_NOTIFICATION = gql`
   mutation DeleteNotification($id: Int!) {
     delete_game_player_notification_by_pk(id: $id) {
       id
+    }
+  }
+`
+
+export const SEND_P2P_MESSAGE = gql`
+  mutation SendP2PMessage($message: jsonb!, $receiverId: Int!, $senderId: Int!, $roomId: Int!) {
+    insert_p2p_message_one(
+      object: { message: $message, room_id: $roomId, receiver_member_id: $receiverId, sender_member_id: $senderId }
+    ) {
+      id
+    }
+  }
+`
+
+export const CLEANUP_HANDSHAKE_MESSAGES = gql`
+  mutation CleanUpMessages($roomId: Int!, $senderId: Int!, $receiverId: Int!) {
+    delete_p2p_message(
+      where: {
+        room_id: { _eq: $roomId }
+        sender_member_id: { _eq: $senderId }
+        receiver_member_id: { _eq: $receiverId }
+      }
+    ) {
+      affected_rows
     }
   }
 `

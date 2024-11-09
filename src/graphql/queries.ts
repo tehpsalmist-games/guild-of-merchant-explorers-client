@@ -47,6 +47,7 @@ export const PLAYER_LIST = gql`
         id
         displayName
         avatarUrl
+        lastSeen
       }
     }
   }
@@ -64,7 +65,21 @@ export const STREAM_NEW_PLAYERS = gql`
         id
         displayName
         avatarUrl
+        lastSeen
       }
+    }
+  }
+`
+
+export const WATCH_ONLINE_STATUSES = gql`
+  subscription WatchOnlineStatuses($limit: Int!) {
+    users(
+      where: { games: { game_id: { _eq: "${GOME_ID}" } } }
+      limit: $limit
+      order_by: { lastSeen: desc_nulls_last }
+    ) {
+      lastSeen
+      id
     }
   }
 `
@@ -90,6 +105,58 @@ export const STREAM_NOTIFICATIONS = gql`
       id
       message
       ack
+      created_at
+    }
+  }
+`
+
+export const ROOM_SUB = gql`
+  subscription RoomSub($roomId: Int!) {
+    room_by_pk(id: $roomId) {
+      id
+      host_id
+      created_at
+      name
+      is_public
+      members {
+        id
+        player_id
+        invite_accepted
+      }
+    }
+  }
+`
+
+export const LATEST_P2P_MESSAGE = gql`
+  query LatestP2PMessage($roomId: Int!, $sendingMemberId: Int!, $receivingMemberId: Int!) {
+    p2p_message(
+      where: {
+        room_id: { _eq: $roomId }
+        sender_member_id: { _eq: $sendingMemberId }
+        receiver_member_id: { _eq: $receivingMemberId }
+      }
+      limit: 1
+      order_by: { created_at: desc_nulls_last }
+    ) {
+      id
+      message
+    }
+  }
+`
+
+export const P2P_MESSAGE_STREAM = gql`
+  subscription P2PMessageStream($roomId: Int!, $sendingMemberId: Int!, $receivingMemberId: Int!, $latestId: Int!) {
+    p2p_message_stream(
+      where: {
+        room_id: { _eq: $roomId }
+        sender_member_id: { _eq: $sendingMemberId }
+        receiver_member_id: { _eq: $receivingMemberId }
+      }
+      batch_size: 1
+      cursor: { initial_value: { id: $latestId } }
+    ) {
+      id
+      message
       created_at
     }
   }

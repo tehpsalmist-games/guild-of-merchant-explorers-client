@@ -4,7 +4,7 @@ import { useNhostClient, useUserData } from '@nhost/react'
 import { CheckIcon } from '@heroicons/react/24/outline'
 import { ChangePassword } from './ChangePassword'
 import { Button, TextInput, toast } from '@8thday/react'
-import { UPDATE_DISPLAY_NAME } from '../graphql/mutations'
+import { UPDATE_USER } from '../graphql/mutations'
 import { Avatar } from './Avatar'
 
 export interface ProfileProps {}
@@ -42,7 +42,7 @@ export const Profile = (_: ProfileProps) => {
             return
 
           nhost.graphql
-            .request(UPDATE_DISPLAY_NAME, { userId: user.id, displayName })
+            .request(UPDATE_USER, { userId: user.id, set: { displayName } })
             .then((r) => {
               if (r.error) {
                 return toast.error({
