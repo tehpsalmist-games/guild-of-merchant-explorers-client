@@ -223,7 +223,7 @@ export class P2PConnection extends EventEmitter<
     })
 
     this.peer.on('signal', (data) => {
-      this.sendServerMessage({ type: 'signal', data })
+      this.sendServerMessage(data)
     })
 
     this.peer.on('error', (err: any) => {
