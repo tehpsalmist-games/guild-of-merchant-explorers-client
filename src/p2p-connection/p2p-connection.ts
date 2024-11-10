@@ -60,7 +60,7 @@ export class P2PConnection extends EventEmitter<
 
   handshakeState: PeerState = 'initializing'
 
-  generatedOffer: SignalData
+  generatedOffer: SignalData | null = null
 
   peer: SimplePeer.Instance
 
@@ -190,6 +190,7 @@ export class P2PConnection extends EventEmitter<
 
   async setupPeer() {
     if (this.peer && !this.peer.destroyed) {
+      this.generatedOffer = null
       this.peer.removeAllListeners()
       this.peer.destroy()
     }
@@ -290,6 +291,7 @@ export class P2PConnection extends EventEmitter<
     this.updateHandshakeState('generating-offer')
 
     if (this.generatedOffer) {
+      this.updateHandshakeState('awaiting-answer')
       return this.generatedOffer
     }
 
@@ -310,6 +312,7 @@ export class P2PConnection extends EventEmitter<
           this.updateHandshakeState('awaiting-answer')
 
           offered = true
+          this.generatedOffer = data
           res(data)
         }
       }
